@@ -1,6 +1,8 @@
 Otto Audio Jukebox - beta
 =========================
 
+[Otto Home Page](http://ottoaudiojukebox.com)
+
 ### Version 0.3.0 - Mar 11th 2014 - Initial public release
 
 ------------------------------------------------------------
