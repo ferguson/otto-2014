@@ -1,0 +1,459 @@
+/*
+  from Tom Genoni
+  http://atomeye.com/sass-css-spinner.html
+  https://github.com/tomgenoni/ouroboros
+*/
+
+@-webkit-keyframes ui-spinner-rotate-cw-right {
+  0% {
+    -webkit-transform: rotate(0deg);
+  }
+
+  25% {
+    -webkit-transform: rotate(180deg);
+  }
+
+  50% {
+    -webkit-transform: rotate(180deg);
+  }
+
+  75% {
+    -webkit-transform: rotate(360deg);
+  }
+
+  100% {
+    -webkit-transform: rotate(360deg);
+  }
+}
+
+@-webkit-keyframes ui-spinner-rotate-cw-left {
+  0% {
+    -webkit-transform: rotate(0deg);
+  }
+
+  25% {
+    -webkit-transform: rotate(0deg);
+  }
+
+  50% {
+    -webkit-transform: rotate(180deg);
+  }
+
+  75% {
+    -webkit-transform: rotate(180deg);
+  }
+
+  100% {
+    -webkit-transform: rotate(360deg);
+  }
+}
+
+@-moz-keyframes ui-spinner-rotate-cw-right {
+  0% {
+    -moz-transform: rotate(0deg);
+  }
+
+  25% {
+    -moz-transform: rotate(180deg);
+  }
+
+  50% {
+    -moz-transform: rotate(180deg);
+  }
+
+  75% {
+    -moz-transform: rotate(360deg);
+  }
+
+  100% {
+    -moz-transform: rotate(360deg);
+  }
+}
+
+@-moz-keyframes ui-spinner-rotate-cw-left {
+  0% {
+    -moz-transform: rotate(0deg);
+  }
+
+  25% {
+    -moz-transform: rotate(0deg);
+  }
+
+  50% {
+    -moz-transform: rotate(180deg);
+  }
+
+  75% {
+    -moz-transform: rotate(180deg);
+  }
+
+  100% {
+    -moz-transform: rotate(360deg);
+  }
+}
+
+@keyframes ui-spinner-rotate-cw-right {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  25% {
+    transform: rotate(180deg);
+  }
+
+  50% {
+    transform: rotate(180deg);
+  }
+
+  75% {
+    transform: rotate(360deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes ui-spinner-rotate-cw-left {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  25% {
+    transform: rotate(0deg);
+  }
+
+  50% {
+    transform: rotate(180deg);
+  }
+
+  75% {
+    transform: rotate(180deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/******************************************/
+
+@-webkit-keyframes ui-spinner-rotate-ccw-right {
+  0% {
+    -webkit-transform: rotate(0deg);
+  }
+
+  25% {
+    -webkit-transform: rotate(-180deg);
+  }
+
+  50% {
+    -webkit-transform: rotate(-180deg);
+  }
+
+  75% {
+    -webkit-transform: rotate(-360deg);
+  }
+
+  100% {
+    -webkit-transform: rotate(-360deg);
+  }
+}
+
+@-webkit-keyframes ui-spinner-rotate-ccw-left {
+  0% {
+    -webkit-transform: rotate(0deg);
+  }
+
+  25% {
+    -webkit-transform: rotate(0deg);
+  }
+
+  50% {
+    -webkit-transform: rotate(-180deg);
+  }
+
+  75% {
+    -webkit-transform: rotate(-180deg);
+  }
+
+  100% {
+    -webkit-transform: rotate(-360deg);
+  }
+}
+
+@-moz-keyframes ui-spinner-rotate-ccw-right {
+  0% {
+    -moz-transform: rotate(0deg);
+  }
+
+  25% {
+    -moz-transform: rotate(-180deg);
+  }
+
+  50% {
+    -moz-transform: rotate(-180deg);
+  }
+
+  75% {
+    -moz-transform: rotate(-360deg);
+  }
+
+  100% {
+    -moz-transform: rotate(-360deg);
+  }
+}
+
+@-moz-keyframes ui-spinner-rotate-ccw-left {
+  0% {
+    -moz-transform: rotate(0deg);
+  }
+
+  25% {
+    -moz-transform: rotate(0deg);
+  }
+
+  50% {
+    -moz-transform: rotate(-180deg);
+  }
+
+  75% {
+    -moz-transform: rotate(-180deg);
+  }
+
+  100% {
+    -moz-transform: rotate(-360deg);
+  }
+}
+
+@keyframes ui-spinner-rotate-ccw-right {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  25% {
+    transform: rotate(-180deg);
+  }
+
+  50% {
+    transform: rotate(-180deg);
+  }
+
+  75% {
+    transform: rotate(-360deg);
+  }
+
+  100% {
+    transform: rotate(-360deg);
+  }
+}
+
+@keyframes ui-spinner-rotate-ccw-left {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  25% {
+    transform: rotate(0deg);
+  }
+
+  50% {
+    transform: rotate(-180deg);
+  }
+
+  75% {
+    transform: rotate(-180deg);
+  }
+
+  100% {
+    transform: rotate(-360deg);
+  }
+}
+
+.ouroboros .ui-spinner {
+  display: inline-block;
+  position: relative;
+  border-radius: 100%;
+}
+.ouroboros .ui-spinner .side {
+  width: 50%;
+  height: 100%;
+  overflow: hidden;
+  position: absolute;
+}
+.ouroboros .ui-spinner .side .fill {
+  border-radius: 999px;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  -webkit-animation-iteration-count: infinite;
+  -moz-animation-iteration-count: infinite;
+  -ms-animation-iteration-count: infinite;
+  -o-animation-iteration-count: infinite;
+  animation-iteration-count: infinite;
+  -webkit-animation-timing-function: linear;
+  -moz-animation-timing-function: linear;
+  -ms-animation-timing-function: linear;
+  -o-animation-timing-function: linear;
+  animation-timing-function: linear;
+}
+.ouroboros .ui-spinner .side.left {
+  left: 0;
+}
+.ouroboros .ui-spinner .side.left .fill {
+  left: 100%;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  -webkit-transform-origin: 0 50%;
+  -moz-transform-origin: 0 50%;
+  -ms-transform-origin: 0 50%;
+  -o-transform-origin: 0 50%;
+  transform-origin: 0 50%;
+}
+
+.ouroboros .ui-spinner.cw .side.left .fill {
+  -webkit-animation-name: ui-spinner-rotate-cw-left;
+  -moz-animation-name: ui-spinner-rotate-cw-left;
+  -ms-animation-name: ui-spinner-rotate-cw-left;
+  -o-animation-name: ui-spinner-rotate-cw-left;
+  animation-name: ui-spinner-rotate-cw-left;
+}
+
+.ouroboros .ui-spinner.ccw .side.left .fill {
+  -webkit-animation-name: ui-spinner-rotate-ccw-left;
+  -moz-animation-name: ui-spinner-rotate-ccw-left;
+  -ms-animation-name: ui-spinner-rotate-ccw-left;
+  -o-animation-name: ui-spinner-rotate-ccw-left;
+  animation-name: ui-spinner-rotate-ccw-left;
+  -webkit-transform-origin: 0 50%;
+}
+.ouroboros .ui-spinner .side.right {
+  left: 50%;
+}
+.ouroboros .ui-spinner .side.right .fill {
+  left: -100%;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  -webkit-transform-origin: 100% 50%;
+  -moz-transform-origin: 100% 50%;
+  -ms-transform-origin: 100% 50%;
+  -o-transform-origin: 100% 50%;
+  transform-origin: 100% 50%;
+}
+
+.ouroboros .ui-spinner.cw .side.right .fill {
+  -webkit-animation-name: ui-spinner-rotate-cw-right;
+  -moz-animation-name: ui-spinner-rotate-cw-right;
+  -ms-animation-name: ui-spinner-rotate-cw-right;
+  -o-animation-name: ui-spinner-rotate-cw-right;
+  animation-name: ui-spinner-rotate-cw-right;
+}
+
+.ouroboros .ui-spinner.ccw .side.right .fill {
+  -webkit-animation-name: ui-spinner-rotate-ccw-right;
+  -moz-animation-name: ui-spinner-rotate-ccw-right;
+  -ms-animation-name: ui-spinner-rotate-ccw-right;
+  -o-animation-name: ui-spinner-rotate-ccw-right;
+  animation-name: ui-spinner-rotate-ccw-right;
+}
+
+/* speed */
+.ouroboros .ui-spinner.slow .side .fill {
+  -webkit-animation-duration: 5s;
+  -moz-animation-duration: 5s;
+  -ms-animation-duration: 5s;
+  -o-animation-duration: 5s;
+  animation-duration: 5s;
+}
+.ouroboros .ui-spinner.normal .side .fill {
+  -webkit-animation-duration: 2s;
+  -moz-animation-duration: 2s;
+  -ms-animation-duration: 2s;
+  -o-animation-duration: 2s;
+  animation-duration: 2s;
+}
+.ouroboros .ui-spinner.fast .side .fill {
+  -webkit-animation-duration: 1.5s;
+  -moz-animation-duration: 1.5s;
+  -ms-animation-duration: 1.5s;
+  -o-animation-duration: 1.5s;
+  animation-duration: 1.5s;
+}
+
+/* :after is the hole in the middle */
+/* and also the reason we can't just
+   make the background transparent */
+.ouroboros .ui-spinner:after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  display: block;
+}
+
+.ouroboros .ui-spinner .side .fill {
+  /*opacity: 0.8;*/
+  opacity: 1;
+}
+
+/* fill color */
+.ouroboros .ui-spinner.gray .side .fill {
+  background: gray;
+}
+.ouroboros .ui-spinner.blue .side .fill {
+  background: blue;
+}
+
+/* background */
+.ouroboros .ui-spinner.black {
+  background: black;
+}
+.ouroboros .ui-spinner.black:after { /* hole in the middle */
+  background: black;
+}
+.ouroboros .ui-spinner.dark {
+  background: #333;
+}
+.ouroboros .ui-spinner.dark:after { /* hole in the middle */
+  background: #333;
+}
+
+/* size */
+.ouroboros .ui-spinner.small {
+  //width: 20px;
+  //height: 20px;
+  width: 18px;
+  height: 18px;
+}
+.ouroboros .ui-spinner.small:after {
+  //width: 12px;
+  //height: 12px;
+  //top: 4px;
+  //left: 4px;
+  width: 10px;
+  height: 10px;
+  top: 4px;
+  left: 4px;
+}
+
+.ouroboros .ui-spinner.medium {
+  width: 26px;
+  height: 26px;
+}
+.ouroboros .ui-spinner.medium:after {
+  width: 16px;
+  height: 16px;
+  top: 5px;
+  left: 5px;
+}
+
+.ouroboros .ui-spinner.large {
+  width: 100px;
+  height: 100px;
+}
+.ouroboros .ui-spinner.large:after {
+  width: 60px;
+  height: 60px;
+  top: 20px;
+  left: 20px;
+}
+

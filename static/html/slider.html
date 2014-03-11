@@ -1,0 +1,17 @@
+<!doctype html>
+<html>
+<head>
+  <title>slider test</title>
+  <script src="/zappa/jquery.js"></script>
+  <script src="/static/js/jquery-ui-1.8.17.custom.min.js"></script>
+  <script>
+    $(function() {
+      $('#volume-bar').slider({range: true, values: [17, 67]});
+    });
+  </script>
+</head>
+<body>
+  slider:
+  <div id='volume-bar'></div>
+</body>
+</html>

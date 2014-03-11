@@ -1,0 +1,27 @@
+Creating a simple OS X App in Python (PyObjC, Cocoa, XIB)
+http://www.youtube.com/watch?v=N4Q8u7ajGuA
+uses Apple's py2applet tool thus:
+/System/Library/Frameworks/Python.framework/Versions/Current/Extras/bin/py2applet --make-setup Otto.py
+
+
+installing a local version of python for py2app to bundle up in an app:
+
+# https://gist.github.com/pithyless/1208841
+$ brew install --universal readline sqlite gdbm
+$ brew install python --universal --framework
+
+$ cd /usr/local
+$ virtualenv otto
+$ cd otto
+$ . activate
+
+$ brew install libtiff libjpeg webp littlecms
+#$ pip install yolk  # perhaps use pip list instead
+$ pip install Pillow
+$ pip install mutagen
+$ pip install chardet
+$ pip install pymongo
+x bson  # don't! pymongo does it, if you do it too it breaks??
+$ pip install pyobjc  # damn that takes a long, long time
+
+

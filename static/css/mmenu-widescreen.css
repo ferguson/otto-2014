@@ -1,0 +1,82 @@
+/*
+	CSS for having the menu always opened.
+	To use on widescreens only, include it using a mediaquery:
+	<link type="text/css" href="mmenu-widescreen.css" media="all and (min-width: 900px)"/>
+*/
+
+/* hide open-button */
+a[href="#menu"]
+{
+	display: none !important;
+}
+
+/* positioning and sizing */
+body
+{
+	position: relative;
+}
+.mmenu-page
+{
+	box-shadow: none !important;
+	background-color: inherit;
+	width: 70% !important;
+	min-height: 100%;
+	margin: 0 !important;
+	left: 30% !important;
+	top: 0 !important;
+	position: fixed;
+	z-index: 1;
+	overflow-y: auto;
+	
+	-webkit-overflow-scrolling: touch;
+
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+}
+.mmenu
+{
+	position: fixed;
+	z-index: 0;
+}
+.mmenu > ul
+{
+	padding-right: 0 !important;
+	padding-left: 0 !important;
+}
+.mmenu.mmenu-vertical
+{
+	width: 30% !important;
+}
+.mmenu.mmenu-horizontal
+{
+	width: 150% !important;
+}
+.mmenu.mmenu-right.mmenu-horizontal
+{
+	left: 0;
+	right: auto;
+}
+.mmenu a.mmenu-subopen
+{
+	right: 0;
+}
+.mmenu.mmenu-right a.mmenu-subclose:before
+{
+	left: 20px;
+}
+.mmenu em.mmenu-counter
+{
+	right: 40px;
+}
+.mmenu div.mmenu-search
+{
+	width: 20% !important;
+	padding: 10px !important;
+}
+
+.mmenu:first-child,
+.mmenu.mmenu-opened
+{
+	display: block;
+}

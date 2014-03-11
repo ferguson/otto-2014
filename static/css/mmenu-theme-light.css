@@ -1,0 +1,112 @@
+/*
+	Menu, submenus, items
+	- Styling (light background)
+*/
+.mmenu
+{
+	background: #f6f6f6;
+}
+.mmenu *
+{
+	text-shadow: none;
+}
+.mmenu li
+{
+	border-top: 1px solid rgba( 255, 255, 255, 0.7 );
+	border-bottom: 1px solid rgba( 0, 0, 0, 0.1 );
+}
+.mmenu li,
+.mmenu li > a,
+.mmenu li > a:hover,
+.mmenu li > span
+{
+	color: rgba( 0, 0, 0, 0.5 );
+	text-decoration: none;
+}
+.mmenu li.mmenu-selected > a,
+.mmenu li.mmenu-selected > span
+{
+	background: rgba( 255, 255, 255, 0.6 );
+}
+.mmenu li.mmenu-selected > a.mmenu-subopen
+{
+	background: transparent;
+}
+
+/* subopen/close */
+.mmenu a.mmenu-subopen
+{
+	border-left-color: rgba( 0, 0, 0, 0.1 );
+}
+.mmenu a.mmenu-subclose
+{
+	background: rgba( 255, 255, 255, 0.6 );
+}
+
+/* vertical submenu */
+.mmenu.mmenu-vertical li.mmenu-opened > a.mmenu-subopen,
+.mmenu.mmenu-vertical li.mmenu-opened > ul
+{
+	background: rgba( 0, 0, 0, 0.05 );
+}
+
+/* page + blocker */
+html.mmenu-opened .mmenu-page
+{
+	box-shadow: 0 0 10px rgba( 0, 0, 0, 0.6 );
+}
+
+
+/*
+	Labels
+	- Styling
+*/
+.mmenu li.mmenu-label
+{
+	background: rgba( 0, 0, 0, 0.05 );
+	color: rgba( 0, 0, 0, 0.4 );
+}
+
+
+/*
+	Counters
+	- Styling
+*/
+.mmenu em.mmenu-counter
+{
+	background: rgba( 0, 0, 0, 0.2 );
+	box-shadow: none;
+	color: rgba( 255, 255, 255, 0.8 );
+}
+
+
+/*
+	Arrows
+	- Styling
+*/
+.mmenu a.mmenu-subopen:after,
+.mmenu a.mmenu-subclose:before
+{
+	border-color: rgba( 0, 0, 0, 0.2 );
+}
+
+
+/*
+	Search
+	- Styling
+*/
+.mmenu div.mmenu-search
+{
+	background: rgba( 0, 0, 0, 0.2 );
+	border-bottom: 1px solid rgba( 0, 0, 0, 0.1 );
+}
+.mmenu div.mmenu-search input
+{
+	background: rgba( 255, 255, 255, 0.8 );
+	border: none;
+	color: rgba( 0, 0, 0, 0.7 );
+}
+.mmenu li.mmenu-noresults
+{
+	color: rgba( 0, 0, 0, 0.5 );
+}

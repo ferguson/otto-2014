@@ -1,0 +1,39 @@
+{
+  "name": "Otto",
+  "version": "0.0.1",
+  "description": "Otto Audio Jukebox. (or) The Social Jukebox. (or) The Networked Jukebox (or) Your Music, Everywhere. (or) Stop Listening Alone.",
+  "main": "index.html",
+  "node-main": "main.js",
+  "window": {
+    "title": "Otto",
+    "icon": "otto.png",
+    "width": 500,
+    "height": 250,
+    "show": false,
+    "toolbar": false,
+    "frame": false
+  },
+  "webkit": {
+    "page-cache": true,
+    "plugin": true
+  },
+  "dependencies": {
+    "coffee-script": "*",
+    "coffeecup": "*",
+    "mongodb": "*",
+    "connect-mongo": "*",
+    "zappajs": "*",
+    "zappajs-partials": "*",
+    "glob": "*",
+    "posix": "*",
+    "underscore": "*",
+    "zipstream": "*",
+    "JSONStream": "*",
+    "mdns": "*",
+    "jsonreq": "*"
+  },
+  "devDependencies": {
+    "event-stream": "3.0.10"
+  },
+  "engine": "node 0.8.14"
+}

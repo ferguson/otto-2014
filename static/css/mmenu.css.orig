@@ -1,0 +1,686 @@
+/*
+	Animations
+*/
+html.mmenu-opened .mmenu-page,
+html.mmenu-opened #mmenu-blocker,
+.mmenu.mmenu-horizontal ul
+{
+	-webkit-transition-duration: 0.5s;
+	-moz-transition-duration: 0.5s;
+	transition-duration: 0.5s;
+	
+	-webkit-transition-timing-function: ease;
+	-moz-transition-timing-function: ease;
+	transition-timing-function: ease;
+}
+html.mmenu-opened .mmenu-page,
+html.mmenu-opened #mmenu-blocker
+{
+	-webkit-transition-property: top, right, bottom, left, margin;
+	-moz-transition-property: top, right, bottom, left, margin;
+	transition-property: top, right, bottom, left, margin;
+}
+.mmenu.mmenu-horizontal ul
+{
+	-webkit-transition-property: margin-left;
+	-moz-transition-property: margin-left;
+	transition-property: margin-left;
+}
+html.mmenu-accelerated.mmenu-opening .mmenu-page,
+html.mmenu-accelerated.mmenu-opening #mmenu-blocker,
+html.mmenu-accelerated.mmenu-opening .mmenu.mmenu-horizontal ul
+{
+	-webkit-transform: translate3d(0,0,0);
+	-moz-transform: translate3d(0,0,0);
+	transform: translate3d(0,0,0);
+}
+
+/* top */
+html.mmenu-top.mmenu-opened .mmenu-page,
+html.mmenu-top.mmenu-opened #mmenu-blocker
+{
+	margin-top: 0px;
+	top: 0%;
+	left: 0;
+}
+html.mmenu-top.mmenu-opening .mmenu-page,
+html.mmenu-top.mmenu-opening #mmenu-blocker
+{
+	margin-top: -65px;
+	top: 100%;
+}
+
+/* right */
+html.mmenu-right.mmenu-opened .mmenu-page,
+html.mmenu-right.mmenu-opened #mmenu-blocker
+{
+	margin-right: 0px;
+	right: 0%;
+	top: 0;
+}
+html.mmenu-right.mmenu-opening .mmenu-page,
+html.mmenu-right.mmenu-opening #mmenu-blocker
+{
+	margin-right: -65px;
+	right: 100%;
+}
+
+/* bottom */
+html.mmenu-bottom.mmenu-opened .mmenu-page,
+html.mmenu-bottom.mmenu-opened #mmenu-blocker
+{
+	margin-bottom: 0px;
+	bottom: 0%;
+	left: 0;
+}
+html.mmenu-bottom.mmenu-opening .mmenu-page,
+html.mmenu-bottom.mmenu-opening #mmenu-blocker
+{
+	margin-bottom: -65px;
+	bottom: 100%;
+}
+
+/* left */
+html.mmenu-left.mmenu-opened .mmenu-page,
+html.mmenu-left.mmenu-opened #mmenu-blocker
+{
+	margin-left: 0px;
+	left: 0%;
+	top: 0;
+}
+html.mmenu-left.mmenu-opening .mmenu-page,
+html.mmenu-left.mmenu-opening #mmenu-blocker
+{
+	margin-left: -65px;
+	left: 100%;
+}
+
+
+/*
+	Menu, submenus, items
+	- Sizing and positioning
+*/
+html.mmenu-opened .mmenu-page,
+.mmenu.mmenu-horizontal ul,
+.mmenu div.mmenu-search,
+.mmenu div.mmenu-search input
+{
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+}
+
+/* html/body */
+html.mmenu-opened,
+html.mmenu-opened body
+{
+	height: 100%;
+	width: 100%;
+	overflow: hidden;
+}
+html.mmenu-opened body
+{
+	position: relative;
+}
+
+/* menu */
+.mmenu
+{
+	display: none;
+	width: 100%;
+	height: 100%;
+	position: absolute;
+	top: 0;
+	left: 0;
+	z-index: 0;
+	overflow: scroll;
+	overflow-x: hidden;
+	overflow-y: auto;
+	-webkit-overflow-scrolling: touch;
+}
+.mmenu:after {
+	content: '';
+	display: block;
+	clear: both;
+}
+.mmenu.mmenu-opened
+{
+	display: block;
+}
+.mmenu.mmenu-opened + .mmenu.mmenu-opened,
+.mmenu.mmenu-opened ~ .mmenu.mmenu-opened
+{
+	display: none;
+}
+
+/* ul/li */
+.mmenu ul,
+.mmenu li
+{
+	list-style: none;
+}
+.mmenu li
+{
+	position: relative;
+}
+.mmenu ul,
+.mmenu li,
+.mmenu li > a,
+.mmenu li > span
+{
+	display: block;
+	padding: 0;
+	margin: 0;
+}
+.mmenu > ul
+{
+	background-color: inherit;
+	padding: 10px 0 40px 0;
+}
+.mmenu.mmenu-top > ul
+{
+	padding-bottom: 85px;
+}
+.mmenu.mmenu-right > ul
+{
+	padding-left: 65px;
+}
+.mmenu.mmenu-bottom > ul
+{
+	padding-top: 75px;
+}
+.mmenu.mmenu-left > ul
+{
+	padding-right: 65px;
+}
+
+/* items */
+.mmenu li > a,
+.mmenu li > span
+{
+	text-indent: 20px;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	line-height: 40px;
+	overflow: hidden;
+	padding-right: 5px;
+}
+
+/* subopen/close */
+.mmenu a.mmenu-subopen
+{
+	border-left-width: 1px;
+	border-left-style: solid;
+	width: 40px;
+	height: 40px;
+	padding: 0;
+	position: absolute;
+	right: 0;
+	top: 0;
+	z-index: 2;
+}
+.mmenu a.mmenu-subopen.mmenu-fullsubopen
+{
+	border-left: none;
+	width: 100%;
+}
+.mmenu a.mmenu-subclose
+{
+	background: rgba( 0, 0, 0, 0.2 );
+	text-indent: 40px;
+	padding-top: 10px;
+	margin-top: -10px;
+}
+.mmenu a.mmenu-subopen + a,
+.mmenu a.mmenu-subopen + span
+{
+	padding-right: 45px;
+}
+
+/* page + blocker */
+html.mmenu-opened .mmenu-page
+{
+	background: inherit;
+	height: 100%;
+	overflow: hidden;
+	position: absolute;
+}
+#mmenu-blocker
+{
+	background: black;
+	opacity: 0.3;
+	display: none;
+	width: 100%;
+	height: 100%;
+	position: absolute;
+	z-index: 9999;
+}
+html.mmenu-opened #mmenu-blocker,
+html.mmenu-blocking #mmenu-blocker
+{
+	display: block;
+}
+
+/* vertical submenu */
+.mmenu.mmenu-vertical ul ul
+{
+	display: none;
+	padding: 10px 0 10px 10px;
+}
+.mmenu.mmenu-vertical li.mmenu-opened > ul
+{
+	display: block;
+}
+.mmenu.mmenu-vertical ul ul li:last-child
+{
+	border-bottom-width: 0;
+}
+.mmenu.mmenu-vertical li.mmenu-opened.mmenu-selected > a.mmenu-subopen + a,
+.mmenu.mmenu-vertical li.mmenu-opened.mmenu-selected > a.mmenu-subopen + span
+{
+	padding-right: 5px;
+	margin-right: 40px;
+}
+.mmenu.mmenu-vertical li.mmenu-opened.mmenu-selected > em.mmenu-counter + a.mmenu-subopen + a,
+.mmenu.mmenu-vertical li.mmenu-opened.mmenu-selected > em.mmenu-counter + a.mmenu-subopen + span
+{
+	margin-right: 75px;
+}
+
+/* horizontal submenu */
+.mmenu.mmenu-horizontal
+{
+	width: 500%;
+}
+.mmenu.mmenu-horizontal ul
+{
+	width: 20%;
+	margin-left: 0%;
+	float: left;
+}
+.mmenu.mmenu-horizontal ul.mmenu-submenu
+{
+	display: none;
+}
+.mmenu.mmenu-horizontal ul.mmenu-submenu.mmenu-opened
+{
+	display: block;
+}
+.mmenu.mmenu-horizontal ul.mmenu-subopening
+{
+	margin-left: -20%;
+	height: 100%;
+	overflow: hidden;
+}
+
+
+/*
+	Menu, submenus, items
+	- Styling (default: dark background)
+*/
+.mmenu
+{
+	background: #333;
+}
+.mmenu,
+.mmenu *
+{
+	-webkit-text-size-adjust: none;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 14px;
+}
+.mmenu *
+{
+	text-shadow: 0 1px 1px rgba( 0, 0, 0, 0.4 );
+}
+.mmenu li
+{
+/*
+	border-top: 1px solid rgba( 255, 255, 255, 0.1 );
+	border-bottom: 1px solid rgba( 0, 0, 0, 0.3 );
+*/
+   border-bottom: 2px solid black;
+}
+.mmenu li:first-child
+{
+	border-top-width: 0;
+}
+.mmenu li,
+.mmenu li > a,
+.mmenu li > a:hover,
+.mmenu li > span
+{
+	/*color: rgba( 255, 255, 255, 0.6 );*/
+        color: #6C6C6C;
+        font-size: 20px;
+	text-decoration: none;
+}
+.mmenu li > span:hover {
+        color: #999;
+}
+
+.mmenu li.mmenu-selected > a,
+.mmenu li.mmenu-selected > span
+{
+	background: rgba( 0, 0, 0, 0.2 );
+}
+.mmenu li.mmenu-selected > a.mmenu-subopen
+{
+	background: transparent;
+}
+
+/* subopen/close */
+.mmenu a.mmenu-subopen
+{
+	border-left-color: rgba( 0, 0, 0, 0.3 );
+}
+.mmenu a.mmenu-subclose
+{
+	background: rgba( 0, 0, 0, 0.2 );
+}
+
+/* vertical submenu */
+.mmenu.mmenu-vertical li.mmenu-opened > a.mmenu-subopen,
+.mmenu.mmenu-vertical li.mmenu-opened > ul
+{
+	background: rgba( 255, 255, 255, 0.05 );
+}
+
+/* page + blocker */
+html.mmenu-opened .mmenu-page
+{
+	box-shadow: 0 0 20px rgba( 0, 0, 0, 0.8 );
+}
+
+
+/*
+	Labels
+	- Sizing and positioning
+*/
+.mmenu li.mmenu-label
+{
+	text-transform: uppercase;
+	text-indent: 20px;
+	line-height: 20px;
+}
+
+
+/*
+	Labels
+	- Styling
+*/
+.mmenu li.mmenu-label
+{
+	background: rgba( 255, 255, 255, 0.1 );
+	font-size: 11px;
+	color: rgba( 255, 255, 255, 0.5 );
+}
+
+
+/*
+	Counters
+	- Sizing and positioning
+*/
+.mmenu em.mmenu-counter
+{
+	text-indent: 0;
+	text-align: center;
+	text-shadow: none;
+	line-height: 20px;
+	display: block;
+	min-width: 20px;
+	height: 20px;
+	padding: 0;
+	position: absolute;
+	right: 40px;
+	top: 10px;
+}
+.mmenu em.mmenu-counter + a.mmenu-subopen
+{
+	padding-left: 35px;
+}
+.mmenu em.mmenu-counter + a.mmenu-subopen + a,
+.mmenu em.mmenu-counter + a.mmenu-subopen + span
+{
+	padding-right: 80px;
+}
+.mmenu em.mmenu-counter + a.mmenu-fullsubopen + a,
+.mmenu em.mmenu-counter + a.mmenu-fullsubopen + span
+{
+	padding-right: 70px;
+}
+
+
+/*
+	Counters
+	- Styling
+*/
+.mmenu em.mmenu-counter
+{
+	border-radius: 5px;
+	background: rgba( 255, 255, 255, 0.1 );
+	box-shadow: 0 0 2px rgba( 0, 0, 0, 0.3 );
+	font-size: 11px;
+	font-weight: bold;
+	font-style: normal;
+	color: rgba( 255, 255, 255, 0.4 );
+}
+
+
+/*
+	Arrows
+	- Sizing and positioning
+*/
+.mmenu a.mmenu-subopen:after,
+.mmenu a.mmenu-subclose:before
+{
+	content: '';
+	border-width: 4px;
+	border-style: solid;
+	display: block;
+	width: 6px;
+	height: 6px;
+	position: absolute;
+
+	-webkit-transform: rotate( -45deg );
+	transform: rotate( -45deg );
+}
+.mmenu a.mmenu-subopen:after
+{
+	border-top: none;
+	border-left: none;
+	right: 16px;
+	top: 16px;
+}
+.mmenu a.mmenu-subclose:before
+{
+	border-right: none;
+	border-bottom: none;
+	left: 20px;
+	top: 25px;
+}
+.mmenu.mmenu-vertical li.mmenu-opened > a.mmenu-subopen:after
+{
+	-webkit-transform: rotate( 45deg );
+	transform: rotate( 45deg );
+}
+
+
+/*
+	Arrows
+	- Styling
+*/
+.mmenu a.mmenu-subopen:after,
+.mmenu a.mmenu-subclose:before
+{
+	border-color: rgba( 255, 255, 255, 0.3 );
+}
+
+
+/*
+	Search
+	- Sizing and positioning
+*/
+.mmenu div.mmenu-search
+{
+	width: 20%;
+	height: 50px;
+	padding: 10px;
+	position: absolute;
+	top: 0;
+	z-index: 1;
+}
+.mmenu.mmenu-vertical div.mmenu-search
+{
+	width: 100%;
+}
+.mmenu.mmenu-right div.mmenu-search
+{
+	padding-left: 75px;
+}
+.mmenu.mmenu-bottom div.mmenu-search
+{
+	top: 65px;
+}
+.mmenu.mmenu-left div.mmenu-search
+{
+	padding-right: 75px;
+}
+.mmenu div.mmenu-search input
+{
+	border: none;
+	border-radius: 15px;
+	line-height: 30px;
+	outline: none;
+	display: block;
+	width: 100%;
+	height: 30px;
+	margin: 0;
+	padding: 0 0 0 10px;
+}
+.mmenu li.mmenu-noresults
+{
+	border: none;
+	display: none;
+	padding-top: 30px;
+}
+.mmenu.mmenu-noresults li.mmenu-noresults
+{
+	display: block;
+}
+.mmenu div.mmenu-search ~ ul
+{
+	margin-top: 50px;
+}
+
+.mmenu .mmenu-noresult,
+.mmenu .mmenu-nosubresult > a.mmenu-subopen,
+.mmenu .mmenu-nosubresult > em.mmenu-counter
+{
+	display: none;
+}
+.mmenu .mmenu-nosubresult > a.mmenu-subopen + a, 
+.mmenu .mmenu-nosubresult > a.mmenu-subopen + span
+{
+	padding-right: 5px;
+}
+
+
+/*
+	Search
+	- Styling
+*/
+.mmenu div.mmenu-search
+{
+	background: rgba( 0, 0, 0, 0.2 );
+	border-bottom: 1px solid rgba( 255, 255, 255, 0.1 );
+}
+.mmenu div.mmenu-search input
+{
+	background: rgba( 255, 255, 255, 0.3 );
+	color: rgba( 255, 255, 255, 0.9 );
+}
+.mmenu li.mmenu-noresults
+{
+	color: rgba( 255, 255, 255, 0.4 );
+	text-align: center;
+}
+
+
+/*
+	Bugfix for browsers without support for overflowscrolling
+		- Android < 3
+*/
+html.mmenu-no-overflowscrolling.mmenu-opened,
+html.mmenu-no-overflowscrolling.mmenu-opened body
+{
+	overflow: visible;
+}
+html.mmenu-no-overflowscrolling.mmenu-opened body
+{
+	overflow-x: hidden;
+}
+html.mmenu-no-overflowscrolling.mmenu-opened .mmenu-page
+{
+	min-height: 200%;
+	position: fixed;
+	top: 0;
+	z-index: 3;
+}
+html.mmenu-no-overflowscrolling .mmenu
+{
+	height: auto;
+	min-height: 100%;
+	overflow: default;
+	overflow-x: default;
+	overflow-y: default;
+	position: relative;
+	left: auto;
+	top: auto;
+}
+html.mmenu-no-overflowscrolling.mmenu-right .mmenu
+{
+	position: absolute;
+}
+
+
+/*
+	Sizing and positioning for larger screens
+*/
+@media all and (min-width: 400px) {
+
+	.mmenu.mmenu-left.mmenu-vertical,
+	.mmenu.mmenu-right.mmenu-vertical,
+	.mmenu.mmenu-left div.mmenu-search,
+	.mmenu.mmenu-right div.mmenu-search
+	{
+		width: 400px;
+	}
+	.mmenu.mmenu-right.mmenu-vertical
+	{
+		left: auto;
+		right: 0;
+	}
+
+	.mmenu.mmenu-left.mmenu-horizontal,
+	.mmenu.mmenu-right.mmenu-horizontal
+	{
+		width: 2500px;
+	}
+	.mmenu.mmenu-right.mmenu-horizontal
+	{
+		left: auto;
+		right: -2000px;
+	}
+
+	html.mmenu-left.mmenu-opening .mmenu-page,
+	html.mmenu-left.mmenu-opening #mmenu-blocker
+	{
+		left: 400px;
+	}
+	html.mmenu-right.mmenu-opening .mmenu-page,
+	html.mmenu-right.mmenu-opening #mmenu-blocker
+	{
+		right: 400px;
+	}
+}

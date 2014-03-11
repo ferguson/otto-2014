@@ -1,0 +1,18 @@
+body {
+  background: url('/static/images/grid_tile.png');
+  color: white;
+}
+
+#tt {
+  font-size: 140px;
+  font-weight: 700;
+  font-family: verdana, helvetica, arial, sans-serif;
+  color: white;
+  position: relative;
+  top: 500;
+  left: 70;
+  display: block;
+  transform: scale(1.33) !important;
+  -webkit-transform: skew(63deg,-26.5deg) !important;
+  -webkit-transform-origin: -0% -0%;
+}

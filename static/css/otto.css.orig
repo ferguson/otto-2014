@@ -1,0 +1,237 @@
+BODY, TD {
+	font-size: 10px;
+	font-family: arial, helvetica, sans-serif;
+	color: gray;
+//	background: black;
+	}
+
+A, A:visited {
+	color: white;
+	text-decoration: none}
+
+A:active {
+	color: #6060FF}
+
+A:hover {
+	text-decoration: underline}
+
+.banner, .label {
+	color: gray;
+	font-size: 10px}
+
+.labellarge {
+	color: gray;
+	font-weight: bold;
+	font-size: 16px}
+
+.queue1st {
+	font-size: 16px;
+	font-weight: bold;
+	color: gray}
+
+.queue, .queue-artist, .queue-album {
+	color: gray}
+
+.queue-owner {
+	color: gray;
+	font-size: 10px}
+
+.queue-song, .queue-user {
+	color: white}
+
+.channel, .channel-url {
+	color: gray}
+
+.listeners {
+	color: gray}
+
+.listeners-num {
+	color: white}
+
+.listeners-when {
+	color: gray;
+	text-align: right}
+
+.listeners-key {
+	color: white}
+
+.listenerlog {
+	color: gray}
+
+.listenerlog-when {
+	color: gray;
+	text-align: right}
+
+.listenerlog-key {
+	color: white}
+
+.newest, .newest-artist {
+	color: gray}
+
+.newest-when {
+	color: gray;
+	text-align: right}
+
+.newest-key { }
+
+.navbox {
+	color: gray;
+	background: gray}
+
+.navbox-url {
+	font-size: 16px;
+	font-weight: bold;
+	color: white;
+	background: gray}
+
+.info {
+	color: gray}
+
+.info-none {
+	font-style: italic;
+	color: gray;
+	text-align: center}
+
+.info-label {
+	color: gray;
+	text-align: right;
+	white-space: nowrap}
+
+.info-key {
+	color: white}
+/*      white-space: pre}   -this didn't do what i wanted (allow double spaces) */
+
+.lists {
+	color: gray}
+
+.lists-none {
+	font-style: italic;
+	color: gray;
+	text-align: center}
+
+.lists-num {
+	color: gray;
+	text-align: right}
+
+.lists-album, .lists-artist, .addlist-label {
+	color: gray}
+
+/*this doesn't seem to work, it doesn't do the same thing as BORDERCOLOR= in ie6*/
+.listnamebox {
+	border: 1px solid gray;
+	border-color: gray}
+
+.blank {
+	font-style: italic}
+
+.none {
+	color: gray;
+	font-style: italic}
+
+.picking {
+	color: gray;
+	font-style: italic}
+
+.pickinglarge {
+	color: gray;
+	font-style: italic;
+	font-weight: bold;
+	font-size: 16px}
+
+.song, .a.song {
+	color: gray}
+
+.song-key { }
+
+.fileunder {
+	color: gray}
+
+.fileunder-label {
+	font-size: 16px;
+	font-weight: bold;
+	color: gray;
+	text-align: center}
+
+.fileunder-none {
+	font-style: italic;
+	color: gray;
+	text-align: center}
+
+.fileunderalbums-none {
+	font-style: italic;
+	color: gray;
+	text-align: left}
+
+.fileunder-num {
+	color: gray;
+	text-align: right}
+
+.searchsongs, .searchsongs-album, .searchsongs-artist {
+	color: gray}
+
+.searchsongs-label {
+	color: gray;
+	font-weight: bold;
+	font-size: 16px}
+
+.searchsongs-none {
+	font-style: italic;
+	color: gray;
+	text-align: center}
+
+.searcha {
+	color: gray}
+
+.searcha-label {
+	color: gray;
+	font-weight: bold;
+	font-size: 16px}
+
+.searcha-none {
+	font-style: italic;
+	color: gray;
+	text-align: center}
+
+.artist-label {
+	color: gray}
+
+.artist-labellarge {
+	font-weight: bold;
+	font-size: 16px}
+
+.artist-index {
+	color: white}
+
+.album-odd {
+	color: gray;
+	background: #222222}
+
+.album-even {
+	color: gray;
+	background: #111111}
+
+.album-label {
+	color: gray}
+
+.album-labellarge {
+	color: gray;
+	font-weight: bold;
+	font-size: 16px}
+
+.message {
+	color: gray;
+	font-weight: bold;
+	font-size: 16px;
+	background: #222222}
+
+.message-error {
+	color: red;
+	font-weight: bold;
+	font-size: 16px;
+	background: #222222}
+
+.actionmessage {
+	color: gray}
+
+.version, .version-url {
+	color: gray}

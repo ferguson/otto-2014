@@ -1,0 +1,75 @@
+:bugs:
+leaving stream too sensitive, esp. in channelbar display
+timeout 'typing' in chat window after a sufficent period
+fix zipfile to unpack correctly on mac (don't use the non-compressed setting)
+chat window doesn't always autoscroll
+font size off in firefox esp. for chat prompt
+chat captures browser meta keys on some browsers
+hover in now playing should do both filename and lables at the same time
+does time format still have bugs?
+what do to about clicking on now playing test
+panel resizing has bugs
+image resizing/caching is way too slow
+stuff not loading in to various, soundtracks, and unknown correctly
+rounding bug between song.length and what mpd reports as total time
+sound effects seems to be stepping on each other, e.g. chat message alert
+log scale on volume slider
+make channelbar hover items disappear after a while (so we have a place to park the cursor on the tv)
+
+
+:short/missing features:
+save events and chat
+save queue
+scrollback in chat/event window
+better imageless album text (autosize, v space between title & artist)
+directory browser
+move db code out of dbserver.py in to coffeescript
+toggle for browsing various
+give various only entries a different look (smaller?)
+need more controls
+.auto pause
+.crossfade
+.auto levels
+.fx only from other people
+automatically supress crossfade when two tracks are sequential in an album
+more info in album view including directory
+play album
+scrolling content cues
+action pending cues, esp. on or over the buttons themselves
+create browsing content in chunks for speed
+animate eyes in otto logo
+drag & drop to manipulate queue order
+click on stuff in queue and in search results for songs
+browser should remember settings (chat window, playing? auto-playing?, sound effects, vol) cookie? local storage?
+
+
+:ui issues:
+panel resizing needs a better mechanism and an affordance
+fix upper panels in place?
+checkbox for now playing background color (or better ui element. switch?)
+guide / faq / instructions / help
+theme song
+eyes in logo
+
+:non-trivial issues:
+can't play songs with " in filename
+what do do with wav files
+windows
+
+:new features:
+filters for browsing and channels
+better album arrangement (non-varous first, sorted by date then title)
+better lists, favorites, ratings (stars?), tagging, problem tracks
+checkbox for artists
+think social
+"the social crowdsourced jukebox"
+search hints and completion
+chat "/" commands
+ipad layout
+iphone layout
+standalone app w/menu bar icon for osx (ref. couchdb app)
+integrate loader w/active feedback
+rsync app
+fullscreen mode
+detect and collapse duplicates
+edits and corrections

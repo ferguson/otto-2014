@@ -1,0 +1,12 @@
+Loading:
+
+Find all new files and all missing files:
+
+1) scan directory and make a list of all filenames (and directories)
+2) load list of all filenames from database
+3) compare lists and find all new files
+4) compare lists and find and report all missing files
+
+For each new file/directory:
+
+1) Convert filename to unicode, skip it and report if it can't be converted to unicode

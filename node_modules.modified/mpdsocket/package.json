@@ -1,0 +1,15 @@
+{
+  "name": "mpdsocket",
+  "description": "MPD client library for Node.js",
+  "version": "0.1.0",
+  "homepage": "http://www.github.com/ewenig/node-mpdsocket",
+  "repository": "git://github.com/ewenig/node-mpdsocket.git",
+  "author": "Eli Wenig <eli@csh.rit.edu> (http://www.eliwenig.com/)",
+  "main": "mpdsocket",
+  "directories": {
+    "lib": "."
+  },
+  "engines": {
+    "node": "*"
+  }
+}

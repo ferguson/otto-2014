@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+<head>
+  <script src='/zappa/jquery.js' /></script>
+  <script src='/static/js/jquery-ui-1.10.3.custom.min.js' /></script>
+  <link rel='stylesheet' href='/static/css/jquery-ui-1.10.3.custom.css'>
+  <style>
+    #content {
+      height: 400px;
+      width: 400px;
+      background-color: #6C6C6C;
+    }
+    #volumebar {
+      height: 100px;
+      width: 100px;
+      background-color: #888;
+    }
+  </style>
+</head>
+<body bgcolor=gray>
+<div id='content'>
+  <div id='volumebar'></div>
+</div>
+<script>
+  $('#volumebar').slider();
+</script>
+</body>
