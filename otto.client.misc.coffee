@@ -15,9 +15,11 @@ global.otto.client.misc = ->
       console.log "loading module #{modulename}"
       $.getScript "/otto.client.#{modulename}.js", ->
         console.log "module #{modulename} loaded"
-        callback()
+        if callback
+          callback()
     else
-      callback()
+      if callback
+        callback()
 
   otto.call_module = (modulename, methodname, args...) ->
     otto.load_module modulename, ->
@@ -48,51 +50,48 @@ global.otto.client.misc = ->
     this.animate scrollTop: this.prop('scrollHeight') - this.height(), 100
 
 
-  otto.adjust_autosize = ->
-    #console.log 'adjust_autosize'
-    #$element = $( $('.autosize').filter(':first') )
-    $('.autosize').each (index, element) ->
-      $element = $ element
-      size = 34
-      #console.log $element
-      #desired_width = $element.width()
-      desired_width = $(window).width() - $element.parent().offset().left
-      desired_width -= 10  # give a little bit of margin
+  otto.autosize_clear_cache = -> otto.$autosize_elements_cache = false
+  otto.autosize_clear_cache()
 
-      $resizer = $element.clone(true, true)
+  otto.autosize_adjust = ->
+    console.log 'autosize_adjust'
+    if !otto.$autosize_elements_cache
+      otto.$autosize_elements_cache = $('.autosize')
+    otto.$autosize_elements_cache.each (index, element) ->
+      $element = $ element
+      maxFontSize = $element.data('autosize-max') || $element.height()-4
+      minFontSize = $element.data('autosize-min') || Math.round($element.height/2)-4
+      rightMargin = $element.data('autosize-right-margin') || 0
+
+      fontSize = maxFontSize
+
+      #while size > minFontSize and element.scrollWidth > element.offsetWidth
+      #  $element.css 'font-size': "#{fontSize}px"
+
+      desiredWidth = $element.parent().width()
+
+      $resizer = $element.clone()
       $resizer.css
-        #'max-width': desired_width
         'display': 'inline'
         'white-space': 'nowrap'
         'width': 'auto'
-        'font-size': "#{size}px"
-      $resizer.insertAfter("#playlist")
+        'font-size': "#{fontSize}px"
+      $resizer.insertAfter($element)
 
-      #console.log "desired_width #{desired_width}, width #{$resizer.width()}, size #{size}"
-      gaveup = false;
-      while $resizer.width() > desired_width
-        size = size - 1
-        if size <= 19
-          gaveup = true
-          break
-        #console.log "desired_width #{desired_width}, width #{$resizer.width()}, size #{size}"
-        $resizer.css
-          'font-size':  "#{size}px"
+      while fontSize > minFontSize and $resizer.width() > desiredWidth
+        fontSize = fontSize - 1
+        $resizer.css 'font-size': "#{fontSize}px"
 
-      # adjust the padding so the text stays at the botton of the div as it shrinks
-      if gaveup
-        height_adjust = 0
-      else
-        height_adjust = $element.height() - $resizer.height()
-      #console.log 'height_adjust', height_adjust
+      # adjust the top so the text stays centered in the div
+      heightAdjust = 0
+      if fontSize > minFontSize
+        heightAdjust = (maxFontSize - fontSize) / 2
+
       $resizer.remove()
 
       $element.css
-        'font-size': "#{size}px"
-      $element.css
-        'padding-top': "#{height_adjust}px"
-      $element.width(desired_width)
-      #$('currenttrack-container').css 'max-width': "300px"
+        'font-size': "#{fontSize}px"
+        'top': "#{heightAdjust}px"
 
 
   otto.format_time = (seconds, minlen=4) ->
@@ -135,7 +134,7 @@ global.otto.client.misc = ->
           clearTimeout timeout
         else if execAsap
           func.apply(obj, args)
-        timeout = setTimeout(delayed, threshold || 100)
+        timeout = setTimeout(delayed, threshold || 50)
       return debounced
     # smartresize
     $.fn[sr] = (fn) ->

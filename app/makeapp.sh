@@ -9,9 +9,15 @@ fi
 
 cd $ROOT/app || exit
 
-rm -rf $ROOT/app/{build,dist}
+APPNAME="Otto.app"
+APP=dist/$APPNAME
+RES=$APP/Contents/Resources
 
-#export PATH=/usr/bin:/bin:/usr/sbin:/sbin
+if [ -e $APP ]; then
+  rm -rf $APP
+fi
+
+export PATH=$ROOT/bin:/usr/bin:/bin:/usr/sbin:/sbin
 #unset LD_LIBRARY_PATH
 #unset DYLD_FALLBACK_LIBRARY_PATH
 #unset MANPATH
@@ -20,14 +26,20 @@ rm -rf $ROOT/app/{build,dist}
 #arch -32 python setup.py py2app $*
 #arch -32 python2.7 setup.py py2app --iconfile ../static/images/ottoicon.icns
 python setup.py py2app $*
-
-
-RES=dist/Otto.app/Contents/Resources
+rm -rf *.egg
 
 if [ ! -d $RES ]; then
   echo "failed"
   exit
 fi
+
+# testing using a shell script to start up
+#echo 'installing experimental shell script'
+#mv $RES/../MacOS/Otto{,.python}
+#cp -p Otto.sh $RES/../MacOS/Otto
+#cp -p Otto.py $RES/
+# bzzz. import objc failed. need to copy all the python stuff that py2app is doing for us
+
 
 cd $RES || exit
 echo 'installing mpd'
@@ -47,7 +59,15 @@ rsync -a $ROOT/lib/{node,node_modules,dtrace} $RES/lib/
 
 rsync -a $ROOT/node_modules $RES/
 
-scp -p /usr/local/lib/libtiff* $RES/lib
+scp -p /usr/local/lib/libtiff* $RES/lib   # i wonder... is this needed? maybe py2app takes care of it?
+# ha! it seems this was not needed and in fact was causing my /usr/local/lib embedded path problem that
+# i wrote fixlibpaths.sh to fix
+# wait, yes i *do* need to copy this. sigh.
+# fix it's embedded /usr/local/lib...
+echo "fixing libtiff's libjpegsearch path..."
+for f in $RES/lib/libtoff*.dylib; do
+    install_name_tool -change /usr/local/lib/libjpeg.8.dylib @executable_path/libjpeg.8.dylib $f
+done
 
 cp -p $ROOT/bin/{activate*,bsondump,chardetect,mongo*,mutagen*,ncmpc,mpc,node,node-waf} $RES/bin
 
@@ -63,12 +83,55 @@ ln -s python $RES/bin/python2
 ln -s python $RES/bin/python2.7
 cp -p $ROOT/.Python $RES
 
+#rsynclist='.git LICENSE NOTES README.md TODO activate dev.sh loader.py otto* package.json reset.sh slosh go.sh static'
+rsynclist='LICENSE NOTES README.md TODO activate dev.sh loader.py otto* package.json reset.sh slosh go.sh static'
+if [ "$1" = "-A" ]; then
+    echo "-A mode, only linking files"
+    for f in $rsynclist; do
+        echo "linking $f"
+        ln -s $ROOT/$f $RES/
+        # extra stuff py2app doesn't do in -A mode
+        ln -s $ROOT/lib/python2.7/lib-dynload $RES/lib/python2.7/
+    done
+else
+    for f in $rsynclist; do
+        echo "rsyncing $f"
+        rsync -a $ROOT/$f $RES/
+    done
 
-#for f in .git LICENSE NOTES README.md TODO activate dev.sh loader.py otto* package.json reset.sh slosh start.sh static; do
-for f in LICENSE NOTES README.md TODO activate dev.sh loader.py otto* package.json reset.sh slosh start.sh static; do
-    echo "rsyncing $f"
-    rsync -a $ROOT/$f $RES/
-done
+    #echo "fixing embedded dynamic library paths..."
+    #if ./fixlibpaths.sh $RES/lib; then
+    #	echo -n ""
+    #else
+    #	echo "error! exiting $0"
+    #	exit 1
+    #fi
+fi
+
+cp -p $RES/static/images/ottosplash.png $RES/
+
+find $RES -name "*~" | xargs rm
+find $RES -name "#*#" | xargs rm
+find $RES -name ".DS_Store" | xargs rm
+
+./licensegrabber.py $ROOT $RES/THIRD-PARTY-NOTICES || exit
+
+#chown -R jon:wheel $APP  # operation not permitted
+chown -R jon:staff $APP
+chmod -R go-w $APP
+
+echo "signing $APPNAME"
+# note: http://stackoverflow.com/questions/20205162/user-interaction-is-not-allowed-trying-to-sign-an-osx-app-using-codesign
+# also just run it on a terminal directly on the build machine with remote desktop
+codesign --force --sign "Developer ID Application: Jon Ferguson (YY4HK3844N)" $APP
+spctl -a -v $APP
+
+echo "checking signature (should say 'satisfies its Designated Requirement')..."
+codesign -vv $APP
+
+echo "size:" `du -sh $APP`
+
+echo "did you edit versions and dates in Info.plist and static/html/about.html?"
 
 echo "done"
 

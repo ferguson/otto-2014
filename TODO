@@ -1,29 +1,70 @@
 :bugs:
-leaving stream too sensitive, esp. in channelbar display
+v letterbar not being clipped on narrow browser window
+v chat output div slightly too wide, long lines make it sideways scrollable
+channel list should not be completely rebuilt just by listener changes
+inbox on letterbar has extra gap
+better formatting of search results
+v changing channels is not quite working
+v server crashes sometimes when clients reconnect after server restarts (setting focus state etc?)
+v app: about box crashes (until assets are cached?)
+v app: media keys lockup app on 10.7 (just don't do media keys on 10.7?)
+v app: need to get and pass session cookie on Otto.py socket.io connection
+app: use output (lineout) status to trigger "listening" on listener list
+v? leaving stream too sensitive, esp. in channelbar display
 timeout 'typing' in chat window after a sufficent period
-fix zipfile to unpack correctly on mac (don't use the non-compressed setting)
-chat window doesn't always autoscroll
-font size off in firefox esp. for chat prompt
-chat captures browser meta keys on some browsers
-hover in now playing should do both filename and lables at the same time
-does time format still have bugs?
+v fix zipfile to unpack correctly on mac (don't use the non-compressed setting)
+chat window doesn't always autoscroll (might be because of smooth scrolling)
+x font size off in firefox esp. for chat prompt (not font size i don't think, div off by 1px up?)
+chat captures browser meta keys on some browsers and app (e.g. cmd-q)
 what do to about clicking on now playing test
-panel resizing has bugs
 image resizing/caching is way too slow
-stuff not loading in to various, soundtracks, and unknown correctly
-rounding bug between song.length and what mpd reports as total time
+stuff not loading into various, soundtracks, and unknown correctly
+v rounding bug between song.length and what mpd reports as total time (round up instead of down perhaps?)
 sound effects seems to be stepping on each other, e.g. chat message alert
 log scale on volume slider
-make channelbar hover items disappear after a while (so we have a place to park the cursor on the tv)
+v make channelbar hover items disappear after a while (so we have a place to park the cursor on the tv)
+don't random pick 'audiobook' or 'podcast' labeled items
+audio channel options tray should default open for current channel
+audio channel options tray needs a different icon (i in circil? gear?)
+clicking on channel should switch to listening to it in local (lineout) mode
+need 'crossfade' subpression option/checkbox for channels
+seeking is scaled wrong in TV mode (it's 'doubled') stars too
+bug when listener changes name (extranious 'unknown' listener stays listed until refresh)
+v /nick in chat should change username
+.eventually need to seperate chat nick name from username so people can have a choice
+grid background messes up on scroll (only in app and only on initial load page!)
+stars layout problems in a number of places (expand album view, search results, more...)
+search results has major layout problems
+for songs missing an image, use first image found in album
+remember size setting (cookie? or local storage?)
+is unknown filed in ...? should it be (i can't remember if i did this on purpose)
+app seems to have css problems on the second initial load page
+don't put a black background behind album images (see shaped picture disc example on will's otto)
+clear emptydatabase flag earlier in load process (so you can point a browser at it while it's still doing the initial load)?
+odd big gap between owner and file in queue
+just use orig sized image instead of 600x600 (and don't generate and store 600x600 images)
+make TV mode one of the -/+ sizes
+logging out leaves things active on letter bar (and there are prob. other things that need to be reset too)
+clicking on album name or artist name in now play renders .browserresults w/o "otto" logo footer
+make "otto" footer only appear when there are .browserresults (and maybe only when they require scrolling down?)
+perhaps clicking on 'otto' logo at bottom should shoot to to the top of page?
+add "x" to search box to dismiss search results
+queue updates need to be split between now playing and queue changes to prevent blinking
+click on landscape doesn't reset cubes
 
 
 :short/missing features:
 save events and chat
++3 random
+play album
+album shuffle
+save load times
+use load time to denote load sessions
 save queue
 scrollback in chat/event window
 better imageless album text (autosize, v space between title & artist)
 directory browser
-move db code out of dbserver.py in to coffeescript
+x move db code out of dbserver.py in to coffeescript
 toggle for browsing various
 give various only entries a different look (smaller?)
 need more controls
@@ -33,43 +74,52 @@ need more controls
 .fx only from other people
 automatically supress crossfade when two tracks are sequential in an album
 more info in album view including directory
-play album
-scrolling content cues
-action pending cues, esp. on or over the buttons themselves
+x scrolling content cues
+action pending cues on or over the buttons themselves
 create browsing content in chunks for speed
 animate eyes in otto logo
 drag & drop to manipulate queue order
 click on stuff in queue and in search results for songs
 browser should remember settings (chat window, playing? auto-playing?, sound effects, vol) cookie? local storage?
+edit menu missing
+.cmd-a in text fields
+.cmd-f for find
+press key to go to albums sescrion starting with that letter?
+add 'scan' to newest albums screen
+command to call someone into chat room?
+annount chat entry and leavings in notifications/sfx?
 
 
 :ui issues:
-panel resizing needs a better mechanism and an affordance
-fix upper panels in place?
-checkbox for now playing background color (or better ui element. switch?)
+v panel resizing needs a better mechanism and an affordance
+fix upper panels in place? click on otto to scroll to top?
+? checkbox for now playing background color (or better ui element. switch?)
 guide / faq / instructions / help
 theme song
-eyes in logo
+song changes too late due to crossfade, anticipate crossfade (when enabled) and change before mpd reports it
+
 
 :non-trivial issues:
 can't play songs with " in filename
 what do do with wav files
 windows
 
+
 :new features:
 filters for browsing and channels
 better album arrangement (non-varous first, sorted by date then title)
 better lists, favorites, ratings (stars?), tagging, problem tracks
 checkbox for artists
-think social
 "the social crowdsourced jukebox"
 search hints and completion
 chat "/" commands
+commands in search box too
 ipad layout
 iphone layout
-standalone app w/menu bar icon for osx (ref. couchdb app)
+v standalone app w/menu bar icon for osx (ref. couchdb app)
 integrate loader w/active feedback
 rsync app
-fullscreen mode
+v fullscreen mode
 detect and collapse duplicates
 edits and corrections
+command line interface

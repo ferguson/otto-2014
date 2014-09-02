@@ -1,5 +1,3 @@
-_ = require 'underscore'
-
 require './otto.events'
 otto = global.otto
 
@@ -14,12 +12,14 @@ global.otto.channels = do -> # note 'do' calls the function
   channels.Channel = class Channel extends otto.events.EventEmitter
     constructor: (@name, @info) ->
       # valid events:
-      super ['*', 'time', 'update', 'state', 'finished', 'addtoqueue', 'killed', 'removed']
+      super ['*', 'time', 'queue', 'state', 'status', 'lineout', 'outputs', 'started', 'finished', 'addtoqueue', 'killed', 'removed']
       if channels.channel_list[@name]
         throw new Error "channel name #{@name} already exists!"
       channels.channel_list[@name] = @
       @type = @info.type || 'standard'
       @queue = []
+      @outputs = []
+      @lineout = 0
       switch @type
         when 'webcast', 'archive'
           @autofill = false
@@ -30,7 +30,7 @@ global.otto.channels = do -> # note 'do' calls the function
       @mpd = null
 
 
-    attach_mpd: ->
+    attach_mpd: (callback) ->
       @mpd = new otto.mpd.MPD(@name)
       if @name is 'main' and process.platform isnt 'darwin'
         @mpd.setautopause no
@@ -62,7 +62,7 @@ global.otto.channels = do -> # note 'do' calls the function
       @mpd.on '*', (eventname, mpd, args...) =>
         @mpd_event_handler eventname, mpd, args...
 
-      @mpd.connect()
+      @mpd.connect callback
       #@mpd.refresh() # this shouldn't be needed, just debugging something
 
 
@@ -74,7 +74,7 @@ global.otto.channels = do -> # note 'do' calls the function
 
         when 'playlist'
           @playlist_changed args[0], =>
-            @trigger 'update'
+            @trigger 'queue'
 
         when 'state'
           @state = args[0]
@@ -83,37 +83,69 @@ global.otto.channels = do -> # note 'do' calls the function
             otto.misc.timeoutSet 1000, =>
               mpd.playifnot ->
 
+        when 'status'
+          @status = args[0]
+          @trigger 'status'
+
+        when 'outputs'
+          @outputs = args[0]
+          for output in @outputs
+            if output.outputname is 'Otto Line Out'
+              if @lineout != output.outputenabled
+                @lineout = output.outputenabled
+                alllineout = {}
+                for name,channel of channels.channel_list
+                  alllineout[name] = channel.lineout
+                @trigger 'lineout', alllineout
+              break
+          alloutputs = {}
+          for name,channel of channels.channel_list
+            alloutputs[name] = channel.outputs
+          @trigger 'outputs', alloutputs
+
+        when 'died'
+          @autofill_pending = false
+          @mpdids_invalid = true
+
 
     refresh: ->
       @mpd.refresh()
 
 
-    playlist_changed: (newplaylistinfo, callback=no) ->
+    playlist_changed: (newplaylist, callback=no) ->
       console.log "Channel#playlist_changed for #{@name}"
       filename_list = []
-      for mpdsong in newplaylistinfo
+      for mpdsong in newplaylist
         ottofilename = channels.mpd_filename_to_otto(mpdsong.file)
         filename_list.push(ottofilename)
 
       # correlate the mpd queue ids to the otto song list
       otto.db.load_songs_by_filenames filename_list, (ottosongs) =>
         for ottosong in ottosongs
-          for mpdsong, n in newplaylistinfo
-            if ottosong.filename is channels.mpd_filename_to_otto(mpdsong.file)
+          for mpdsong in newplaylist
+            if ottosong.filename is channels.mpd_filename_to_otto(mpdsong.file)  # not sure this works with "s
               ottosong.mpdqueueid = mpdsong.Id
-
-        if newplaylistinfo.song and ottosongs and newplaylistinfo.song < ottosongs.length
-          ottosongs[newplaylistinfo.song].nowplaying = true
 
         if @queue.length
           # transfer the (currently) ephemeral requestor values to the new song list
-          for ottosong in ottosongs
-            if ottosong.mpdqueueid
+          if not @mpdids_invalid
+            for ottosong in ottosongs
+              if ottosong.mpdqueueid
+                for oldsong in @queue
+                  if oldsong.mpdqueueid and ottosong.mpdqueueid is oldsong.mpdqueueid
+                    if oldsong.requestor?
+                      ottosong.requestor = oldsong.requestor
+                    break
+          else
+            # old ids invalid, match by filename instead of mpdids
+            for ottosong in ottosongs
               for oldsong in @queue
-                if oldsong.mpdqueueid and ottosong.mpdqueueid is oldsong.mpdqueueid
+                if ottosong.filename is oldsong.filename
                   if oldsong.requestor?
-                    ottosong.requestor = oldsong.requestor
-                  break
+                      ottosong.requestor = oldsong.requestor
+                    break
+            @mpdids_invalid = false
+
           # see if the playing song has changed
           previously_playing = @queue[0]
           if previously_playing
@@ -121,6 +153,17 @@ global.otto.channels = do -> # note 'do' calls the function
               # check the killed flag to determine if it finished naturally
               if not previously_playing.killed
                 @trigger 'finished', previously_playing
+
+        if newplaylist.songpos and ottosongs and newplaylist.songpos < ottosongs.length
+          ottosongs[newplaylist.songpos].nowplaying = true
+          previously_playing = false
+          for oldsong in @queue
+            if oldsong.nowplaying
+              previously_playing = oldsong
+          if not previously_playing or not previously_playing._id.equals( ottosongs[newplaylist.songpos]._id )
+            @trigger 'started', ottosongs[newplaylist.songpos]
+            # that might not work with featured playlists
+            # but probably neither does the @queue[0] bit about a dozen lines above
 
         # this is broken now
         #if requested_filename
@@ -137,52 +180,26 @@ global.otto.channels = do -> # note 'do' calls the function
 
     # adds random songs to the queue if it's below the autofill_min
     autofill_queue: (callback) ->
+      console.log 'autofill_queue'
+      if otto.db.emptydatabase
+        console.log 'empty database, skipping autofill_queue'
+        callback()
+        return
       if @type is 'webcast'
         console.log 'autofill ignored for webcast'
         callback()
         return
       if @autofill_min > @queue.length and not @autofill_pending
-        @autofill_pending = true
         howmany = @autofill_min - @queue.length
         console.log 'howmany', howmany
+        @autofill_pending = true
+        console.log 'autofill_pending', @autofill_pending
         switch @type
           when 'standard'
             otto.db.get_random_songs 100, (randomsongs) =>
               console.log 'auto filling queue with random songs'
-              # get a list of owners (people who have loaded music, or starred something)
-              otto.db.load_owner_list (owners) =>
-                ownerusernames = owners.map (owner) -> return owner.owner
-                # we still need to lookup the stars to include them in the lucky listeners picks FIXME
-                listeners = []
-                if otto.ll?
-                  for id in otto.ll
-                    listener = otto.ll[id]
-                    # filter out old stale listeners junk from the listener list
-                    if listener.socketids.length > 0 or listener.streams
-                      # each listener only get one slot, even if they have multiple connections
-                      if listener.user not in listeners
-                        # this prevents non owner users from making things more random,
-                        # but maybe we want a little bit of that?
-                        if listener.user in ownerusernames
-                          listeners.push listener.user
-                console.log 'listeners', listeners
+              channels.pick_a_lucky_listener (luckylistener) =>
                 mpdfilenames = []
-                luckylistener = undefined
-                if listeners.length and (Math.floor Math.random() * 100) > 0
-                  luckylistener = listeners[Math.floor Math.random() * listeners.length]
-                  console.log 'luckylistener', luckylistener
-                # 15% of the time the lucky listener is actually unlucky
-                if luckylistener and Math.random() < 0.15
-                  notlucky = ownerusernames.filter (username) -> username isnt luckylistener
-                  luckylistener = notlucky[Math.floor Math.random() * notlucky.length]
-                  console.log 'make that unlucky'
-                  console.log 'new lucky owner', luckylistener
-                if not luckylistener
-                  # no listeners match owners/starred, randomly pick luckylistener
-                  # a lucky owner from the owners list (this method should help balance out
-                  # lopsided collections)
-                  luckylistener = ownerusernames[Math.floor Math.random() * ownerusernames.length]
-                  console.log 'luckowner', luckylistener
                 if luckylistener
                   for randomsong in randomsongs
                     if randomsong.owners[0].owner is luckylistener
@@ -197,8 +214,11 @@ global.otto.channels = do -> # note 'do' calls the function
                     if mpdfilenames.length >= howmany
                       break
                 console.log mpdfilenames
+                console.log 'before addsongs'
                 @mpd.addsongs mpdfilenames, =>
+                  console.log 'after addsongs'
                   @autofill_pending = false
+                  console.log 'autofill_pending', @autofill_pending
                   callback()
           when 'limited'
             otto.db.get_random_starred_songs howmany, 'jon', (newsongs) =>
@@ -207,19 +227,21 @@ global.otto.channels = do -> # note 'do' calls the function
               if newsongs
                 for newsong in newsongs
                   mpdfilenames.push channels.otto_filename_to_mpd(newsong.filename)
-                console.log mpdfilenames
+                #console.log mpdfilenames
                 @mpd.addsongs mpdfilenames, =>
                   @autofill_pending = false
                   callback()
               else
                 callback()
       else
-        console.log 'queue has enough songs'
+        console.log 'queue has enough songs, autofillpending =', @autofill_pending
         callback()
 
 
-    add_to_queue: (id, user) ->
+    add_to_queue: (id, user, callback) ->
       console.log 'Channel#add_to_queue', id
+      if !id
+        if callback then callback() else return
       otto.db.load_object id, no, (song) =>
         mpdfilename = channels.otto_filename_to_mpd(song.filename)
         if @queue and @queue.length
@@ -230,10 +252,10 @@ global.otto.channels = do -> # note 'do' calls the function
         else
           pos=0 # queue is empty, insert song at the beginning
         @mpd.addid mpdfilename, pos, (mpdresponse) =>
-          console.log 'mpdresponse', mpdresponse
-          console.log 'queue', @queue
-          @mpd.playlist_watchdog =>  # the callback supresses the 'playlist' event
-            @playlist_changed @mpd.cache.playlistinfo, =>
+          #console.log 'mpdresponse', mpdresponse
+          #console.log 'queue', @queue
+          @mpd.playlist (playlist) =>
+            @playlist_changed playlist, =>
               if @queue.length
                 # set the requestor of the new song
                 found = false
@@ -243,14 +265,18 @@ global.otto.channels = do -> # note 'do' calls the function
                     found = true
                 if not found
                   console.log 'error: unable to mark the requestor in the queue'
-              @trigger 'update'
+              @trigger 'queue'
               @trigger 'addtoqueue', song, user
+              if callback
+                callback()
 
 
     remove_from_queue: (id, user) ->
     # this appears to be messed up re: return values and async callbacks
       if @queue
         first = true
+        if id is '' and @queue[0]
+          id = @queue[0].mpdqueueid
         for song in @queue
           if Number(song.mpdqueueid) == Number(id)
             song.killed = true
@@ -259,7 +285,6 @@ global.otto.channels = do -> # note 'do' calls the function
                 @trigger 'killed', song, user
               else
                 @trigger 'removed', song, user
-              #@mpd.playlistinfo() # perhaps mpd.deleteid should trigger this (now it does)
               return true
             break
           first = false
@@ -276,6 +301,13 @@ global.otto.channels = do -> # note 'do' calls the function
 
     pause: (callback) ->
       @mpd.pause callback
+
+    pauseifnot: (callback) ->
+      if @state is 'play'
+        @mpd.pause callback
+      else
+        callback()
+
     # next is not currently used
     next: (callback) ->
       @mpd.next callback
@@ -286,10 +318,17 @@ global.otto.channels = do -> # note 'do' calls the function
     play: (position, callback) ->
       @mpd.play position, callback
 
+    toggleplay: (callback) ->
+      if @state is 'play'
+        @mpd.pause callback
+      else
+        @mpd.play undefined, callback
+
     #output state and manipulation
-    outputs: (callback) ->
+    get_outputs: (callback) ->
       @mpd.outputs callback
-    lineout: (enable, callback) ->
+    #lineout is just a specific input
+    set_lineout: (enable, callback) ->
       @mpd.outputs (r) =>
         for output in r
           if output.outputname is 'Otto Line Out'
@@ -298,10 +337,58 @@ global.otto.channels = do -> # note 'do' calls the function
             else
               @mpd.disableoutput output.outputid, ->
             break
+    toggle_lineout: (enable, callback) ->
+      @mpd.outputs (r) =>
+        for output in r
+          if output.outputname is 'Otto Line Out'
+            if @lineout == '1'
+              @mpd.disableoutput output.outputid, ->
+            else
+              @mpd.enableoutput output.outputid, ->
+            break
 
     #server side vol for line out (doesn't affect the streams thankfully)
     setvol: (vol, callback) ->
-      @mpd.setvol vol, callback
+      @mpd.setvol Math.max( Math.min(vol, 100), 0), callback
+
+
+  channels.pick_a_lucky_listener = (callback) ->
+    # get a list of owners (people who have loaded music, or starred something)
+    otto.db.load_owner_list (owners) =>
+      ownerusernames = owners.map (owner) -> return owner.owner
+      # we still need to lookup the stars to include them in the lucky listeners picks FIXME
+      listeners = []
+      if otto.ourlisteners
+        list = otto.ourlisteners.get_list()
+        for id in list
+          listener = list[id]
+          # filter out old stale listeners junk from the listener list
+          if listener.socketids or listener.streams
+            # each listener only get one slot, even if they have multiple connections
+            if listener.user not in listeners
+              # this prevents non owner users from making things more random,
+              # but maybe we want a little bit of that?
+              if listener.user in ownerusernames
+                listeners.push listener.user
+      console.log 'eligible listeners', listeners
+      luckylistener = undefined
+      if listeners.length
+        luckylistener = listeners[Math.floor Math.random() * listeners.length]
+        # 15% of the time the lucky listener is actually unlucky
+        if luckylistener and Math.random() > 0.15
+          console.log 'lucky listener', luckylistener
+        else
+          console.log 'unluckly listener', luckylistener
+          notlucky = ownerusernames.filter (username) -> username isnt luckylistener
+          luckylistener = notlucky[Math.floor Math.random() * notlucky.length]
+          console.log 'lucky owner', luckylistener
+      if not luckylistener
+        # no listeners match owners/starred, randomly pick luckylistener
+        # a lucky owner from the owners list (this method should help balance out
+        # lopsided collections)
+        luckylistener = ownerusernames[Math.floor Math.random() * ownerusernames.length]
+        console.log 'lucky owner', luckylistener
+      callback luckylistener
 
 
   channels.set_global_event_handler = (handler) ->
@@ -325,14 +412,16 @@ global.otto.channels = do -> # note 'do' calls the function
       process.exit(1)
     console.log 'using ' + root.dir + ' as the music root directory.'
 
+    callcount = otto.channelinfolist.length
     for channelinfo in otto.channelinfolist
       console.log "creating channel #{channelinfo.name}"
       channel = new otto.channels.Channel(channelinfo.name, channelinfo)
       if channels.global_event_handler
         channel.on '*', global_event_handler
-      channel.attach_mpd()
-
-    callback()
+      channel.attach_mpd ->
+        if callcount-- == 1 and callback
+          callback()
+      #channel.refresh()  # this didn't do what i expected
 
 
   #channels.mpd_filename_to_otto = (filename) ->

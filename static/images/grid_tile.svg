@@ -1,0 +1,10 @@
+<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <pattern id="grid" width="28" height="14" patternUnits="userSpaceOnUse">
+      <path d="M 0 0 L 28 14 M 0 14 L 28 0" fill="none" stroke="#222" stroke-width="1.0"/>
+    </pattern>
+  </defs>
+  <rect width="100%" height="100%" fill="url(#grid)" />
+</svg>
+<!-- http://stackoverflow.com/questions/14208673/how-to-draw-grid-using-html5-and-canvas-or-svg -->
+<!-- https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Paths -->

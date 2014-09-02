@@ -57,8 +57,9 @@ if process.platform is 'darwin'
 
 
 otto.channelinfolist = [
-  {name: 'main',    fullname: 'Main Channel',    type: 'standard', layout: 'standard'},
-  {name: 'another', fullname: 'Another Channel', type: 'standard', layout: 'standard'}
+  {name: 'main',   fullname: 'Main Channel',   type: 'standard', layout: 'standard'},
+  {name: 'second', fullname: 'Second Channel', type: 'standard', layout: 'standard'}
+  {name: 'third',  fullname: 'Third Channel',  type: 'standard', layout: 'standard'}
 ]
 
 
@@ -81,7 +82,6 @@ require './otto.client.misc'
 require './otto.client.player'
 require './otto.client.soundfx'
 require './otto.client.cubes'
-require './otto.client.webkit'
 
 require './otto.server'
 

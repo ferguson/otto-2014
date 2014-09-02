@@ -11,27 +11,35 @@ global.otto.index = do -> # note 'do' calls the function
       { rel: 'icon', type: 'image/png', href: 'static/images/favicon.png' }
       #{ rel: 'shortcut icon', href: 'static/images/favicon.ico/favicon.ico' }
       #{ rel: 'apple-touch-icon', href: 'static/images/ottoicon1024.png' }
-      { rel: 'apple-touch-icon-precomposed', href: 'static/images/ottoicon1024.png' }
-    ]
+      { rel: 'apple-touch-icon-precomposed', href: 'static/images/ottoicon1024.png' }  # no reflective shine
+      { rel: 'apple-touch-startup-image', href: 'static/images/ottoiphonesplash.png' }
+  ]
 
   index.metas = [
       { name: 'apple-mobile-web-app-capable', content: 'yes' }
+      { name: 'mobile-web-app-capable', content: 'yes' }  # android?
       #{ name: 'viewport', content: 'width=device-width' }
       #{ name: 'viewport', content: 'width=1470, user-scalable=no' }
       #{ name: 'viewport', content: 'width=1270' }
-      { name: 'viewport', content: 'initial-scale=1.0, user-scalable=no' } # no reflective shine
+      { name: 'viewport', content: 'initial-scale=1.0, user-scalable=no, minimal-ui' }
+      #{ name: 'apple-mobile-web-app-status-bar-style', content: 'black' }
+      #{ name: 'apple-mobile-web-app-status-bar-style', content: 'translucent' }
+      { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' }
+      { name: 'apple-mobile-web-app-title', content: 'Otto Client' }
+      { name: 'format-detection', content: 'telephone=no' }
     ]
 
   index.stylesheets = [
-    'static/fonts/icomoon'
     #'static/css/jquery-ui-1.8.17.custom'
     'static/css/jquery-ui-1.10.3.custom'
     #'static/css/reset'
     #'static/css/jquery.terminal'
     #'static/css/miniAlert'
+    'static/css/addtohomescreen'
     'static/css/normalize'
     'static/css/ouroboros'
     'static/css/mmenu'
+    'static/fonts/icomoon'  # mmenu.css messes up the icons!
     'static/css/otto'
     ]
 
@@ -49,6 +57,10 @@ global.otto.index = do -> # note 'do' calls the function
     'static/js/jquery-migrate-1.2.1'
     'static/js/jquery.terminal'
     'static/js/jquery.mmenu.min'
+    'static/js/restive.min'
+    'static/js/moment.min'
+    'static/js/addtohomescreen.min'
+    'static/js/toe'
     'static/js/prefixfree'
     #'static/js/miniAlert'
     'static/js/showdown'
@@ -74,7 +86,7 @@ global.otto.index = do -> # note 'do' calls the function
 
   index.template = coffeecup.compile ->
     doctype 5
-    html ->
+    html '.nofouc', ->  # .nofouc not really used currently
       head ->
         title @title if @title
         if @links
@@ -93,6 +105,7 @@ global.otto.index = do -> # note 'do' calls the function
             link rel: 'stylesheet', href: s + '.css'
         link(rel: 'stylesheet', href: @stylesheet + '.css') if @stylesheet
         style @style if @style
+        script 'document.documentElement.className=""'  # http://www.paulirish.com/2009/avoiding-the-fouc-v3/
       body @bodyclasses, ->
         if @body
           text @body

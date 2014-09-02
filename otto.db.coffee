@@ -133,16 +133,16 @@ module.exports = global.otto.db = do ->  # note the 'do' causes the function to 
           console.log "connected to database #{database} on #{hostname}:#{port}"
           s = if count != 1 then 's' else ''
           console.log "#{count} object#{s}"
+          if count < 5
+            console.log 'we have an empty database!'
+            db.emptydatabase = true
+          else
+            db.emptydatabase = false
           if count > 150000
             console.log 'we have a large database!'
-            db.large_database = true
+            db.largedatabase = true
           else
-            db.large_database = false
-          if count is 0
-            console.log 'we have an empty database!'
-            db.empty_database = true
-          else
-            db.empty_database = false
+            db.largedatabase = false
           if callback
             callback()
 
@@ -178,15 +178,15 @@ module.exports = global.otto.db = do ->  # note the 'do' causes the function to 
     # 30 artist
     # 40 fileunder
     # 50 list
-    if ids is null then throw new Error "load_object: you must specify the ids"
+    if not ids
+      console.log "load_object: no id(s) given"
+      ids = []
     if ids instanceof Array
       returnarray = true
     else
       returnarray = false
       ids = [ids]
-    bids = []
-    for id in ids
-      bids.push new mongodb.ObjectID(String(id)) # get_random_songs needed this for some odd reason!
+    bids = ids.map (id) -> new mongodb.ObjectID(String(id)) # get_random_songs needed this for some odd reason!
     q = { '_id': { '$in': bids } }
     c.objects.find(q).toArray (err, objects) ->
       if err then throw new Error "database error trying to load objects #{ids}: #{err}"
@@ -557,7 +557,7 @@ module.exports = global.otto.db = do ->  # note the 'do' causes the function to 
       throw err if err
       callback results
 
-  db.all_albums = (callback) ->
+  db.all_albums_by_year = (callback) ->
     filter = {}
     filter['otype'] = 20
     order = {year: 1, album: 1}
@@ -574,6 +574,28 @@ module.exports = global.otto.db = do ->  # note the 'do' causes the function to 
           objects = [].concat objects[i..], objects[...i]
         callback objects
 
+  db.all_albums_by_fileunder = (callback) ->
+    filter = {}
+    filter['otype'] = 20
+    c.objects.find(filter).toArray (err, objects) ->
+      if err then throw new Error "error loading all_albums: #{err}"
+      db.attach_parents objects, { otype: [40,1] }, ->
+        console.log objects.length, 'objects'
+        console.log 'sorting by fileunder'
+        objects.sort (a, b) ->
+          if not a.fileunder or not a.fileunder[0] or not a.fileunder[0].key
+            return 1
+          if not b.fileunder or not b.fileunder[0] or not b.fileunder[0].key
+            return -1
+          if a.fileunder[0].key is b.fileunder[0].key
+            return 0
+          else if a.fileunder[0].key > b.fileunder[0].key
+            return 1
+          else
+            return -1
+        console.log 'done'
+        callback objects
+
 
   db.get_filename = (id, callback) ->
     bid = new mongodb.ObjectID(id)
@@ -588,8 +610,8 @@ module.exports = global.otto.db = do ->  # note the 'do' causes the function to 
       c.objects.find({ filename: {'$exists':1} }, {_id:1, filename:1}).each (err, items) ->
         if item
           tempcache[item._id] = item.filename
-          if bid == _id
-            console.log "<<<<<<<<< #{item.filename}"
+          #if bid == _id
+          #  console.log "<<<<<<<<< #{item.filename}"
         else
           filenamecache = tempcache
           console.log 'finished loading filename cache'
@@ -628,7 +650,8 @@ module.exports = global.otto.db = do ->  # note the 'do' causes the function to 
                   objects.splice i, 1
                   break
               if not found
-                console.log 'warning: mpd queue item not found in database:', filename
+                #console.log 'warning: mpd queue item not found in database:', filename
+                console.log 'warning: mpd queue item not found in database'
                 # should be make a fake object to return so the queue prints something?
                 object =
                   filename: filename
@@ -638,8 +661,8 @@ module.exports = global.otto.db = do ->  # note the 'do' causes the function to 
             # objects really should be empty now
             for object in objects
               console.log 'could not match result object with requested filename!'
-              console.log object.filename
-              console.log filenames
+              #console.log object.filename
+              #console.log filenames
             callback ordered
 
         for object in objects
@@ -726,65 +749,69 @@ module.exports = global.otto.db = do ->  # note the 'do' causes the function to 
 
   # still slow, let's try again
   db.load_owner = (username, callback) ->
-    elapsed = new otto.misc.Elapsed()
     if username
-      c.objects.findOne { otype: 1, owner: username }, {}, (err, owner) ->
-        if err then throw err
-        callback owner
-    else # none specified, load 'em all
-      # load list of owners
-      db.load_owner_list (owners) ->
-        console.log "#{elapsed.seconds()} owners loaded"
-        console.log 'owners.length', owners.length
-        c.connections.find { ctype: 1 }, (err, cursor) =>
+      q = { otype: 1, owner: username }
+    else
+      q = { otype: 1}
+    c.objects.findOne q, {}, (err, owner) ->
+      if err then throw err
+      callback owner
+
+  db.load_users = (callback) ->
+    # load list of owners
+    elapsed = new otto.misc.Elapsed()
+    db.load_owner_list (owners) ->
+      console.log "#{elapsed.seconds()} owners loaded"
+      console.log 'owners.length', owners.length
+      c.connections.find { ctype: 1 }, (err, cursor) =>
+        throw err if err
+        console.log "#{elapsed.seconds()} connections loaded"
+        #console.log 'connections.length', connections.length
+        owner_lookup = {}
+        owner_stats = {}
+        cursor.each (err, connection) ->
           throw err if err
-          console.log "#{elapsed.seconds()} connections loaded"
-          #console.log 'connections.length', connections.length
-          owner_lookup = {}
-          owner_stats = {}
-          cursor.each (err, connection) ->
-            throw err if err
-            if connection
-              owner_lookup[connection.child] = connection.parent
-            else
-              console.log "#{elapsed.seconds()} owner_lookup built"
-              c.objects.find {}, {_id: 1, otype: 1, length: 1}, (err, cursor) ->
-              #c.objects.find({}, {_id: 1, otype: 1, length: 1}).toArray (err, objects) ->
-                throw err if err
-                console.log "#{elapsed.seconds()} objects loaded"
-                #console.log 'objects.length', objects.length
-                cursor.each (err, object) ->
-                  if object
-                    owner_id = owner_lookup[object._id]
-                    if owner_id
-                      if not owner_stats[owner_id]
-                        owner_stats[owner_id] = {}
-                      name = false
-                      switch object.otype
-                        when 5  then name = 'dirs'
-                        when 10 then name = 'songs'
-                        when 20 then name = 'albums'
-                        when 30 then name = 'artists'
-                      if name
-                        owner_stats[owner_id][name] = 0 if not owner_stats[owner_id][name]
-                        owner_stats[owner_id][name] += 1
-                      if object.otype is 10 and object['length']
-                        owner_stats[owner_id].seconds = 0 if not owner_stats[owner_id].seconds
-                        owner_stats[owner_id].seconds += object['length']
-                  else
-                    for owner in owners
-                      if owner_stats[owner._id]
-                        console.log owner_stats[owner._id]
-                        _.extend owner, owner_stats[owner._id]
-                    console.log "#{elapsed.seconds()} stats totaled"
-                    seq = new Sequence owners, (owner) ->
-                      c.connections.find( { parent: owner._id, ctype: 12 } ).count (err, howmany) =>
-                        throw err if err
-                        owner.stars = howmany
-                        @next()
-                    seq.go ->
-                      console.log "#{elapsed.seconds()} stars totaled. done."
-                      callback owners
+          if connection
+            owner_lookup[connection.child] = connection.parent
+          else
+            console.log "#{elapsed.seconds()} owner_lookup built"
+            c.objects.find {}, {_id: 1, otype: 1, length: 1}, (err, cursor) ->
+            #c.objects.find({}, {_id: 1, otype: 1, length: 1}).toArray (err, objects) ->
+              throw err if err
+              console.log "#{elapsed.seconds()} objects loaded"
+              #console.log 'objects.length', objects.length
+              cursor.each (err, object) ->
+                if object
+                  owner_id = owner_lookup[object._id]
+                  if owner_id
+                    if not owner_stats[owner_id]
+                      owner_stats[owner_id] = {}
+                    name = false
+                    switch object.otype
+                      when 5  then name = 'dirs'
+                      when 10 then name = 'songs'
+                      when 20 then name = 'albums'
+                      when 30 then name = 'artists'
+                    if name
+                      owner_stats[owner_id][name] = 0 if not owner_stats[owner_id][name]
+                      owner_stats[owner_id][name] += 1
+                    if object.otype is 10 and object['length']
+                      owner_stats[owner_id].seconds = 0 if not owner_stats[owner_id].seconds
+                      owner_stats[owner_id].seconds += object['length']
+                else
+                  for owner in owners
+                    if owner_stats[owner._id]
+                      console.log owner_stats[owner._id]
+                      _.extend owner, owner_stats[owner._id]
+                  console.log "#{elapsed.seconds()} stats totaled"
+                  seq = new Sequence owners, (owner) ->
+                    c.connections.find( { parent: owner._id, ctype: 12, rank: {'$gt': 0} } ).count (err, howmany) =>
+                      throw err if err
+                      owner.stars = howmany
+                      @next()
+                  seq.go ->
+                    console.log "#{elapsed.seconds()} stars totaled. done."
+                    callback owners
 
 
   db.find_or_create_owner = (username, callback) ->
@@ -1002,11 +1029,11 @@ module.exports = global.otto.db = do ->  # note the 'do' causes the function to 
     console.log 'get_random_songs', howmany
     elapsed = new otto.misc.Elapsed()
     song_ids = []
-    # pick a slate of random songs, skipping anything over 10mins long
-    c.objects.find({ otype: 10, length: {$lt: 600} }, { _id: 1 }).count (err, count) ->
+    # pick a slate of random songs, skipping anything over 15mins long
+    c.objects.find({ otype: 10, length: {$lt: 900} }, { _id: 1 }).count (err, count) ->
       console.log "#{elapsed} count songs: #{count}"
       randomWhere = "(Math.random() > #{(count-howmany)/count})"
-      c.objects.find( {otype: 10, $where: randomWhere} ).toArray (err, picked_songs) ->
+      c.objects.find( {otype: 10, length: {$lt: 900}, $where: randomWhere} ).toArray (err, picked_songs) ->
         throw err if err
         console.log "#{elapsed} randomWhere done, #{picked_songs.length} picked_songs"
         db.attach_parents picked_songs, { otype: 1 }, ->
@@ -1015,12 +1042,10 @@ module.exports = global.otto.db = do ->  # note the 'do' causes the function to 
           # return them in 'natural' order. thus there will be a bias in the order of the random
           # picks being in the order in which they were loaded into the database
           shuffle = []
-          console.log 'shuffling picks'
           while picked_songs.length
             n = Math.floor Math.random() * picked_songs.length
             shuffle.push picked_songs[n]
             picked_songs.splice(n, 1)
-          console.log "#{elapsed} shuffeled results. done."
           callback shuffle
 
 
@@ -1079,12 +1104,14 @@ module.exports = global.otto.db = do ->  # note the 'do' causes the function to 
   db.get_newest_albums = (callback) ->
     c.objects.find( {otype : 20} ).sort( {_id:-1} ).limit(1000).toArray (err, albums) ->
       throw err if err
+      for album in albums
+        album.timestamp = Number(album._id.getTimestamp())
       db.attach_parents albums, { otype: [1, 30] }, ->
         callback albums
 
 
   db.get_album = (albumname, callback) ->
-    console.log 'get_album for', albumname
+    #console.log 'get_album for', albumname
     c.objects.findOne {otype: 20, album: albumname}, (err, album)->
       if err then throw new Error "error: db.get_album - #{err}"
       if album
@@ -1117,6 +1144,12 @@ module.exports = global.otto.db = do ->  # note the 'do' causes the function to 
               for song in songs
                 song.oid = song._id  # for backwards compatability
               callback null, fileunders: fileunders, albums: albums, songs: songs
+
+
+  db.load_fileunder = (artistid, callback) ->
+    console.log 'load_fileunder', artistid
+    db.load_object artistid, load_parents=40, (artist) ->
+      callback artist.fileunder
 
 
   return db

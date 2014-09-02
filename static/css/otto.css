@@ -1,19 +1,11 @@
-* {
-  -webkit-box-sizing: border-box;
-  -moz-box-sizing: border-box;
-  box-sizing : border-box;
-}
-
 html, body {
   height: 100%;
-  /*max-height: 100%;*/ /* don't yet know why you'd want this */
 }
 
 body, td {
-/*	font-size: 10px; */
-	font-family: Verdana, "Helvetica Neue", Helvetica, Arial, sans-serif;
-	color: #6C6C6C;
-        background-color: #333;
+  font-family: Verdana, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: #6C6C6C;
+  background-color: #333;
   /* Improved handling of kerning pairs and ligatures in modern browsers */
   /* http://aestheticallyloyal.com/public/optimize-legibility/ */
   text-rendering: optimizeLegibility;
@@ -26,8 +18,84 @@ input .disconnected {
   disabled: disabled;
 }
 
-/* leftovers from reset.css */
-p, ul {
+html.mmenu-opened body {
+  //opacity: 0.2;
+}
+#mmenu-blocker
+{
+	opacity: 0.5;
+}
+
+.startup-container {
+  position: absolute;
+  top: 40%;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  margin-left: 50%;
+  height: 100%;
+}
+
+.startup {
+  width: 103px;
+}
+
+.startup .ouroboros {
+  display: inline-block;
+  width: 103px;
+  margin-left: -50%;
+  padding: 0;
+}
+
+.mmenu-page {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+#mainpage {
+  min-height: 100%;
+  height: auto !important;
+  height: 100%;
+  margin: 0 auto -145px;
+}
+
+.footer-container, .footer-backer {  /* sticky footer thanks to Ryan Fait http://ryanfait.com/ */
+  display: block;
+  height: 45px;
+  margin-top: 100px;
+  width: 100%;
+  //clear: both;
+}
+
+.cursor-hider {  /* a place to park the cursor to make it go away in full screen mode */
+  display: block;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 5px;
+  height: 100%;
+  z-index: 20;
+}
+
+.greeting {
+  visibility: hidden; /* helps with a FOUC from dynamically loading the welcome screen css */
+}
+
+@media (min-width: 1900px) {
+  /* i got tired of the damn cursor hiding bugs that make my cursor disappear */
+  /* so this is a clumsy attempt to restrict to just fullscreen mode */
+  .cursor-hider {
+    cursor: none;
+  }
+}
+
+
+ul {
   margin:0;
   padding:0;
   border:0;
@@ -41,7 +109,6 @@ li {
   list-style-type: none;
 }
 
-/* my addition */
 li.h {
   float: left;
   white-space: normal;
@@ -65,10 +132,14 @@ li.h {
 /**************************************************/
 
 .artistlist {
-  clear: both;
-  margin-left: 28px;
+  position: relative;
+  margin-left: -62px;
+  margin-right: 12px;
 }
 
+.artistname-container {
+  margin-left: 62px;
+}
 .artistname {
   font-size: 36px;
   line-height: 36px;
@@ -107,8 +178,8 @@ li.h {
 .thumbnails {
   display: inline-block;
   position: relative;
+  margin-left: 32px;
   top: 4px;
-  margin-left: 30px;
 }
 
 .thumb {
@@ -117,7 +188,9 @@ li.h {
   margin-top: 2px;
   margin-right: 2px;
   color: #6C6C6C;
-  border: 3px solid rgba(0,0,0,0);
+  background-color: #222; /* none more black */
+  //border: 3px solid rgba(0,0,0,0);
+  border: 3px solid #333;
 }
 
 .thumb:hover {
@@ -132,9 +205,10 @@ li.h {
 }
 
 .thumb.px40 {
-  width: 44px;
-  height: 44px;
-  border: 2px solid rgba(0,0,0,0);
+  width: 40px;
+  height: 40px;
+  //border: 2px solid rgba(0,0,0,0);
+  border: 2px solid #333;
 }
 
 .thumb.px40:hover {
@@ -147,19 +221,30 @@ li.h {
 }
 
 .thumb.px120 {
-  width: 126px;
-  height: 126px;
+  width: 120px;
+  height: 120px;
+}
+
+.thumb.px200 {
+  width: 200px;
+  height: 200px;
+}
+
+.thumb.px200 img {  /* we need to precompute 200px images FIXME */
+  width: 200px;
+  height: 200px;
 }
 
 .thumb.px300 {
-  width: 306px;
-  height: 306px;
+  width: 300px;
+  height: 300px;
 }
 
 .noimg {
   display: inline-block;
   vertical-align: top;
   background-color: #222;
+  font-family: Courier, Times;
   overflow: hidden;
 }
 
@@ -167,22 +252,29 @@ li.h {
   width: 40px;
   height: 40px;
   font-size: 8px;
+  font-family: Verdana, "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 .noimg.px120 {
-  width: 120px;
-  height: 120px;
+  width: 110px;
+  height: 110px;
   font-size: 15px;
-  font-family: Courier, Times;
+  padding: 5px;
+}
+
+.noimg.px200 {
+  width: 200px;
+  height: 200px;
+  font-size: 15px;
   padding: 5px;
 }
 
 .noimg.px300 {
-  width: 300px;
-  height: 300px;
+  width: 270px;
+  height: 270px;
   font-size: 26px;
   font-family: Courier;
-  line-height: 1em; // something was mucking it up. artist? album?
+  line-height: 1em; /* something was mucking it up. artist? album? */
   color: #555;
   padding: 15px;
 }
@@ -191,6 +283,15 @@ li.h {
   height: 16px;
 }
 
+.albumimg.lazy {
+  opacity: 0;
+//  background-color: #222; /* none more black */
+//  //border: 1px solid rgba(0,0,0,0); /* FIXME why is this needed to make background color work when using a datauri?? */
+}
+
+img.albumimg {
+  -webkit-transition: opacity 0.5s;
+}
 
 .sep:before {
   content: '▪';
@@ -202,6 +303,7 @@ li.h {
   padding-left: 0.6em;
   padding-right: 0.6em;
   color: #6C6C6C;
+  -webkit-font-smoothing: antialiased;
 }
 
 .enlist + .time.sep {
@@ -218,52 +320,15 @@ li.h {
   color: white;
 }
 
-.nowplayingcontainer
-{
-  display: inline-block;
-  overflow: hidden;
-  padding-top: 39px;
-}
-
-.nowplayingcover-container
-{
-  vertical-align: top;
-  /*min-width: 306px;  /* image was shrinking without this! (might be useful sometime) */
-  width: 306px;
-  height: 306px;
-  padding-top: 12px;
-  padding-left: 51px;
-  padding-right: 25px;
-  cursor: pointer;
-}
-
-.nowplaying
-{ 
-  display: inline-block;
-  position: relative;
-  padding-top: 12px;
-  padding-left: 25px;
-  vertical-align: top;
-}
-
-.nowplaying-controls
-{
-  position: relative;
-  left: -8px;
-  height: 38px;
-}
-
-#currenttrack-container {
-}
 
 .currenttrack {
   position: relative;
-  height: 46px;
+  min-height: 50px;
+  max-height: 90px;
   width:100%;
   overflow: hidden;
   font-size: 19px;
   color: white;
-  padding-bottom: 5px;
 
   /* this allows two lines when things are long: */
   /*max-height: 1.99em;*/
@@ -279,74 +344,20 @@ li.h {
   ms-text-overflow: ellipsis;
   */
 }
+//.size1 .currenttrack {
+//  max-height: 50px;
+//}
+
 .currenttrack.song {
   font-size: 14px;
   font-weight: 700;
-}
-
-.currenttrack span {
-  display: inline-block;
 }
 
 .playing.control, .playing.control:hover {
   color: white;
 }
 
-.nowplaying .album {
-  display: block;
-  font-size: 24px;
-  color: #6C6C6C;
-}
-
-.nowplaying .artist {
-  display: block;
-  font-size: 24px;
-  color: #6C6C6C;
-}
-
-.nowplaying .year {
-  margin-left: 1em;
-  font-size: 0.8em;
-  color: #6C6C6C;
-}
-
-#progress-container-old {
-  display: inline-block;
-  position: relative;
-  top: 9px;
-  visibility: hidden;
-  float: left;
-  width: auto;
-}
-
-#progress-container {
-  visibility: hidden;
-  margin-left: 1px;
-  margin-top: 6px;
-  margin-bottom: 22px;
-}
-
-#progress {
-  width: 0px;
-  margin-right: 6px;
-}
-
-.progress {
-  display: inline-block;
-  height: 12px;
-  border: 2px solid #6C6C6C;
-  border-radius: 2px;
-  cursor: crosshair; // other candidates: text, col-resize, s-resize
-}
-
-.bar {
-  height: 8px;
-  width: 0;
-  background-color: #6C6C6C;
-  /* transition: transform 1s linear !important; */
-}
-
-#time {
+#time, #count {
   display: inline-block;
   position: relative;
   top: -2px;
@@ -355,21 +366,8 @@ li.h {
   color: #6C6C6C;
 }
 
-.errata {
-  display: inline-block;
-  font-size: 12px;
-  color: #6C6C6C;
-  margin-left: 2px;
-  margin-top: 18px;
-  white-space: nowrap;
-}
-
-.errata.requestor {
-  font-size: 12px;
-  color: white;
-}
-
-.queue .filename {
+.filename {
+  position: absolute;
   font-size: 12px;
   max-height: 1.5em;
   white-space: nowrap;
@@ -377,14 +375,249 @@ li.h {
   overflow: hidden;
   color: #6C6C6C;
   /*margin-left: 23px;*/
-  //padding-top: 12px;
 }
 
-.scrollbox {
+.playing-container {
   position: relative;
-  z-index: 1;
-  overflow: auto;
+  border-bottom: 2px solid #111;
 }
+
+.play-container {
+  width: 38px;
+  margin: 0 auto;
+  padding-top: 10px;
+}
+
+.connect-container {
+  width: 40px;
+  height: 31px;
+  margin: 0 auto;
+  padding-top: 10px;
+}
+
+.volume-container, .volumelineout-container {
+  position: relative;
+  top: -32px;
+  left: 90px;
+  width: 100px;
+  height: 0px;
+  margin: 0 auto;
+  cursor: crosshair; /* other candidates: text, col-resize, s-resize */
+}
+.volume, .volumelineout {
+  display: inline-block;
+  position: relative;
+  left: 8px;
+  top: 2px;
+  height: 4px;
+  width: 85px;
+}
+
+.lineout-container {
+  display: inline-block;
+  position: relative;
+  top: 7px;
+}
+.size-container {
+  position: absolute;
+  top: 20px;
+  right: 92px;
+}
+#size.bigger, #size.smaller {
+  position: relative;
+  z-index: 2;
+}
+#size.bigger .icon-zoomin {
+  position: relative;
+  font-size: 20px;
+  top: -2px;
+  left: -2px;
+}
+.next-container.size2 {
+  position: absolute;
+  top: 94px;
+  left: 20px;
+}
+.next-container.size1 {
+  position: absolute;
+  top: 48px;
+  left: 20px;
+}
+.icon-remove {
+}
+.icon-play2 {
+  //-webkit-font-smoothing: subpixel-antialiased;
+}
+
+.currenttrack-container.size2 {
+  margin: 46px 400px 0 65px;
+  min-height: 320px;
+}
+.currenttrack-container.size1 {
+  margin: 0px 200px 0 65px;
+  min-height: 220px;
+}
+
+.doubler {
+  zoom: 2.0;
+}
+
+@media (min-width: 1900px) { /* >1905 doesn't work in app */
+  html {
+    zoom: 1.86;
+    //zoom: 1.675;
+  }
+}
+
+.size2 .currenttrack-binder {
+  min-height: 270px;
+}
+.size1 .currenttrack-binder {
+  min-height: 170px;
+}
+
+
+.currentsong-container {
+}
+.timeprogress-container {
+  width: 100%;
+  height: 29px;
+  padding-right: 36px;
+  margin-left: 2px;
+  margin-top: 6px;
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+.progress-maximum {
+  padding-right: 100px;
+}
+.timeprogress-binder {
+  display: inline-block;
+  width: 100%;
+  white-space: nowrap;
+}
+.time-container, .count-container {
+  display: inline-block;
+  position: relative;
+  top: -1px;
+  margin-left: 10px;
+}
+.progress-container {
+  display: inline-block;
+}
+
+.progress {
+  width: 100%;
+  display: inline-block;
+  height: 10px;
+  border: 2px solid #6C6C6C;
+  border-radius: 2px;
+  cursor: crosshair; /* other candidates: text, col-resize, s-resize */
+}
+.progress-indicator {
+  height: 10px;
+  background-color: #6C6C6C;
+  /* transition: transform 1s linear !important; */
+}
+
+
+.currentalbum-container {
+  display: inline-block;
+}
+.currentyear-container {
+  display: inline-block;
+}
+.currentartist-container {
+  margin-top: 2px;
+}
+.size2 .currenterrata-container {
+  font-size: 12px;
+  margin-top: 40px;
+}
+.size1 .currenterrata-container {
+  font-size: 12px;
+  margin-top: 10px;
+}
+.currenterrata-container .requestor-container {
+  display: inline-block;
+}
+.currenterrata-container .requestor-container .requestor {
+  color: white;
+}
+.owner-container {
+  display: inline-block;
+  position: relative;
+  left: 1px;
+}
+.filename-container {
+  display: inline-block;
+  //position: absolute; /* keeps it from being clipped by it's container */
+  margin-left: 2px;
+  margin-top: 8px;
+}
+.filename-clipper {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 15px;
+  overflow: hidden;
+}
+.filename {
+  margin-left: 66px;
+}
+
+.size2 .currentalbum-container, .size2 .currentartist-container {
+  font-size: 24px;
+  color: #6C6C6C;
+}
+.size1 .currentalbum-container, .size1 .currentartist-container {
+  font-size: 18px;
+  color: #6C6C6C;
+}
+
+.currentyear-container .year {
+  display: inline-block;
+  color: #6C6C6C;
+}
+
+.size2 .currentyear-container .year {
+  margin-left: 20px;
+  font-size: 19px;
+}
+.size1 .currentyear-container .year {
+  margin-left: 14px;
+  font-size: 14px;
+}
+
+.currentcover-container {
+  position: absolute;
+  cursor: pointer;
+}
+.size2 .currentcover-container {
+  top: 50px;
+  right: 50px;
+}
+.size1 .currentcover-container {
+  top: 50px;
+  right: 30px;
+}
+.size1 .thumb.px300 {
+  width: 120px;
+  height: 120px;
+}
+.size1 .thumb.px300 img {
+  width: 120px;
+  height: 120px;
+}
+.size1 .noimg.px300 {
+  width: 110px;
+  height: 110px;
+  font-size: 15px;
+  font-family: Courier, Times;
+  padding: 5px;
+}
+
+
 
 .search .section {
   margin-top: 20px;
@@ -399,20 +632,13 @@ li.h {
 }
 
 .search .filename {
-  font-size: 12px;
-  max-height: 1.5em;
-  white-space: nowrap;
-  /*overflow: scroll;*/
-  overflow: hidden;
-  color: #6C6C6C;
-  /*margin-left: 23px;*/
   margin-top: 4px;
 }
 
 .search .noresults {
   margin-top: 20px;
   margin-bottom: 5px;
-  font-size: 18px;
+  font-size: 24px;
   font-wieght: 700;
 }
 
@@ -422,16 +648,16 @@ li.h {
 }
 
 .ondeck-container {
-  margin-top: 6px;
-  margin-left: 236px;
+  min-height: 71px;
+  max-height: 350px;
+  padding: 10px 0;
+  overflow: hidden;
+  border-bottom: 2px solid #111;
 }
 
-#ondeck {
-  //height: 64px;
-  height: 94px;
-}
-#ondeck.featured {
+.ondeck-container.featured {
   height: 100%;
+  border: none;
 }
 
 .ondeck
@@ -439,38 +665,43 @@ li.h {
   height: 100%;
   clear: both;
   position: relative;
-  margin-top: 0px;
+  margin-top: 10px;
+  margin-bottom: 10px;
   font-size: 14px;
 }
 
-.ondeck li {
+.ondeck td {
   max-height: 1.5em;
   white-space: nowrap;
+  overflow: hidden;
+  padding: 0;
+}
+
+.ondeck .requestor-container {
+  display: inline-block;
+  position: relative;
+  top: 2px;
+  vertical-align: top;
+  width: 100%;
+  height: 16px;
+  text-align: right;
+  font-size: 11px;
+  min-width: 46px;
   overflow: hidden;
 }
 
 .ondeck .requestor {
-  display: inline-block;
-  vertical-align: top;
-  padding-top: 1px;
-  font-size: 11px;
-  width: 150px;
+  margin-right: 6px;
+  margin-left: 6px;
 }
 
-.ondeck .requestor div {
-  display: relative;  /* this is wrong FIXME */
-  height: 16px;
-  float: right;
-  overflow: hidden;
-  margin-right: 3px;
-}
-
-.ondeck .song {
-  /*font-weight: 700;*/
-}
 
 .ondeck .song.requested {
   color: white;
+}
+
+.ondeck .filename:before {  /* fix the sep */
+  font-size: 14px;
 }
 
 .songs {
@@ -491,41 +722,38 @@ li.h {
   min-height: 52px;
 }
 
-.albumlist-container {
-  position: relative;
-  display: block;
-  z-index:999;
-}
-
 .starslist {
   margin-left: 25px;
 }
 
 .starslist .section {
-    margin-top: 25px;
+  margin-top: 25px;
 }
 
 .download.control {
-    margin-left: 8px;
+  margin-left: 8px;
 }
 
 .stars.control.teeny {
-    margin-left: 4px;
-    padding-left: 4px;
-    padding-right: 4px;
+  margin-left: 4px;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+.nostars, .none {
+  margin-top: 20px;
+  margin-bottom: 5px;
+  font-size: 24px;
+  font-wieght: 700;
 }
 
 .songs .song {
   /* font-weight: 700; */
 }
 
-.songs .control {
-  margin-right: 6px;
-}
-
 .letterbar-container {
   display: inline-block;
-  position: absolute;
+  width: 0;
 }
 
 .letterbar {
@@ -551,20 +779,12 @@ li.h {
   margin-left: 15px;
 }
 
-.showcubes.gap {
-  margin-left: 20px;
-}
-
 .letterbar li:hover {
   color: #999;
 }
 
 .letterbar .active, .letterbar .active:hover, .letterbar:active {
   color: #AAA;
-}
-
-.channelbarconsole-container {
-  border-bottom: 2px solid #111;
 }
 
 .channelbar-container {
@@ -574,6 +794,7 @@ li.h {
   background-color: #333;
   overflow: hidden;
   white-space: nowrap;
+  border-bottom: 2px solid #111;
 }
 
 .channelbar {
@@ -595,11 +816,10 @@ li.h {
   position: absolute;
   top: 0;
   left: 0;
-  padding-top: 9px;
-  padding-left: 64px;
-  padding-right: 64px;
-  height: 100%;
-  width: 100%;
+  right: 0;
+  margin-top: 9px;
+  margin-left: 64px;
+  margin-right: 64px;
 }
 
 .channelbar-right {
@@ -611,42 +831,58 @@ li.h {
 }
 
 .channelbar-lower {
-  width: 100%;
   padding-top: 50px;
-  padding-left: 64px;
-  padding-right: 179px;
+  left: 0;
+  right: 0;
+  margin-left: 64px;
+  margin-right: 10px;
+}
+
+.topcontrols-container {
+  position: absolute;
+  top: 0px;
+  right: 10px;
+}
+
+.channelbar .notificationstoggle {
+  position: relative;
+  top: -3px;
+  margin-left: 15px;
+  -webkit-transform: rotate(180deg);
+}
+  
+.channelbar .soundfxtoggle {
+  position: relative;
+  top: 3px;
+}
+  
+.channelbar .notificationstoggle .icon-bubble3 {
 }
 
 .listeners-container {
 }
 
-.listeners-clipper {
-}
-
-#listeners {
+.listeners {
   color: #111;
   /*font-size: 12px; for three rows*/
   /*font-size: 16px; /*for two rows*/
   font-size: 14px;
-  font-style: italic;
+  font-style: normal;
   white-space: normal;
 }
 
-#listeners .count {
-  font-style: normal;
+.listeners .count {
+  white-space: nowrap;
 }
 
-#listeners .sep {
+.listeners .sep {
   color: #111;
   font-style: normal;
 }
-/*
-#listeners .sep:after {
-  content: '▪ ';
-  padding-left: 0.6em;
-  padding-right: 0em;
+
+.listener {
+  display: inline-block;
 }
-*/
 
 .listener.streaming {
   font-weight: 800;
@@ -658,17 +894,19 @@ li.h {
   text-shadow: 2px 2px 20px #6C6C6C;
 }
 .listener.idle {
-  font-style: normal;
+  font-style: italic;
 }
 
-#browsebar {
-  height: 38px;
-  width: 100%;
-  overflow: hidden;
+
+.browse-container {
+  margin-top: 17px;
+  margin-left: 66px;
+}
+
+.browsecontrols-container {
+  min-height: 56px;
   white-space: nowrap;
-  padding-left: 64px;
-  padding-top: 1px;
-  border-bottom: 2px solid #111;  
+  overflow: hidden;
 }
 
 .search-container {
@@ -681,7 +919,7 @@ li.h {
 }
 
 .searchtext {
-  width: 65px;
+  width: 42px;
   padding: 3px 9px;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 13px;
@@ -691,11 +929,14 @@ li.h {
   background: #333;
   border: 2px solid #6C6C6C;
   border-radius: 2px;
-  transition: none;
+  transition: width 0.2s;
 }
 
 .searchtext:focus {
-  width: 226px;
+  width: 280px;
+}
+
+.searchtext-cancel {
 }
 
 .searchtext :-moz-placeholder {
@@ -733,15 +974,30 @@ input:-moz-placeholder { color:#6C6C6C; font-weight: 700; }
 
 
 
-#login {
+.login-container {
   width: 100%;
-  padding-top: 50px;
-  padding-bottom: 60px;
-  border-bottom: 2px solid #111;  
+  height: 150px;
+  transition: height 0.2s, border-width 0s;
+  border-bottom: 2px solid #111;
+  overflow: hidden;
 }
 
-.login-container {
-  display: inline-block;
+body.loggedin .login-container {
+  height: 0px;
+  border-bottom: 0px solid #111;
+  transition: height 0.2s, border-width 0s ease 0.14s;
+}
+
+body.loggedout .ondeck-container,
+body.loggedout .browse-container,
+body.loggedout .next-container,
+body.loggedout .ondeckchattoggle-container {
+  display: none;
+}
+
+.login {
+  padding-top: 50px;
+  padding-bottom: 60px;
   padding-left: 250px;
 }
 
@@ -787,10 +1043,12 @@ input:-moz-placeholder { color:#6C6C6C; font-weight: 700; }
 
 .ouroboros-container {
   display: inline-block;
-  position: absolute;
+  position: fixed;
   z-index: 2;
-  top: 44px;
-  right: 106px;
+  //top: 10px;
+  //right: 50px;
+  bottom: 18px;
+  right: 70px;
 }
 
 .debug-container {
@@ -826,17 +1084,10 @@ input:-moz-placeholder { color:#6C6C6C; font-weight: 700; }
   text-shadow: 2px 2px 20px white
 }
 
-#results {
+.browseresults-container {
   display: block;
-  clear: both;
+  width: 100%;
   margin-top: 20px;
-/*  margin-bottom: 300px; */
-}
-
-#footer {
-  display: block;
-  clear: both;
-  height: 300px;
 }
 
 .buttonless {
@@ -848,17 +1099,6 @@ input:-moz-placeholder { color:#6C6C6C; font-weight: 700; }
   padding: 0px;
   margin: 0px;
 }
-
-/*i { */
-/*  border: 2px solid #6C6C6C; */
-/*  border-radius: 3px; */
-/*  padding: 2px 1px 1px 1px;  /* trbl */
-/*} */
-
-/*button span {
-  vertical-align: top;
-}*/
-
 
 .control {
   font-family: 'icomoon';
@@ -880,13 +1120,21 @@ input:-moz-placeholder { color:#6C6C6C; font-weight: 700; }
   user-select: none;
 }
 
+.control.enabled {
+  visibility: visible !important;
+}
+
 .control.large {
   height: 30px;
-  width: 100px;
+  width: 40px;
   border-radius: 3px;
   border-width: 3px;
   border-color: #6C6C6C;
   border-style: solid;
+}
+
+.control.wide {
+  width: 110px;
 }
 
 .control:focus {
@@ -906,15 +1154,11 @@ input:-moz-placeholder { color:#6C6C6C; font-weight: 700; }
 .control.medium {
   font-size: 32px;
   width: 38px;
-/*  font-size: 18px;
-  width: 26px;*/
 }
 
 .control.medium2 {
   font-size: 28px;
   width: 38px;
-/*  font-size: 18px;
-  width: 26px;*/
 }
 
 .control.small {
@@ -932,90 +1176,76 @@ input:-moz-placeholder { color:#6C6C6C; font-weight: 700; }
   top: 1px;
 }
 
-.control.close:before {
-  content: '\e002';
+.control.enqueue + span, .control.unqueue + span {
+  margin-left: 0.3em;
 }
 
 .control.enqueue:before {
-  content: '\e003';
+  content: '\e603';
+  -webkit-font-smoothing: antialiased;
 }
 
-.control.remove:before {
-  content: '\e004';
+.control.unqueue:before {
+  content: '\e604';
+  -webkit-font-smoothing: antialiased;
+}
+.control.enqueue.unqueue:before {
+  content: '\e604';
+  -webkit-font-smoothing: antialiased;
+}
+.control.enqueue.unqueue.first:before {
+  content: '\e62e';
 }
 
 .control.stars.n0:before {
-  content: '\e07c\e07c\e07c';
+  content: '\e610\e610\e610';
+  -webkit-font-smoothing: antialiased;
 }
 .control.stars.n1:before {
-  content: '\e07d\e07c\e07c';
+  content: '\e60f\e610\e610';
   visibility: visible !important;
+  -webkit-font-smoothing: antialiased;
 }
 .control.stars.n2:before {
-  content: '\e07e\e07c\e07c';
+  content: '\e60e\e610\e610';
   visibility: visible !important;
+  -webkit-font-smoothing: antialiased;
 }
 .control.stars.n3:before {
-  content: '\e07e\e07d\e07c';
+  content: '\e60e\e60f\e610';
   visibility: visible !important;
+  -webkit-font-smoothing: antialiased;
 }
 .control.stars.n4:before {
-  content: '\e07e\e07e\e07c';
+  content: '\e60e\e60e\e610';
   visibility: visible !important;
+  -webkit-font-smoothing: antialiased;
 }
 .control.stars.n5:before {
-  content: '\e07e\e07e\e07d';
+  content: '\e60e\e60e\e60f';
   visibility: visible !important;
+  -webkit-font-smoothing: antialiased;
 }
 .control.stars.n6:before {
-  content: '\e07e\e07e\e07e';
+  content: '\e60e\e60e\e60e';
   visibility: visible !important;
+  -webkit-font-smoothing: antialiased;
 }
 
-/*
-li.showcubes {
-  position: relative;
-  top: -4px;
-  background-image: url('/static/images/showcubes.png');
-  background-position: 0px 14px;
-  background-repeat: no-repeat;
-}
-
-.showcubes:hover {
-  background-position: -24px 14px;
-}
-
-.showcubes.active {
-  background-position: -47px 14px;
-}
-*/
-
-li.showall, li.showowners, li.shownewest {
-  position: relative;
-  top: 2px;
-  margin-right: -8px;
-}
-
-.control.showall:before {
-  content: '\e071';
-}
-
-.control.showowners:before {
-  content: '\e064';
-  //content: '\e065';
-}
-
-.control.shownewest:before {
-  content: '\e05c';
-}
-
-li.showcubes {
+li.showall, li.showusers, li.shownewest, li.showcubes {
   position: relative;
   top: 2px;
 }
 
-.control.showcubes:before {
-  content: '\e025';
+.userlist .owner {
+  font-size: 14px;
+  text-align: right;
+}
+
+.userlist td {
+  padding-right: 30px;
+  padding-bottom: 2px;
+  text-align: right;
 }
 
 li.showstars {
@@ -1023,23 +1253,18 @@ li.showstars {
   top: 1px;
 }
 
-.control.showstars:before {
-  content: '\e07e';
+li.showall {
+  font-size: 28px;
+  top: -3px;
+  margin-right: -5px;
 }
-
-#progressindicator {
-  font-size: 27px;
-  padding: 4px 0px 0px 6px;
-  width: 20px;
+li.showcubes {
+  font-size: 20px;
+  top: 0px;
 }
 
 .shy {
  /* things that hide until their parent is hovered over */
-  visibility: hidden;
-}
-
-.shy2 {
- /* a second shy class for things that still hide (mostly for the ondeck items) */
   visibility: hidden;
 }
 
@@ -1048,17 +1273,8 @@ body.noshy .shy
   visibility: visible;
 }
 
-body.noshy .shy2
-{
-  visibility: visible;
-}
 
 li:hover > .shy, div:hover > .shy, td:hover > .shy, span:hover > .shy, .reveal:hover .shy
-{
-  visibility: visible;
-}
-
-li:hover > .shy2, div:hover > .shy2, td:hover > .shy2, span:hover > .shy2
 {
   visibility: visible;
 }
@@ -1067,53 +1283,67 @@ li:hover > .shy2, div:hover > .shy2, td:hover > .shy2, span:hover > .shy2
   visibility: visible;
 }
 
-#channelname {
+.channelbar .channelname-container {
+  position: absolute;
+}
+
+.channelbar .channelname {
   display: inline-block;
-  float: left;
   color: #6C6C6C;
   min-width: 150px;
   font-size: 26px;
   margin-right: 20px;
 }
 
-#hostname {
-  display: inline-block;
-  position: relative;
-  left: 0px;
-  float: left;
-  clear: left;
-  color: #111;
+.hostname {
   font-size: 14px;
   padding-left: 2px;
   color: #111;
 }
 
-.channelname-container {
-  display: inline-block;
-  float: left;
-}
-
 .channeltoggle {
   position: absolute;
-  top: 5px;
+  top: 7px;
   left: 15px;
   z-index: 10;
 }
 
-.settingstoggle {
+.channeltoggle .icon-close {
+  font-size: 24px;
+}
+
+.ondeckchattoggle-container {
+  position: relative;
+}
+
+.chattoggle-container {
   position: absolute;
-  top: 3px;
-  right: 15px;
-  float: right;
-  z-index: 10;
+  right: 10px;
+  bottom: -1px;
+  height: 4px;
+  width: 44px;
+  z-index: 9;
+}
+
+.chattoggle-container:hover, .ondeckchattoggle-container:hover .chattoggle-container {
+  background-color: #333;
+  border-left: 2px solid #111;
+  border-right: 2px solid #111;
+}
+
+
+.ondeckchattoggle-container:hover .chattoggle.shy {
+  visibility: visible;
 }
 
 .chattoggle {
-  position: absolute;
-  top: 3px;
-  right: 15px;
-  float: right;
+  position: relative;
+  top: -15px;
   z-index: 10;
+}
+
+.inchat .chattoggle-container {
+  display: none;
 }
 
 .thisisme { 
@@ -1141,55 +1371,21 @@ li:hover > .shy2, div:hover > .shy2, td:hover > .shy2, span:hover > .shy2
 }
 
 .logo-container {
-  position: absolute;
-  top: 4px;
-  right: 64px;
-  width: 115px;
-  padding-top: 5px;
+  width: 100%;
+}
+
+.channelbar .logo-container {
+  margin-top: 5px;
 }
 
 .logo {
-  display: inline-block;
+  display: block;
+  margin: 0 auto;
   width: 115px;
   height: 30px;
   background-image: url('/static/images/otto-6C-460x100.png');
   background-size: contain;
   background-repeat: no-repeat;
-}
-
-.maincontrols-container
-{
-  position: relative;
-  width: 500px;
-  margin-left: auto;
-  margin-right: auto;
-  height: 100%;
-  white-space: nowrap;
-}
-
-.maincontrols {
-  display: inline-block;
-  height: 100%;
-  white-space: nowrap;
-}
-
-.maincontrols-left {
-  display: inline-block;
-  float: left;
-  width: 200px;
-  padding-right: 40px;
-}
-
-.maincontrols-center {
-  display: inline-block;
-  float: left;
-}
-
-.maincontrols-right {
-  display: inline-block;
-  float: right;
-  width: 200px;
-  padding-left: 40px;
 }
 
 #connect {
@@ -1201,7 +1397,6 @@ li:hover > .shy2, div:hover > .shy2, td:hover > .shy2, span:hover > .shy2
 }
 
 #play {
-  margin-right: 20px;
   /* the play symbol is too small, so we bump it up... */
   /*font-size: 20px;*/
 }
@@ -1220,23 +1415,14 @@ li:hover > .shy2, div:hover > .shy2, td:hover > .shy2, span:hover > .shy2
   //margin-right: 55px;
 }
 
-.nowplaying #next {
-  display: inline-block;
-  //position: absolute;
-  //top: 95px;
-  //left: -19px;
-  /* slight tweak to the size to make it match play/pause */
-  font-size: 27px;
-}
-
-#currenttrack-container .stars {
+.currenttrack-container .stars {
   display: inline-block;
   //position: absolute;
   //top: 58px;
   //left: -32px;
   position: relative;
-  //top: 12px;
-  top: 3px;
+  top: 12px;
+  //top: 3px;
 }
 
 input[type="checkbox"] { 
@@ -1255,29 +1441,23 @@ input[type="checkbox"] + label {
   user-select: none;
 }
 
-#fx {
-  display: inline-block;
-  position: relative;
-  top: 8px;
-  left: -12px;
-  margin-top: 7px;
-  font-size: 14px;
-}
-
-input[type="checkbox"]:checked + #fx { 
-  visibility: visible !important;
-}
-
 #notifications {
-  display: inline-block;
-  position: relative;
-  top: -10px;
-  left: -143px;
-  margin-top: 7px;
+  display: block;
   font-size: 14px;
 }
 
 input[type="checkbox"]:checked + #notifications { 
+  visibility: visible !important;
+}
+
+#fx {
+  display: block;
+  position: relative;
+  top: -3px;
+  font-size: 14px;
+}
+
+input[type="checkbox"]:checked + #fx { 
   visibility: visible !important;
 }
 
@@ -1311,54 +1491,38 @@ input[type="checkbox"] + label span {
 }
 
 input[type="checkbox"] + label:before {
-  content: '\e010';
+  content: '\e611';
+  -webkit-font-smoothing: antialiased;
 }
 
 input[type="checkbox"]:checked + label:before {
-  content: '\e00f';
+  content: '\e612';
+  -webkit-font-smoothing: antialiased;
 }
 
 input[type="checkbox"] + label:hover, input[type="checkbox"] + label:hover span {
   color: #999;
 }
 
-
-.volumebar-container {
-  float: right;
-  cursor: crosshair; // other candidates: text, col-resize, s-resize
+.mmenu.mmenu-horizontal ul  /* why isn't this working */
+{
+  -webkit-transition-duration: 0.4s;
+  -moz-transition-duration: 0.4s;
+  transition-duration: 0.4;
 }
-
-#volumebar {
-  display: inline-block;
-  position: relative;
-  left: 8px;
-  top: 2px;
-  height: 8px;
-  width: 85px;
+.mmenu * {
+  text-shadow: none;
 }
-
-.volumebar-lineout-container {
-  display: inline-block;
-  position: relative;
-  top: -3px;
-  margin-left: 10px;
-  cursor: crosshair; // other candidates: text, col-resize, s-resize
-}
-
-#volumebar-lineout {
-  display: inline-block;
-  position: relative;
-  left: 8px;
-  top: 2px;
-  height: 8px;
-  width: 85px;
+.mmenu li > div:hover {
+  color: #999;
+  cursor: pointer;
 }
 
 .ui-slider .ui-slider-handle {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   border-radius: 14px;
-  top: -6px;
+  top: -5px;
   background-color: #6C6C6C;
   background-image: none;
 }
@@ -1398,6 +1562,7 @@ input[type="checkbox"] + label:hover, input[type="checkbox"] + label:hover span 
   border-color: #999;
 }
 
+
 .ui-resizable-handle {
   background-color: #6C6C6C;
   /*padding-left: 40px;
@@ -1405,7 +1570,6 @@ input[type="checkbox"] + label:hover, input[type="checkbox"] + label:hover span 
 }
 .ui-resizable-handle-s {
 }
-
 
 .ui-resizable { position: relative;}
 .ui-resizable-handle { position: absolute;font-size: 0.1px;z-index: 99999; display: block; }
@@ -1422,14 +1586,10 @@ input[type="checkbox"] + label:hover, input[type="checkbox"] + label:hover span 
 .ui-resizable-s {
   display: block; text-indent: -99999px; overflow: hidden; background-repeat: no-repeat; /* ui-icon */
   position: relative;
-  top: 15px;
+  top: 24px;
   left: 50%;
-  width: 16px; height: 7px; background-image: url(/static/images/ui-icons_222222_256x240.png);
+  width: 16px; height: 7px; background-image: url(images/ui-icons_222222_256x240.png);
   background-position: -16px -229px;
-}
-
-.ui-resizable-s:before {
-content: 'sdlfkjlskdjf';
 }
 
 .varioussep {
@@ -1443,18 +1603,18 @@ content: 'sdlfkjlskdjf';
 /* needs to be integrated in to the above */
 
 .albumlist-container {
+  display: block;
   position: relative;
-/*  background-image: url('static/backgrounds/black-40.png'); */
   background-color: #333;
   float: left;
   clear: both;
   margin-top: 10px;
-  margin-left: 30px;
   margin-right: 100px;
   margin-bottom: 25px;
   border: 2px solid #111;
   border-radius: 3px;
   padding: 10px;
+//  z-index:999;
 }
 
 .albumlist-container td {
@@ -1464,33 +1624,27 @@ content: 'sdlfkjlskdjf';
 .albumlist {
 }
 
+.albumlist .albumname {
+  margin-left: 14px;
+}
+
+.newestowner {
+  margin-top: 40px;
+  margin-bottom: 10px;
+  margin-left: 62px;
+}
+
 .albumdetails {
   position: relative;
   margin-top: 10px;
   padding-bottom: 30px;
+  min-height: 250px;
 }
 
-.albumcover {
+.albumcover-container {
   position: absolute;
   top: 30px;
   left: 40px;
-}
-
-.albumcover img {
-  width: 120px;
-/*  height: 120px;  // we only really care about the width */
-    /* except this means we should really supply our own (square) broken image image */
-/*  background-image: url('static/images/gray.gif'); */
-}
-
-.albumcover p {
-  width: 120px;
-  height: 120px;
-  padding: 5px;
-  border: none;
-  background-color: #222;
-  overflow: hidden;
-/*  background-image: url('static/images/gray.gif'); */
 }
 
 .albumcover .stars-container {
@@ -1522,7 +1676,7 @@ content: 'sdlfkjlskdjf';
 
 .albuminfo {
   padding-top: 38px;
-  padding-left: 205px;
+  padding-left: 285px;
   min-width: 400px;
 }
 
@@ -1564,6 +1718,9 @@ content: 'sdlfkjlskdjf';
 
 .inqueue {
   color: white
+}
+.ondeck .inqueue {
+  color: #6C6C6C;
 }
 
 .inqueue.first {
@@ -1647,57 +1804,92 @@ content: 'sdlfkjlskdjf';
   filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#000000', endColorstr='#00000000',GradientType=0 ); /* IE6-9 */
 }
 
-#console {
+.console-container {
   display: none;
   position: relative;
   width: 100%;
-  height: 170px;
+  height: 176px;
   background-color: #333;
   font: inherit;
-  border-top: 2px solid #111;
-  border-bottom: 1px solid #111;
+  border-bottom: 2px solid #111;
 }
 
-#console:focus {
+.console-container:focus {
   outline: none;
 }
 
-#console .input {
+.console-container #input {
   font-size: 14px;
   font-family: DejaVu Sans Mono, monospace;
 }
 
-#output {
-  /*display: inline-block;*/
+.console-container .chattoggle {
+  position: absolute;
+  top: 0px;
+  right: 14px;
+  z-index: 10;
+  background-color: rgba(51,51,51,0.6);
+}
+.console-container .chattoggle .icon-close {
+  font-size: 24px;
+}
+
+.output-container {
+  margin-left: 18px;
+}
+
+.output {
   width: 100%;
   height: 145px;
   word-wrap: break-word;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
-#inputdiv {
-  display: inline-block;
+.input-container {
   position: absolute;
-  bottom: -1px;
-  width: 100%;
+  left: 53px;
+  right: 0px;
+  bottom: 0px;
+//  width: 100%;
+  //padding-left: 53px;
 }
 
-#inputl {
-  display: inline-block;
+.inputl {
+  position: absolute;
+  bottom: 1px;
   background-color: #333;
 }
 
-.inputrdiv {
+#prompt {
   display: inline-block;
   position: relative;
-  width: 100%;
+  bottom: 5px;
+  padding-left: 2px;
+  background-color: #111;
+  font-size: 18px;
+  /*line-height: 18px;*/
+  font-weight: 800;
+  background-color: #333;
+  -webkit-font-smoothing: none;
+}
+
+#prompt:before {
+  content: ']';
+}
+
+.inputr-container {
+  position: absolute;
+  bottom: 0;
+  left: 13px;
+  right: 0px;
+  //margin-left: 13px;
+  //width: 100%;
   background-color: #333;
 }
 
-#inputr {
+#inputr {  /* this breaks if changed to .inputr! */
   display: inline-block;
-  width: 90%;
-/*  float: left; */
   background-color: #333;
 }
 
@@ -1726,52 +1918,66 @@ content: 'sdlfkjlskdjf';
   word-wrap: break-word;
 }
 
-#output em {
+.output em {
   font-style: italic;
 }
 
-#output strong {
+.output strong {
   font-weight: 800;
 }
 
-#output .event {
+.output .event {
   white-space: nowrap;
 }
 
-#output .timestamp , #output .user {
+.event .user {
+  padding-right: 1em;
+}
+.event .timestamp {
+  display: inline-block;
+  min-width: 40px;
+}
+.event p {  /* markdown converter emits 'p's */
+  margin: 0;
+  padding: 0;
+}
+
+.output .timestamp , .output .user {
   display: inline-block;
   vertical-align: top;
 }
 
-#output .timestamp {
+.output .timestamp {
   font-size: 10px;
   padding-top: 5px;
   color: #555;
   padding-right: 8px;
 }
 
-#output .sep:after {
+.output .sep:after {
   color: #555;
 }
 
-#output .user {
+.output .user {
   font-size: 12px;
   padding-top: 3px;
   color: #555;
 }
 
-#output .sep {
+.output .sep {
   white-space: nowrap;
 }
 
-#output .message, #output .name {
+.output .message, .output .name {
   display: inline-block;
+  padding-right: 200px; /* this doesn't work when usernames get big :( FIXME */
   font-size: 14px;
   white-space: normal;
   color: #6C6C6C;
 }
 
-
+.output p {
+}
 
 .cmd .clipboard {
     position: absolute;
@@ -1795,12 +2001,12 @@ content: 'sdlfkjlskdjf';
     margin: 0;
     height: 1.3em;
 }
-.terminal .terminal-output div {
+#terminal .terminal-output div {
     display: block;
 }
 /*
-.cmd, .terminal .terminal-output, .terminal .terminal-output div,
-.terminal .terminal-output div div, .cmd, .cmd span, .cmd div {
+.cmd, #terminal .terminal-output, #terminal .terminal-output div,
+#terminal .terminal-output div div, .cmd, .cmd span, .cmd div {
     font-family: monospace;
     color: #6C6C6C;
     background-color: #000;
@@ -1815,15 +2021,15 @@ content: 'sdlfkjlskdjf';
     background-color: #6C6C6C;
     color: #000;
 }
-.cmd div::-moz-selection, .terminal span::-moz-selection {
+.cmd div::-moz-selection, #terminal span::-moz-selection {
     background-color: #6C6C6C;
     color: #000;
 }
-.cmd div::selection, .terminal span::selection {
+.cmd div::selection, #terminal span::selection {
     background-color: #6C6C6C;
     color: #000;
 }
-.terminal .terminal-output div.error, .terminal .terminal-output div.error div {
+#terminal .terminal-output div.error, #terminal .terminal-output div.error div {
     color: red;
 }
 .tilda {
@@ -1844,22 +2050,6 @@ content: 'sdlfkjlskdjf';
     background-color: #000;
     font-size: 16px;
     line-height: 16px;
-}
-
-.prompt {
-  position: relative;
-  padding-left: 2px;
-  top: -3px;
-  background-color: #111;
-  /*font-size: 1.24em;*/
-  font-size: 19px;
-  line-height: 18px;
-  font-weight: 800;
-  background-color: #333;
-}
-
-.prompt:before {
-  content: ']';
 }
 
 #webcast-container {
@@ -2007,8 +2197,8 @@ content: 'sdlfkjlskdjf';
 
 .artistlist .stars {
   display: inline-block;
-  position: relative;
-  top: 22px;
+  position: absolute;
+  top: 24px;
 }
 
 .songs .artistlist {
@@ -2036,36 +2226,261 @@ content: 'sdlfkjlskdjf';
   z-index: 10;
 }
 
-#channellist {
+.channellist-container {
 }
 
-#channellistheader {
+.channellistheader {
   height: 81px;
   border-bottom: 2px solid black;
 }
 
-#channellistheader .channeltoggle .span {
+/*
+.channellistheader .channeltoggle .span {
   font-size: 100px;
 }
+*/
 
-.currentchannel { 
+.channelselect {
+  position: relative;
+  top: 1px;
+  padding-top: 10px;
+  margin-left: 40px;
+  margin-right: 60px;
+}
+
+.channelselect .channelname {
+  height: 23px;
+}
+
+.currentchannel .channelselect { 
   font-weight: 700;
 }
 
-.channelselect {
+.channellisteners {
+  min-height: 23px;
+  line-height: 18px;
+  //font-weight: 300;
 }
 
-.channelfork {
-  position: absolute;
-  top: 8px;
-  right: 50px;
-  float: right;
-  z-index: 10;
+.channellisteners .count {
+  margin-right: 14px;
 }
 
 .channelsettings { 
   position: absolute;
-  top: 8px;
-  right: 15px;
+  width: 10px;
+  padding: 10px 25px 35px 8px;
+  top: 1px;
+  left: 3px;
+}
+
+.channelsettings .icon-menu {
+  font-size: 20px;
+}
+
+.open .channelsettings {
+  visibility: visible;
+}
+
+.changechannel .settings {
+  position: relative;
+  top: 2px; /* the extra 2px hides border */
+  height: 0;
+  margin: 10px 16px 0 15px;
+  padding: 0px 0 0 20px;
+  border-top: 2px solid #111;
+  overflow: hidden;
+  transition: height 0.2s ease 0.14s;
+}
+.open.changechannel .settings {
+  height: 70px;
+}
+
+.changechannel .settings .channelsettings {
+  position: absolute;
+  top: 2px;
+  left: 274px;
+}
+
+.changechannel .settings .channelplay {
+  position: relative;
+  top: 22px;
+  left: 1px;
+}
+.changechannel.playing .settings .channelplay .icon-play2:before {
+  content: "\e602";
+}
+.changechannel .settings .volumelineout-container {
+  top: -12px;
+  left: -35px;
+}
+
+.changechannel .channelerrata-container {
+  position: absolute;
+  width: 100%;
+  top: 1px;
+  left: 5px;
+  color: #111;
+  font-size: 12px;
+}
+.changechannel .time-container {
+  position: relative;
+  width: 113px;
+  height: 18px;
+  top: 0px;
+}
+.changechannel .time {
+  position: absolute;
+  top: 2px;
+  right: 0px;
+}
+.changechannel #time,
+.changechannel #total-time {
+  color: #111;
+}
+.changechannel .audio {
+  position: absolute;
+  top: 0px;
+  left: 170px;
+  color: #111;
+  font-size: 12px;
+}
+.changechannel .bitrate {
+  position: absolute;
+  top: 0px;
+  right: 78px;
+  color: #111;
+  font-size: 12px;
+}
+
+.changechannel .settings .channelsettings .icon-close {
+  font-size: 16px;
+}
+
+.channeloutput {
+  position: absolute;
+  width: 10px;
+  padding: 10px 35px 35px 8px;
+  top: 2px;
+  right: 0px;
   z-index: 10;
+}
+
+.lineout .channeloutput {
+  visibility: visible;
+}
+
+.lineout .channeloutput .icon-volume-mute:before {
+  visibility: visible;
+  content: "\e638";
+}
+
+.currentchannel .channeloutput .icon-volume-mute:before { 
+  visibility: visible;
+  content: "\e63a";
+}
+
+.currentchannel.lineout .channeloutput .icon-volume-mute:before { 
+  content: "\e638";
+}
+
+
+@media (max-width: 480px) {
+  .chattoggle { display: none; }
+  .logo-container { display: none; }
+  .listeners-container { display: none; }
+  .shy {
+    visibility: visible;
+  }
+  .channelbar-container {
+    border: none;
+    height: 150px;
+  }
+
+  .channeltoggle {
+    left: -20px;
+  }
+
+  .maincontrols-center {  /* not used anymore */
+    position: absolute;
+    top: 80px;
+    left: 50%;
+    margin-left: -200px;
+  }
+  .control {
+    -webkit-transform: scale(1.3, 1.3);
+  }
+  .channeltoggle {
+    -webkit-transform: scale(1.2, 1.2);
+  }
+
+  .next-container {
+    position: absolute;
+    top: -242px;
+    left: -2px;
+  }
+  .currenttrack-container {
+    margin-top: 350px;
+  }
+
+  .currentcover-container {
+    position: absolute;
+    top: -380px;
+    width: 300px;
+    -webkit-transform: scale(0.5, 0.5);
+    left: 50%;
+    margin-left: -150px;
+  }
+  .currentcover-container img {
+  }
+  .time-container {
+    display: block;
+    position: absolute;
+    top: -22px;
+    left: 120px;
+    -webkit-transform: scale(1.5, 1.5);
+  }
+  .progress-container {
+    position: absolute;
+    top: -50px;
+    left: 80px;
+    -webkit-transform: scale(2.0, 2.0);
+  }
+  .progress {
+    width: 140px !important;
+  }
+
+  .currentsong-container {
+    position: absolute;
+    top: -140px;
+    left: 20px;
+  }
+  .currentalbum-container {
+    position: absolute;
+    top: -110px;
+    left: 20px;
+  }
+  .currentartist-container {
+    position: absolute;
+    top: -85px;
+    left: 20px;
+  }
+  .currentyear-container {
+    position: absolute;
+    top: -238px;
+    right: 20px;
+  }
+  .currenttrack {
+    overflow: visible;
+  }
+  .currenttrack .stars {
+    position: absolute;
+    top: -150px;
+    left: 230px;
+  }
+
+}
+
+
+@media (min-width: 481px) {
 }

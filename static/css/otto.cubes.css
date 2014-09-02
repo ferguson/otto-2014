@@ -1,33 +1,315 @@
-#landscape {
-  position: absolute;
-/*  top: 0; */
-/*  left: 0; */
-  float: left;
-  clear: none;
-  width: 100%;
-/*  height: 790px; */
+/* the welcome screen css is tucked here so it only loads when needed
+   along with the cubes module which it requires anyways */
+
+.welcome-container {
   height: 100%;
-  z-index: 1;
-  background: url('/static/images/grid_tile.png');
-/*  overflow: hidden; */
+  background-color: #333;
+  //overflow: hidden;
+  white-space: nowrap;
+}
+
+.welcome {
+  width: 100%;
+  padding-top: 15px;
+  vertical-align: top;
+  font-family: 'Lato', helvetica, arial;
+}
+
+.greeting {
+  display: block;
+  visibility: visible;  /* undo the FOUC fix in otto.css */
+  width: 100%;
+  margin-top: 60px;
+  text-align: center;
+  color: #BF6F04;
+}
+
+.hi {
+  font-size: 48px;
+  margin-bottom: 60px;
+}
+
+.explain {
+  font-size: 22px;
+  line-height: 36px;
+  color: #BF6F04;
+}
+
+.greeting .folder {
+  margin: 20px 0 0px 0;
+  font-size: 32px;
+  color: #6C6C6C;
+}
+
+.greeting .folder button {
+  position: relative;
+  top: 3px;
+  left: -8px;
+}
+
+.greeting .folder .path {
+  position: relative;
+  left: -4px;
+  padding: 5px 20px 5px 6px;
+  border: solid 2px rgba(0,0,0,0);
+}
+
+.greeting .folder .path:active,
+.greeting .folder .path:focus {
+  border: solid 2px #BF6F04;
+  border-radius: 3px;
+  outline: none;
+}
+
+.explain.note {
+  position: relative;
+  top: 6px;
+  font-size: 16px;
+  //color: #6C6C6C;
+}
+
+.explain.note button {
+  position: relative;
+  top: 6px;
+  left: -2px;
+}
+
+.control.loadmusic,
+.control.restartload,
+.control.continue {
+  position: relative;
+  line-height: 19px;
+  z-index: 3;
+}
+
+.control.continue {
+  margin-top: 10px;
+}
+
+.control.medium2.begin {
+  margin-top: 6px;
+}
+
+.control.loadmusic {
+  margin-top: 55px;
+}
+
+.beginmessage {
+  position: absolute;
+  top: 70px;
+  width: 100%;
+  text-align: center;
+  z-index: 2;
+}
+
+.beginmessage div {
+  display: inline-block;
+}
+.beginmessage div button {
+  position: relative;
+  top: 8px;
+  left: -1px;
+}
+
+.beginmessage > button {
+  margin-top: 22px;
+}
+
+.initialload-container {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 100%;
+}
+
+.cubeswithload-container {
+}
+
+.loadingstatus {
+  position: relative;
+  padding-top: 74px;
+  height: 120px;
+  width: 100%;
+}
+
+.browseresults-container .loadingstatus {
+  padding-top: 0;
+}
+
+.status {
+  display: none;
+  width: 100%;
+  text-align: center;
+  font-size: 22px;
+  line-height: 22px;
+  color: #BF6F04;
+}
+
+.status {
+}
+.loadingstatus.begin     .status.begin,
+.loadingstatus.searching .status.searching,
+.loadingstatus.loading   .status.loading,
+.loadingstatus.finished  .status.finished,
+.loadingstatus.nonefound .status.nonefound,
+.loadingstatus.error     .status.error {
+  display: inline-block;
+}
+
+.loadingresults.error .loadingcurrent {
+  visibility: hidden;
+}
+
+.loadingprogress {
+  position: relative;
+  top: -50px;
+  width: 60%;
+  height: 20px;
+  left: 45px;
+  margin: 0 auto;
+  white-space: nowrap;
+}
+
+.loadingprogress .progress {
+  cursor: inherit;
+}
+
+.loadingcurrent {
+  position: relative;
+  top: -40px;
+  margin-top: 25px;
+  margin-left: 100px;
+  height: 48px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.thumb.px40:hover {
+  border: solid 2px #333;
+  cursor: inherit;
+}
+
+.loadingspinner {
+  position: relative;
+  display: inline-block;
+}
+
+.loadingspinner div {
+  display: inline-block;
+}
+
+.loadingspinner .note {
+  position: relative;
+  top: -6px;
+  left: 12px;
+  width: 110px;
+  text-align: left;
+}
+
+.control.loadmusic2 {
+  position: absolute;
+  padding-top: 0;
+  right: 30px;
+  top: -7px;
+  line-height: 11px;
+}
+
+.browseresults-container .cubeswithload-container {
+  margin-right: 75px;
+}
+
+.browseresults-container .loadingstatus {
+  height: 30px;
+}
+
+.browseresults-container .loadingstatus .status,
+.browseresults-container .loadingspinner {
+  display: none !important;
+}
+
+.browseresults-container .loadingstatus.begin .status.begin {
+  display: block !important;
+}
+
+.browseresults-container .loadingprogress {
+  top: -30px;
+}
+
+.browseresults-container .loadingcurrent {
+  top: -50px;
+}
+
+.browseresults-container .loadingcubes-container {
+  position: relative;
+  top: -40px;
+}
+
+.loadingcubes {
+  position: relative;
+  height: 512px;
+}
+
+.cubes-container {
+  position: absolute;
+  bottom: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+.resort {
+  position: absolute;
+  bottom: 60px;
+  left: 80px;
+}
+
+.landscape-right {
+  position: absolute;
+  bottom: 0;
+  width: 50%;
+  right: 50%;
+  height: 500px;
+  transform: scaleX(-1);
+  -webkit-transform: scaleX(-1);
+  /* background: url('/static/images/grid_tile.png'); */
+  background: url('/static/images/grid_tile.svg');
+  background-color: #333;
+  border-top: solid 1px #2D2D2D;
+  /* -webkit-mask-image: -webkit-gradient(top, rgba(255,255,255,0), rgba(255,255,255, 1)) */
+  /* http://mir.aculo.us/2012/09/16/masking-html-elements-with-gradient-based-fadeouts/ */
+  -webkit-mask-image: -webkit-gradient(linear, right bottom, right top, from(rgba(0,0,0,1)), color-stop(0.40, rgba(0,0,0,1)), to(rgba(0,0,0,0.3)));
+  /* mask: url(#fade_right_svg_mask); */
   background-position: top;
 }
 
-#cubes {
-  position: relative;
+.landscape-left {
+  position: absolute;
+  bottom: 0;
+  width: 50%;
+  left: 50%;
+  height: 500px;
+  /* background: url('/static/images/grid_tile.png'); */
+  background: url('/static/images/grid_tile.svg');
+  background-color: #333;
+  border-top: solid 1px #2D2D2D;
+  /* -webkit-mask-image: -webkit-gradient(top, rgba(255,255,255,0), rgba(255,255,255, 1)) */
+  /* http://mir.aculo.us/2012/09/16/masking-html-elements-with-gradient-based-fadeouts/ */
+  -webkit-mask-image: -webkit-gradient(linear, right bottom, right top, from(rgba(0,0,0,1)), color-stop(0.40, rgba(0,0,0,1)), to(rgba(0,0,0,0.3)));
+  /* mask: url(#fade_right_svg_mask); */
+  background-position: top;
+}
+
+.cubes {
+  position: absolute;
+  bottom: 94px;
+  left: 50%;
   width: 1px;
-/*  height: 1px; */
-/*  height: 100%; */
-  margin: auto;
+  margin: 0 auto;
   text-align: left;
-  top: 700px;
 }
 
 .scene {
-/*  position: absolute; */
-/*  width: 100%; */
-/*  height: 100%; */
-/*  z-index: 1; */
+  position: relative;
 }
 
 .cube {
@@ -48,17 +330,20 @@
   padding-bottom: 10px;
   font-weight: 800;
   font-size: 9px;
-  z-index: 0;
+  color: #505050;
   cursor: pointer;
   transform: skew(63deg,-26.5deg) !important;
-  transform-origin: -0% -0%;
+  transform-origin: -8px 1px;
+  -webkit-transform: skew(63deg,-26.5deg) !important;
+  -webkit-transform-origin: -8px 1px;
 }
 
 .stacklabel:hover {
   /* text-decoration: underline; */
-  text-shadow: 1px 1px 5px white
+  /* text-shadow: 1px 1px 5px white */
+  color: #999;                
 }
 
 .stacklabel.active {
-  color: #FFFFFF;
+  color: #AAA;
 }

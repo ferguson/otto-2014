@@ -682,6 +682,14 @@ class DB():
         return users
 
 
+    def save_musicsearchdir(self, searchdir):
+        self.db.preferences.update({'key': 'searchdir'}, {'key': 'searchdir', 'value': searchdir}, upsert=True)
+
+    def load_musicsearchdir(self):
+        o = self.db.preferences.find_one({'key': 'searchdir'})
+        return o['value'] if o else None
+
+
 ##############################################################################
 ### api ######################################################################
 ##############################################################################

@@ -12,8 +12,6 @@ otto.listeners = do ->  # note the 'do' causes the function to be called
   # and would miss our awful abuse of the poor object
   # (we are adding attributes like [key].attribute)
 
-  listeners.SocketList = class SocketList extends Array
-
   listeners.ListenerList = class ListenerList extends Array
     constructor: ->  # is this necessary? (oddly, it seems it is)
 
@@ -21,7 +19,7 @@ otto.listeners = do ->  # note the 'do' causes the function to be called
       if id not in @
         @push id
         @[id] =
-          socketids: new SocketList()
+          socketids: {}
           user: user
           address: address
           channelname: channelname
@@ -41,27 +39,33 @@ otto.listeners = do ->  # note the 'do' causes the function to be called
       @[id].channelname = channelname
       return no
 
+    changeChannel: (id, channelname) ->
+      @[id].channelname = channelname
+
     remove: (id) ->
       if id in @
         return removefromarray(@, id)
       return no
 
     empty: (id) ->
-      if @[id].socketids.length == 0 and @[id].streams == 0
+      if Object.keys(@[id].socketids).length == 0 and @[id].streams == 0
         return yes
       return no
 
     addSocket: (id, socketid) ->
       @add(id)
-      @[id].socketids.push socketid
       @[id].socketids[socketid] =
         inchat: 0
         typing: 0
         focus: 1
         idle: 0
 
+    getSockets: (id) ->
+      return @[id].socketids
+
     removeSocket: (id, socketid) ->
-      removefromarray(@[id].socketids, socketid)
+      #removefromarray(@[id].socketids, socketid)
+      delete @[id].socketids[socketid]
       if @empty(id)
         return @remove(id)
       return no
@@ -74,8 +78,9 @@ otto.listeners = do ->  # note the 'do' causes the function to be called
         @[id].streams--
 
     set: (id, socketid, k, v) ->
+      return no if not @[id].socketids[socketid]
       oldv = @[id].socketids[socketid][k]
-      console.log 'k', k, 'oldv', oldv, 'v', v
+      #console.log 'k', k, 'oldv', oldv, 'v', v
       if not (v is oldv)
         @[id].socketids[socketid][k] = v
         return yes
@@ -116,58 +121,65 @@ otto.listeners = do ->  # note the 'do' causes the function to be called
           callback()
 
 
-    set_user: (session, sessionID) ->
-      if @list.setUser sessionID, session.user, session.address
-        @hysteresis 'join', sessionID, =>
-          if not @list.empty(sessionID)
-            @trigger 'userjoin', @list[sessionID]
+    set_user: (session) ->
+      if @list.setUser session.sessionID, session.user, session.address
+        @hysteresis 'join', session.sessionID, =>
+          if not @list.empty(session.sessionID)
+            @trigger 'userjoin', @list[session.sessionID]
 
 
-    change_user: (session, sessionID) ->
-      if @list.changeUser sessionID, session.user, session.address
-        @hysteresis 'join', sessionID, =>
-          if not @list.empty(sessionID)
-            @trigger 'userjoin', @list[sessionID]
+    change_user: (session) ->
+      if @list.changeUser session.sessionID, session.user, session.address
+        @hysteresis 'join', session.sessionID, =>
+          if not @list.empty(session.sessionID)
+            @trigger 'userjoin', @list[session.sessionID]
       else
-        @trigger 'userchange', @list[sessionID]
+        @trigger 'userchange', @list[session.sessionID]
 
+    change_channel: (session) ->
+      console.log 'listeners.change_channel', session.channelname
+      @list.changeChannel session.sessionID, session.channelname
 
-    add_socket: (socketid, session, sessionID, channelname) ->
-      console.log 'add_socket sessionID', sessionID
-      @list.setUser sessionID, session.user, session.address, channelname
-      @list.addSocket sessionID, socketid
+    add_socket: (session, socket) ->
+      console.log 'add_socket sessionID', session.sessionID
+      @list.setUser session.sessionID, session.user, session.address, session.channelname
+      @list.addSocket session.sessionID, socket.id
       @update()
 
 
-    remove_socket: (socketid, sessionID) ->
-      console.log 'remove_socket sessionID', sessionID
-      left = @list.removeSocket sessionID, socketid
+    get_sockets: (session) ->
+      @list.getSockets session.sessionID
+
+
+    remove_socket: (session, socket) ->
+      console.log 'remove_socket sessionID', session.sessionID, 'socket.id', socket.id
+      left = @list.removeSocket session.sessionID, socket.id
       if left
-        @hysteresis 'join', sessionID, =>
-          if @list.empty(sessionID)
+        @hysteresis 'join', session.sessionID, =>
+          if @list.empty(session.sessionID)
             @trigger 'userleft', left
       @update()
 
 
-    add_stream: (session, sessionID) ->
-      console.log 'add_stream sessionID', sessionID
-      @list.setUser sessionID, session.user, session.address
-      @list.addStream sessionID
+    add_stream: (session) ->
+      console.log 'add_stream for sessionID', session.sessionID
+      @list.setUser session.sessionID, session.user, session.address
+      @list.addStream session.sessionID
       @update()
-      if @list[sessionID].streams == 1
-        @hysteresis 'stream', sessionID, =>
-          if @list[sessionID].streams > 0
-            @trigger 'streamingstart', @list[sessionID]
+      if @list[session.sessionID].streams == 1
+        @hysteresis 'stream', session.sessionID, =>
+          if @list[session.sessionID].streams > 0
+            @trigger 'streamingstart', @list[session.sessionID]
 
 
-    remove_stream: (sessionID) ->
-      console.log 'remove_stream sessionID', sessionID
-      @list.removeStream sessionID
+    remove_stream: (session) ->
+      console.log 'remove_stream for sessionID', session.sessionID
+      @list.removeStream session.sessionID
       @update()
-      if @list[sessionID].streams == 0
-        @hysteresis 'stream', sessionID, =>
-          if @list[sessionID].streams == 0
-            @trigger 'streamingstop', @list[sessionID]
+      if @list[session.sessionID].streams == 0
+        @hysteresis 'stream', session.sessionID, =>
+          if @list[session.sessionID].streams == 0
+            @trigger 'streamingstop', @list[session.sessionID]
 
 
     set_state: (sessionID, socketid, state, value) ->
@@ -178,6 +190,9 @@ otto.listeners = do ->  # note the 'do' causes the function to be called
 
     list_socketids: (sessionID) ->
       return @list[sessionID].socketids
+
+    get_list: ->
+      return @list
 
   ##### end of class Listeners
 

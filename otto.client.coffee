@@ -1,43 +1,34 @@
-###############
-### client side (otto.client served by zappa as /otto.client.js)
-###############
+####
+#### client side (otto.client served by zappa as /otto.client.js)
+####
 
 global.otto.client = ->
-
   window.otto = window.otto || {}
 
   otto.socketconnected = false
-  otto.greeted = false
+  otto.salutations = false
   otto.clientstate = {}
   otto.myusername = no
-  otto.mychannelname = no
+  otto.mychannel = no
   otto.current_track_qid = no
   otto.channel_list = []
   otto.current_channel = no
   otto.play_state = 'unknown'
   otto.connect_state = 'disconnected'
-  otto.chat_state = no
   otto.ignore_reload = false
   otto.cache = { queue: [], list: [], stars: [] }
   otto.current_volume = 80
   otto.soundfx = no
   otto.notifications = no
 
+  ## should only do this in dev mode, but we need to tell the client we are in dev mode somehow FIXME
+  #window.console.log = ->
+  #  @emit 'console.log', Array().slice.call(arguments)
+  #window.console.dir = ->
+  #  @emit 'console.dir', Array().slice.call(arguments)
 
-  #disable shy controls on touch devices
-  #touch_device = 'ontouchstart' in document.documentElement
-  #touch_device = ('ontouchstart' in window) or window.DocumentTouch and document instanceof DocumentTouch
-  #touch_device = 'ontouchstart' in window or 'onmsgesturechange' in window # 2nd test for ie10
-
-  #touch_device = true  #detection not working for some reason wtf? FIXME
-  $('head').append '<script src="static/js/modernizr.custom.66957.js">'
-  touch_device = Modernizr.touch  # prob doesn't work for ie10
-  #http://stackoverflow.com/questions/4817029/whats-the-best-way-to-detect-a-touch-screen-device-using-javascript
-  if touch_device
-    console.log 'touch device detected, disabling shy controls'
-    $('body').addClass 'noshy'
-    $('head').append '<script src="static/js/fastclick.js">'
-    FastClick.attach(document.body)
+  #alternately:
+  #$('body').append $ '<script src="http://jsconsole.com/remote.js?656D8845-91E3-4879-AD29-E7C807640B61">'
 
 
   @on 'error': ->
@@ -49,8 +40,19 @@ global.otto.client = ->
   @on 'connect': ->
     console.log 'socket.io connected'
     otto.socketconnected = true
-    $('body').removeClass 'disconnected'
+    # now we wait for the server to say 'proceed' or ask us to 'resession'
+
+
+  @on 'resession': ->
+    console.log 'sir, yes sir!'
+    $.get '/resession', =>
+      console.log 'sir, done sir!'
+      otto.sayhello()
+
+
+  @on 'proceed': ->
     otto.sayhello()
+    # now we wait for the server to say 'welcome' and give us data
 
 
   @on 'disconnect': ->
@@ -70,32 +72,30 @@ global.otto.client = ->
   @connect undefined, 'reconnection limit': 5000, 'max reconnection attempts': Infinity
 
 
-  # use nextTick so the function, and the function it calls, are all defined
+  # use nextTick so the function, and the functions it calls, are all defined
   nextTick ->
     otto.start_client()
 
   otto.start_client = =>
-    console.log 'start_client()'
+    console.log 'start_client'
 
-    #otto.call_module 'webkit', 'init'
+    otto.touch_init()
 
     otto.showdown_converter = new Showdown.converter()
 
     $(window).on 'scrollstop', otto.results_lazyload_handler
-    #$(window).on 'resize', otto.results_lazyload_handler
     $(window).smartresize otto.results_lazyload_handler
-    #$(window).on 'resize', otto.adjust_autosize
-    $(window).smartresize otto.adjust_autosize  # can this take a second function?
+    $(window).smartresize otto.autosize_adjust
     $(window).on 'focus blur', otto.window_focus_handler
     otto.ouroboros_init()
     otto.window_idle_handler_init()
 
-    $(document.body).html otto.templates.body large_database: otto.large_database
+    $(document.body).html otto.templates.body_startup()
+
     $('body').on 'click', otto.button_click_handler
     $('body').on 'click', otto.letterbar_click_handler
     $('body').on 'change', otto.checkbox_click_handler
     $('body').on 'submit', otto.form_submit_handler
-    $('#channellist').on 'click', otto.channellist_click_handler
 
     $(window).on 'unload', ->
       otto.lastnotification.close() if otto.lastnotification
@@ -115,29 +115,61 @@ global.otto.client = ->
             when 'chat' then if v == '1' then $('.chattoggle').click()
             when 'ignorereload' then if v = '1' then otto.ignore_reload = true
 
-    otto.sayhello()
+    #otto.sayhello()  # is this needed? doesn't having it in @on 'connect' suffice? FIXME
+    # if it is needed we might be in trouble with out new 'proceed' and 'resession' setup
 
 
   otto.sayhello = =>
-    if otto.socketconnected and not otto.greeted
-      otto.greeted = true
+    if otto.socketconnected and not otto.salutations
+      otto.salutations = true
       console.log 'well, hello server!'
-      @emit 'hello'  # causes the server to welcome us with all kinds of state data
+      @emit 'hello', otto.clientstate # causes the server to welcome us and tells us our state
 
 
   otto.saygoodbye = =>
     console.log 'ok lady, goodbye!'
-    otto.greeted = false
-    otto.mychannelname = false
+    otto.salutations = false
+    otto.myusername = false
+    otto.mychannel = false
+    otto.current_track_qid = false
 
 
   @on 'welcome': ->
     console.log 'welcome data', @data
-    otto.process_myusername @data.myusername
-    otto.process_channellist @data.channellist
-    otto.process_lists @data.lists
-    if @data.stars
-      otto.process_stars @data.stars
+    $('body').removeClass 'disconnected'
+    otto.localhost = @data.localhost
+    otto.emptydatabase = @data.emptydatabase
+    otto.largedatabase = @data.largedatabase
+    otto.haslineout = @data.haslineout
+    otto.musicroot = @data.musicroot
+    console.log 'musicroot', otto.musicroot
+
+    #otto.emptydatabase = true  #!# temp. while developing
+
+    if otto.emptydatabase
+      otto.create_hellopage()
+      otto.channel_list = @data.channellist
+      otto.myusername = @data.myusername
+      otto.mychannel = @data.mychannel
+    else
+      $(document.body).html otto.templates.body()
+      $('.channellist-container').on 'click', otto.channellist_click_handler
+      otto.process_channellist @data.channellist, true  #process_mychannel will do the final html
+      otto.process_myusername.call @, @data.myusername
+      otto.process_mychannel.call @, @data.mychannel
+
+
+  @on 'begun': ->
+    otto.emptydatabase = false
+    $(document.body).html otto.templates.body()
+    $('.channellist-container').on 'click', otto.channellist_click_handler
+    otto.process_channellist otto.channel_list, true  #process_mychannel will do the final html
+    otto.process_myusername.call @, otto.myusername
+    otto.process_mychannel.call @, otto.mychannel
+    $('.output').append navigator.userAgent
+    $('.output').append otto.app
+
+    @emit 'updateme'
 
 
   otto.create_mainpage = ->
@@ -145,19 +177,34 @@ global.otto.client = ->
  #!#   $(document).attr 'title', otto.current_channel.fullname + ' ▪ otto' #FIXME
     $('#mainpage').html otto.templates.mainpage channel: otto.current_channel
 
-    $('#playlist').on 'click', otto.results_click_handler
-    $('#results').on 'click', otto.results_click_handler
-    $('#console').on 'click', otto.console_click_handler
-    $('#volumebar').slider value: otto.current_volume, range: 'min', slide: otto.adjust_volume_handler
-    $('#volumebar-lineout').slider value: otto.current_volume, range: 'min', slide: otto.adjust_volume_lineout_handler
+    $('.playing-container').on 'click', otto.results_click_handler
+    $('.browseresults-container').on 'click', otto.results_click_handler
+    $('.console-container').on 'click', otto.console_click_handler
+    $('.volume').slider value: otto.current_volume, range: 'min', slide: otto.adjust_volume_handler
+    $('.volumelineout').slider value: otto.current_volume, range: 'min', slide: otto.adjust_volumelineout_handler
     $('.scrollkiller').on 'mousewheel', otto.scroll_bubble_stop_handler
-    $('#console').resizable handles: 's', alsoResize: $('#output'), minHeight: 45, autoHide: true
-    $('.playlist-container').resizable handles: 's', alsoResize: $('#ondeck'), minHeight: 146, autoHide: true
+    $('.console-container').resizable handles: 's', alsoResize: $('.output'), minHeight: 45, autoHide: true
+    $('.channellist-container').mmenu(  { slidingSubmenus: false } )
+    #$('.cursor-hider').hover (e) -> e.stopPropagation() # don't suppress the mouseleave event FIXME
+    $('.cursor-hider').on 'mouseenter', (e) -> e.stopPropagation()
     otto.chat_init()
+    # preserve chat window state
+    if otto.clientstate.inchat
+      otto.clientstate.inchat = false  # to convince enable_chat to act
+      otto.enable_chat true
 
 
-  @on 'playlistinfo': ->
-    active = $('.nowplayingcover').is '.active'
+  otto.create_hellopage = ->
+    otto.load_module 'cubes'  # all the welcome css is in otto.cubes.css
+    $(document.body).html otto.templates.body_welcome musicroot: otto.musicroot
+    $('.folder .path').keydown (e) ->
+      if e.keyCode is 13
+        e.preventDefault()
+        $('.folder .path').blur()
+
+
+  @on 'queue': ->
+    console.log 'queue', @data
     if @data.length
       n = 0
       console.log @data
@@ -165,16 +212,31 @@ global.otto.client = ->
         if song.nowplaying
           n = i
           break
+      if not otto.current_track_qid == false || otto.current_track_qid != @data[n].mpdqueueid
+        len = Math.ceil(@data[n].length)  # we want to round up so it matches what mpd does
+        # take 'len' if you don't want an initial progress bar
+        time = otto.current_song_time || { current: 0, total: len || 0 }
+        active = $('.currentcover-container .thumb').is '.active'
+        $('.currenttrack-container').html otto.templates.currenttrack song: @data[n], current: time.current, total: time.total
+        otto.autosize_adjust()
+        if active
+          top = $(window).scrollTop()
+          $('.currentcover-container .thumb').click()
+          $(window).scrollTop(top)
+          # that isn't cutting it, still scrolls if track changes
+          # and a minimum we should check if the album changed and only repaint if so
+
       otto.current_track_qid = @data[n].mpdqueueid
-      $('.nowplayingcover-container').html otto.templates.nowplaying_cover song: @data[n]
-      $('#currenttrack-container').html otto.templates.nowplaying_currenttrack song: @data[n]
-      $('#currenttrack-errata').html otto.templates.nowplaying_errata song: @data[n]
-      if otto.current_channel.layout is 'featured'
-        $('#ondeck').html otto.templates.nowplaying_featured songs: @data[0..@data.length]
-      else
-        $('#ondeck').html otto.templates.nowplaying_ondeck songs: @data[1..@data.length]
-      otto.adjust_autosize() # problem with getting the playlistinfo event before page is built on the client side?
-      if otto.notifications
+
+      $target = if otto.noscroll_click_event then $(otto.noscroll_click_event.target) else false
+      otto.noscroll_click_event = false
+      otto.render_without_scrolling $target, =>
+        if otto.current_channel.layout is 'featured'
+          $('.ondeck-container').html otto.templates.featured songs: @data[0..@data.length]
+        else
+          $('.ondeck-container').html otto.templates.ondeck songs: @data[1..@data.length]
+
+      if otto.notifications  # add notification for enter/leaving chat room #FIXME <- might be ok
         song = @data[n]
         if song._id isnt otto.lastnotificationid
           otto.lastnotificationid = song._id
@@ -184,23 +246,19 @@ global.otto.client = ->
           artist = song.artist || ''
           body = "#{album}\n#{artist}"
           body += "\n#{song.owners[0].owner}" if song.owners?[0].owner?
-          otto.lastnotification.close() if otto.lastnotification
+          otto.lastnotification.close() if otto.lastnotification  # we should (also?) close on 'finished' event
           otto.lastnotification = new Notification song.song, body: body, icon: "/image/120?id=#{song.cover}"
           #n.onshow = ->
           #  timeoutSet 10000, -> n.close()
     else
-      $('.nowplayingcover-container').empty()
-      $('#currenttrack-container').empty()
-      $('#currenttrack-errata').empty()
+      $('.currenttrack-container').html otto.templates.currenttrack {}
     otto.cache.queue = @data
-    if active
-      $('.nowplayingcover').removeClass('active')
-      $('.nowplayingcover').click()
 
     otto.mark_allthethings()
 
 
   @on 'state': ->
+    console.log 'state', @data
     otto.play_state = @data
     if @data is 'play'
       $play = $('#play')
@@ -216,82 +274,71 @@ global.otto.client = ->
     if @data
       parts = @data.split(':')
       [current, total] = parts[0..1]
-      otto.current_song_total = total
-      percent = (current / total * 100)
-      width = 90 * ( total / 2397 )
-      # 2397 = 39:57, length of the longest single to ever reach the UK charts!
-      width = 75 if width > 75
-      width = 5 if width < 5
+      otto.current_song_time = { current: current, total: total }
 
-      $('#progress-container').each (index, element) ->  # why each?
-        $progress_container = $ element
-        space = $(window).width() - $progress_container.offset().left
-        widthpx = width / 100 * space
-        $('#progress').css 'width', "#{widthpx}px"
-        $('#progress-bar').css 'width', "#{percent}%"
-        totalstr = otto.format_time total
-        currentstr = otto.format_time current, totalstr.length
-        $('#total-time').text totalstr
-        $('#current-time').text currentstr
-        $('#progress-container').css 'visibility', 'visible'
+      $('.timeprogress-container').html otto.templates.timeprogress_widgets total: total, current: current
 
 
   @on 'loader': ->
-    if @data.stdout
-      amountscrolledup =  $('#output').prop('scrollHeight') - $('#output').height() - $('#output').scrollTop()
-      $('#output').append otto.templates.loader event: @data.stdout
-      if amountscrolledup < 80
-        $('#output').scrollToBottom()
-    else if @data.count and @data.total
-      $('#loader_progress').text "#{@data.count} / #{@data.total}"
-    else if @data.album
-      $('#loader_current').text "#{@data.album} ▪ #{@data.fileunder[0].name}"
-      console.log @data
-      if otto.place_one_cube
-        html = otto.place_one_cube(@data.fileunder[0].key, @data.fileunder[0].name, @data.album)
-        $('.scene').append html
-        maxheight = otto.otto.cubes.maxheight
-        # position the cubes so the top fits on the landscape
-        $('#cubes').css('top', (-maxheight + 20) + "px")
-        # adjust the landscape grid to cover everything
-        $('#landscape').height(-maxheight + 300)
+    #console.log 'loader says:', @data
+    otto.client.cubes.loader_event @data
+    if @data is 'started'
+      if otto.emptydatabase
+        $(document.body).html otto.templates.initialload folder: $('.folder .path').text()
+        $('.loadingstatus').addClass('searching');
+        $('.loadingcubes').html otto.client.cubes.show()
+    else if @data.stdout and @data.stdout isnt 'new' and @data.stdout isnt ' ' and @data.stdout isnt ''
+      $output = $('.output')
+      if $output.length
+        amountscrolledup =  $output.prop('scrollHeight') - $output.height() - $output.scrollTop()
+        $output.append otto.templates.loader event: @data.stdout
+        if amountscrolledup < 500  # was 80, but i think we need a different detection mech. for autoscroll
+          $output.scrollToBottom()
 
 
   @on 'myusername': ->
-    otto.process_myusername @data
+    console.log 'myusername'
+    otto.process_myusername.call @, @data
 
   otto.process_myusername = (username) ->
     otto.myusername = username
     if username
-      $('#login').replaceWith otto.templates.browsebar()
+      $('body').addClass 'loggedin'
+      $('body').removeClass 'loggedout'
     else
-      $('#browsebar').replaceWith otto.templates.login()
-      $('#results').empty()
-
-
-  @on 'loggedout': ->
-    console.log 'loggedout'
-    otto.process_myusername null
+      otto.enable_chat false
+      $('.browseresults-container').empty()
+      $('body').addClass 'loggedout'
+      $('body').removeClass 'loggedin'
 
 
   @on 'myurl': ->
+    console.log 'myurl'
     otto.myurl = @data.name
     $('#channelname').text @data.fullname
 
 
-  @on 'changechannel': ->
+  @on 'mychannel': ->
     console.log 'changing channel to', @data.name
-    otto.mychannelname = @data.name
-    html = otto.templates.channellist channellist: otto.channel_list
-    $('#channellist').html( html ).mmenu(  { slidingSubmenus: false } )
+    otto.process_mychannel.call @, @data.name
+
+  otto.process_mychannel = (name) ->
+    otto.mychannel = name
+    otto.current_track_qid = false
+
     otto.current_channel = false
     for channel in otto.channel_list
-      if channel.name is otto.mychannelname
+      if channel.name is otto.mychannel
         otto.current_channel = channel
     if not otto.current_channel then otto.current_channel = otto.channel_list[0]
-    otto.create_mainpage()
-    if otto.connect_state isnt 'disconnected'
-      otto.connect_player()
+
+    if not otto.emptydatabase
+      otto.create_mainpage()
+
+      $('.channellist-container').html otto.templates.channellist channellist: otto.channel_list
+
+      if otto.connect_state isnt 'disconnected'
+        otto.connect_player()
     @emit 'updateme'
 
 
@@ -303,7 +350,7 @@ global.otto.client = ->
       window.location.hash = '#connect=1'
     else
       window.location.hash = '' # hash still appears, rumour is you can't get rid of it
-    if otto.chat_state
+    if otto.clientstate.inchat
       if window.location.hash isnt ''
         window.location.hash += '&chat=1'
       else
@@ -313,9 +360,10 @@ global.otto.client = ->
 
   @on 'chat': ->
     console.log @data.name
+    return if @data.name is 'finished'
     otto.play_soundfx @data.name
     otto.play_notification @data
-    $output = $('#output')
+    $output = $('.output')
     amountscrolledup = $output.prop('scrollHeight') - $output.height() - $output.scrollTop()
     $output.append otto.templates.event event: @data
     if amountscrolledup < 80
@@ -323,6 +371,7 @@ global.otto.client = ->
 
 
   @on 'lists': ->
+    console.log 'lists'
     if @data
       otto.process_lists @data
 
@@ -332,7 +381,7 @@ global.otto.client = ->
         if user == otto.myusername
           otto.cache.list = user.list
           otto.mark_listed_items()
-          $('#results').trigger('scrollstop')
+          $('.browsersults-container').trigger('scrollstop')
 
 
   @on 'stars': ->
@@ -348,7 +397,7 @@ global.otto.client = ->
         console.log 'matched'
         otto.cache.stars = stars[username]
         otto.mark_starred_items()
-        $('#results').trigger('scrollstop')
+        $('.browseresults-container').trigger('scrollstop')
 
 
   @on 'reloadmodule': ->
@@ -378,7 +427,7 @@ global.otto.client = ->
           console.log 'disabling old reloaded style sheet'
           sheet.disabled = true
       catch err
-        console.log 'failed to disable style sheet'
+        console.error 'failed to disable style sheet'
     #$new_sheet = $('<style id="#'+@data.sheetname+'css">').html @data.css
     $new_sheet = $('<style>').html @data.css
     #$new_sheet[0].data = sheetname
@@ -387,60 +436,89 @@ global.otto.client = ->
 
 
   @on 'listeners': ->
+    #console.log 'listeners', @data
     socketid = @socket?.socket?.sessionid
-    otto.ll = @data
-    $('#listeners').html otto.templates.listeners(listeners: @data, socketid: socketid)
+    $('.listeners-container').html otto.templates.listeners(listeners: @data, socketid: socketid)
+
+    #$('.channellist-container').html otto.templates.channellist channellist: otto.channel_list, listeners: @data, socketid: socketid
+    # let's try to insert the listeners without rebuilding the entire channel list
+    # so that open channel setting don't go away every time a listener changes state
+    for channel in otto.channel_list
+      html = otto.templates.format_listeners_for_channel_in_channelbar listeners: @data, channelname: channel.name
+      $('.channellist-container [data-channelname="'+channel.name+'"] .channellisteners').html html
 
 
   @on 'channellist': ->
+    console.log 'channellist'
     otto.process_channellist @data
 
-  otto.process_channellist = (channellist) =>
+
+  @on 'outputs': ->
+
+  @on 'lineout': ->
+    if @data
+      for channelname,lineout of @data
+        $el = $('.channellist-container .changechannel[data-channelname="'+channelname+'"]')
+        if $el
+          if lineout == '1'
+            $el.addClass 'lineout'
+          else
+            $el.removeClass 'lineout'
+
+
+  @on 'status': ->
+    if @data
+      for channelname,status of @data
+        $el = $('.channellist-container .changechannel[data-channelname="'+channelname+'"]')
+        if $el
+          if status.state == 'play'
+            $el.addClass 'playing'
+          else
+            $el.removeClass 'playing'
+        if channelname == otto.mychannel
+          # should prob. do this here too: if parseInt($vol.slider('value')) != parseInt(status.volume)
+          $('#mainpage .volumelineout').slider 'option', 'value', status.volume
+        $el.find('.volumelineout').each ->
+          $vol = $(@)
+          # when i do a log based volume formula, i'll need to reverse it here
+          if parseInt($vol.slider('value')) != parseInt(status.volume)
+            #console.log '$vol.value', $vol.slider('value'), 'status.volume', status.volume
+            $vol.slider 'option', 'value', status.volume
+          $el.find('.channelerrata-container').html otto.templates.channel_status_errata_widget status: status
+
+
+  otto.process_channellist = (channellist, skiphtml) =>
     otto.channel_list = channellist
-    html = otto.templates.channellist channellist: otto.channel_list
-    $('#channellist').html( html ).mmenu(  { slidingSubmenus: false } )
-    if not otto.mychannelname
-      channelname = 'main'
-      @emit 'changechannel', channelname
+    unless skiphtml
+      $('.channellist-container').html otto.templates.channellist channellist: otto.channel_list
+      $('.volumelineout').slider value: otto.current_volume, range: 'min', slide: otto.adjust_volumelineout_handler
 
 
-  ##########
-  ########## handlers
-  ##########
+  ####
+  #### handlers
+  ####
 
   otto.checkbox_click_handler = (e) =>
     $checkbox = $(e.target)
     if not $checkbox.is 'input[type="checkbox"]'
       return
-    e.stopPropagation();
+    e.stopPropagation()
+
+    # no longer used
     if $checkbox.is '#fxtoggle'
       otto.soundfx = $checkbox.is ':checked'
       if otto.soundfx
         otto.play_soundfx 'fxenabled'
 
-    if $checkbox.is '#notificationstoggle'
-      if $checkbox.is ':checked'
-        if Notification?
-          Notification.requestPermission (status) ->
-            console.log 'notifications permission', status  # looking for "granted"
-            if status isnt "granted"
-              otto.notifications = false
-              $checkbox.attr 'checked', false
-            else
-              otto.notifications = true
-              n = new Notification "Notifications Enabled", {body: ""} # this also shows the notification
-              n.onshow = ->
-                timeoutSet 4000, -> n.close()
-
-
+    # not used anymore
     if $checkbox.is '#lineouttoggle'
       otto.lineout = $checkbox.is ':checked'
       if otto.lineout
-        $('#volumebar-lineout').show()
+        $('.volumelineout').show()
       else
-        $('#volumebar-lineout').hide()
+        $('.volumelineout').hide()
       for channel in otto.channel_list
-        if channel.name is otto.mychannelname
+        if channel.name is otto.mychannel
           @emit 'lineout', otto.lineout
           break
 
@@ -453,21 +531,57 @@ global.otto.client = ->
         #console.log 'this did not look like a button to me'
         #console.log $button
         return
-    e.stopPropagation();
+    e.stopPropagation()
 
-    id = $button.data('oid') || $button.attr('id')
-    id = id || $button.parent().data('oid') || $button.parent().attr('id')
-    id = id || $button.parent().parent().data('oid')
-    id = id || $button.parent().parent().attr('id')
+    find_id = ($el, ancestorlimit=2) ->
+      id = $el.data('id')
+      if id then return id
+      for oneclass in $el[0].className.split /\s/
+        found = oneclass.match /^id(.{24})$/
+        if found then return found[1]
+      $el.find("*").each ->
+        id = find_id $(this), 0
+        if id then return false  # stops .each
+      if id then return id
+      if ancestorlimit > 0
+        return find_id $el.parent(), ancestorlimit - 1
+      return 0
 
-    if $button.is '.enqueue'
-      console.log('enqueue ' + id)
+    find_qid = ($el, ancestorlimit=2) ->
+      qid = $el.data('mpdqueueid')
+      if qid then return qid
+      $el.find("*").each ->
+        qid = find_qid $(this), 0
+        if qid then return false  # stop .each
+      if qid then return qid
+      if ancestorlimit > 0
+        return find_qid $el.parent(), ancestorlimit - 1
+      return 0
+
+    # check for unqueue class before enqueue since the button will be .enqueue.unqueue
+    if $button.is '.unqueue'
+      qid = find_qid $button
+      console.log 'deleteid', qid
+      otto.noscroll_click_event = e
+      @emit 'deleteid', qid
+
+    else if $button.is '.enqueue'
+      id = find_id $button
+      console.log 'enqueue', id
+      otto.noscroll_click_event = e
       @emit 'enqueue', id
 
     else if $button.is '.stars'
       console.log '.stars', e
       console.log $button
-      clickpoint = e.pageX - $button.offset().left - 4
+      console.log 'e.pageX', e.pageX
+      console.log '$button.offset().left', $button.offset().left
+      if $('html').is '.doubler'
+        clickpoint = e.pageX - ($button.offset().left * 2) - 8
+        clickpoint = clickpoint / 2
+      else
+        clickpoint = e.pageX - $button.offset().left - 4
+      console.log 'clickpoint', clickpoint
       console.log clickpoint
       if clickpoint < 2
         halfstars = 0
@@ -484,6 +598,7 @@ global.otto.client = ->
       else
         halfstars = 6
       console.log halfstars
+      id = find_id $button
       console.log "stars #{halfstars} " + id
       $button.removeClass('n0 n1 n2 n3 n4 n5 n6').addClass('n' + halfstars)
       @emit 'stars', id: id, rank: halfstars
@@ -496,68 +611,126 @@ global.otto.client = ->
         otto.disconnect_player()
 
     else if $button.is '#play'
-      if otto.play_state is 'play'
-        @emit 'pause'
-      else
-        @emit 'play'
+      toggle_play.call @
 
     else if $button.is '#next'
-      qid = otto.current_track_qid
-      console.log 'deleteid', qid
-      @emit 'deleteid', qid
-      if otto.connect_state isnt 'disconnected'
-        otto.reconnect_player() # make it stop playing instantly (flush buffer)
+      next_track.call @
 
-    else if $button.is '.remove'
-      console.log 'deleteid', id
-      @emit 'deleteid', id
+    else if $button.is '.smaller'
+      console.log 'yup'
+      #if $('html').is '.doubler'
+      #  console.log 'undoubler'
+      #  $('html').removeClass('doubler')
+      #else
+      #  $('.currenttrack-container').addClass('size1').removeClass('size2')
+      #  $('.next-container').addClass('size1').removeClass('size2')
+      $('.currenttrack-container').addClass('size1').removeClass('size2')
+      $('.next-container').addClass('size1').removeClass('size2')
+      otto.autosize_adjust()
+    else if $button.is '.bigger'
+      #window.resizeTo(1920, 1080)  # just for debugging tv mode
+      #if $('.currenttrack-container').is '.size2'
+      #  $('html').addClass('doubler')
+      #else
+      #  $('.currenttrack-container').addClass('size2').removeClass('size1')
+      #  $('.next-container').addClass('size2').removeClass('size1')
+      $('.currenttrack-container').addClass('size2').removeClass('size1')
+      $('.next-container').addClass('size2').removeClass('size1')
+      otto.autosize_adjust()
 
     else if $button.is '.close'
       container_top = $button.parent().parent().parent().offset().top
       $button.parent().remove()
-      if $('#results').parent().scrollTop() > container_top
-        $('#results').parent().scrollTop(container_top)
+      if $('.browseresults-container').parent().scrollTop() > container_top
+        $('.browseresults-container').parent().scrollTop(container_top)
 
     else if $button.is '.runself'
       run = $button.data('run')
       run()
 
     else if $button.is '.download'
-      oid = $button.data('oid')
-      $iframe = $("<iframe class='download' id='#{oid}' style='display:none'>")
+      id = $button.data('id')
+      $iframe = $("<iframe class='download' id='#{id}' style='display:none'>")
       $(document.body).append $iframe
-      $iframe.attr 'src', "/download/#{oid}"
+      $iframe.attr 'src', "/download/#{id}"
       $iframe.load ->
-        console.log "iframe #{oid} loaded"
+        console.log "iframe #{id} loaded"
         #$iframe.remove() # this seems to cut off the download FIXME
 
     else if $button.is '.chattoggle'
-      $('#console').toggle()
-      if $('#console').is(':visible')
-        $('#console').focus()
-        @emit 'inchat', 1
-        otto.chat_state = yes
+      #$('.console-container').toggle(200)
+      if not otto.clientstate.inchat
+        otto.enable_chat true
       else
-        $('#channelbar').focus()
-        @emit 'inchat', 0
-        otto.chat_state = no
+        otto.enable_chat false
 
     else if $button.is '.channeltoggle'
-      $channellist = $('#channellist')
-      if $channellist.is '.mmenu-opened'
-        $channellist.trigger('close')
-      else
-        $channellist.trigger('open')
-        $button.trigger 'mousemove'
-        # webkit bug leaves the div hovered when moved from under cursor
-        #$('.channelbar').trigger 'mouseleave' # doesn't work
+      toggle_channellist $button
 
     else if $button.is '.logout'
       @emit 'logout'
-      #$.getJSON '/logout'
 
     else if $button.is '.play'
       @emit 'play', $button.data('position')
+
+    else if $button.is '.notificationstoggle'
+      if otto.notifications
+        otto.notifications = false
+        $button.removeClass 'enabled'
+        otto.lastnotification.close() if otto.lastnotification
+      else if Notification?
+        Notification.requestPermission (status) ->
+          console.log 'notifications permission', status  # looking for "granted"
+          if status isnt "granted"
+            otto.notifications = false
+            $button.removeClass 'enabled'
+          else
+            otto.notifications = true
+            $button.addClass 'enabled'
+            n = new Notification "Notifications Enabled", {body: ""} # this also shows the notification
+            n.onshow = ->
+              timeoutSet 4000, -> n.close()
+            otto.lastnotification = n
+
+    else if $button.is '.soundfxtoggle'
+      if otto.soundfx
+        otto.soundfx = false
+        $button.removeClass 'enabled'
+      else
+        otto.soundfx = true
+        $button.addClass 'enabled'
+        otto.play_soundfx 'fxenabled'
+
+    else if $button.is '.selectfolder'
+      if otto.localhost and /Otto$/.test navigator.userAgent
+        #@emit('selectfolder')  # uneven message processing in Otto.py make this unusable
+        # instead i use a UIDelegate on the webview to override the file selection input
+        # so the rest of this if should never be run
+        $('#selectFolder').click()
+        $('#selectFolder').change ->
+          alert 'sorry, you can\'t use the folder selection dialog from a web browser'
+          #$('.folder .path').text $('#selectFolder').val()
+          return false
+      else
+        $path = $('.folder .path')
+        $path.focus()
+        #$path.text $path.text()  # move cursor to end? nope.
+        #len = $path.val().length
+        #$path[0].setSelectionRange(len, len)  # nope (setSelectionRange not defined)
+
+    else if $button.is '.loadmusic'
+      @emit 'loadmusic', $('.folder .path').text()
+
+    else if $button.is '.loadmusic2'
+      @emit 'loadmusic'  # loader.py defaults to last directory loaded from
+
+    else if $button.is '.begin'
+      console.log 'begin!'
+      @emit 'begin'
+
+    else if $button.is '.restartload'
+      console.log 'restartload'
+      otto.create_hellopage()
 
     else
       console.log 'did not know what action to do with button'
@@ -585,116 +758,181 @@ global.otto.client = ->
       $gotothere = $target.parent().parent()
 
     if $expand
-      oid = $expand.attr('data-oid')
-      container = $expand.attr('data-container')
-      console.log 'container', container
-      console.log 'oid', oid
-      if not container
-        container = oid
-      $element = $("##{container}")
-      console.log '$element', $element
+      id = $expand.data('id')
+      containerid = $expand.data('container') || id
+      #$container = $(".id#{containerid}")
+      $parent = $expand.parent()
+      $container = $parent
+      if $parent.is '.thumbnails'
+        $container = $parent.parent()
 
-      $child = $element.children().filter(":first")
-      if $child and $child.data('oid') == oid # parseInt(oid) <- not anymore!
-        # same item, toggle it closed instead of redisplaying it
-        $element.empty().hide()
-        $expand.removeClass('active')
+      $expanded = $('.expanded')
+      if $expanded.length and $expanded.data('id') == id
+        # same item, close it instead of redisplaying it (i.e. do nothing)
+        otto.render_without_scrolling $(e.target), ->
+          $expanded.remove()
+          $('.active').removeClass('active')
       else
-        #$expand.parent().find('.active').removeClass 'active'
-        $.getJSON '/album_details', {'oid': oid}, (data) ->
+        $.getJSON '/album_details', {'id': id}, (data) ->
           if data.albums
             data=data.albums
-          $.getJSON '/load_object', {'oid': container}, (fileunder) ->
-            if $element.length is 0
-              $element = $ "<div id='#{container}' class='expander cf'>"
-              $eol = false
-              $last = $expand.parent()
-              while not $eol
-                $next = $last.next()
-                console.log 'next', $next
-                if $next.length is 0
-                  $eol = $last
-                else if $next.offset().top > $last.offset().top
-                  $eol = $last
-                else
-                  $last = $next
-              console.log '$eol', $eol
-              $eol.after $element
-            $('.expander').hide();
-            $('.active').removeClass 'active'
-            $expand.addClass('active')
-            $element.show()
-            $element.html otto.templates.albums_details data: [].concat(data), fileunder: fileunder, oid: oid
-            otto.mark_allthethings()
+          $.getJSON '/load_object', {'id': containerid}, (fileunder) ->
+            otto.render_without_scrolling $(e.target), ->
+              $expanded.remove()
+              $('.active').removeClass('active')
+              $element = $ "<div class='expanded cf' data-id=#{id}>"
+              $element.html otto.templates.albums_details data: [].concat(data), fileunder: fileunder, id: id
+              if $parent.is '.albumall'
+                # search forward to find where the line breaks and put it there
+                $eol = false
+                $last = $parent
+                while not $eol
+                  $next = $last.next()
+                  if $next.length is 0
+                    $eol = $last
+                  else if $next.offset().top > $last.offset().top
+                    $eol = $last
+                  else
+                    $last = $next
+                $eol.after $element
+              else
+                $container.append $element
+              $expand.addClass('active')
+              otto.mark_allthethings()
 
     else if $gotothere
-      oid = $gotothere.data('oid')
+      id = $gotothere.data('id')
       if $gotothere.is '.active'
-        $('#results').empty()
+        $('.browseresults-container').empty()
         $gotothere.removeClass('active')
         console.log 'removing active'
       else
         $('.active').removeClass('active')
         $gotothere.addClass('active')
         console.log 'adding active'
-        if not $('#results').children().first().is '.albumdetailscontainer'
-          $('#results').empty()
-        $.getJSON '/load_object', {oid: oid, load_parents: 20}, (object) ->
+        if not $('.browseresults-container').children().first().is '.albumdetailscontainer'
+          $('.browseresults-container').empty()
+        $.getJSON '/load_object', {id: id, load_parents: 20}, (object) ->
           if object.otype is 10
-            oid = object.albums[0].oid
+            id = object.albums[0]._id
           else if object.otype in [20, 30]
-            oid = object.oid
+            id = object._id
           if object.otype in [10, 20]
-            $.getJSON '/album_details', {'oid': oid}, (data) ->
-              displayed_oid = $('#results').children().first().data('oid')
-              if not displayed_oid or displayed_oid != oid
+            $.getJSON '/album_details', {'id': id}, (data) ->
+              displayed_id = $('.browseresults-container').children().first().data('id')
+              if not displayed_id or displayed_id != id
                 if data.albums
                   data=data.albums
-                $('#results').empty()
-                $('#results').html otto.templates.albums_details data: [].concat(data), oid: oid
+                $('.browseresults-container').html otto.templates.albums_details data: [].concat(data), id: id
                 otto.mark_allthethings()
           else if object.otype in [30]
             # database is broken. artist->fileunder isn't recorded in collections! FIXME
             # hack around this
-            oid = $gotothere.data('albumoid')
-            $.getJSON '/load_fileunder', {'artistoid': oid}, (fileunder) ->
-              oid = 0
+            id = $gotothere.data('albumid')
+            $.getJSON '/load_fileunder', {'artistid': id}, (fileunder) ->
+              id = 0
               for fu in fileunder
                 if fu.key != 'various'
-                  oid = fu.oid
-              if oid
-                $.getJSON '/album_details', {'oid': oid}, (data) ->
-                  displayed_oid = $('#results').children().first().data('oid')
-                  if not displayed_oid or displayed_oid != oid
+                  id = fu._id
+              if id
+                $.getJSON '/album_details', {'id': id}, (data) ->
+                  displayed_id = $('.browseresults-container').children().first().data('id')
+                  if not displayed_id or displayed_id != id
                     if data.albums
                       data=data.albums
-                    $('#results').empty()
-                    $('#results').html otto.templates.albums_details data: [].concat(data), oid: oid
+                    $('.browseresults-container').html otto.templates.albums_details data: [].concat(data), id: id
                     otto.mark_allthethings()
 
-    else if $target.is('.progress') or $target.is('#progress-bar')
-      if $target.is('#progress-bar')
+    else if $target.is('.progress') or $target.is('.progress-indicator')
+      if $target.is('.progress-indicator')
         width = $target.parent().innerWidth()
-        adjust = -2
+        adjust = 0
       else
         width = $target.innerWidth()
-        adjust = -4
-      seconds = Math.round( (e.offsetX+adjust) / (width-1) * otto.current_song_total)
+        adjust = -2
+      seconds = Math.round( (e.offsetX+adjust) / (width-1) * otto.current_song_time.total)
       @emit 'seek', seconds
+      if otto.connect_state isnt 'disconnected'
+        otto.reconnect_player() # make it stop playing instantly (flush buffer)
+    else if $target.is '.loadmusic' # i don't understand why this is needed here, why button_click_handler doesn't see it
+      #@emit 'loadmusic', $('.folder .path').text()
+      console.log 'this one'
+      @emit 'loadmusic', '/Users/jon/Music'
     else
       console.log 'do not know what to do with clicks on this element:'
       console.dir $target
       console.dir e
 
 
+  toggle_play = ->
+    if otto.play_state is 'play'
+      @emit 'pause'
+    else
+      @emit 'play'
+
+
+  next_track = ->
+    qid = otto.current_track_qid
+    console.log 'deleteid', qid
+    @emit 'deleteid', qid
+    otto.current_song_time = false
+    if otto.connect_state isnt 'disconnected'
+      otto.reconnect_player() # make it stop playing instantly (flush buffer)
+
+
+  toggle_channellist = ($button) ->
+    $channellist = $('.channellist-container')
+    if $channellist.is '.mmenu-opened'
+      $channellist.trigger('close')
+    else
+      $channellist.trigger('open')
+      $button.trigger 'mousemove'
+      # webkit bug leaves the div hovered when it is moved from under cursor
+      #$('.channelbar').trigger 'mouseleave' # doesn't work
+
+
   otto.channellist_click_handler = (e) =>
     $target = $(e.target)
+    $button = $(e.target)
+    if $target.is 'button'
+      $button = $target
+    else
+      $button = $target.parents('button').first()
+    if $button.is 'button'
+      e.stopPropagation()
+    else
+      $button = false
 
-    if ($target.is '.changechannel') or ($target.parent().is '.changechannel')
-      newchannelname = $target.data('channelname') || $target.parent().data('channelname')
+    find_channelname = ($el, ancestorlimit=4) ->
+      channelname = $el.data('channelname')
+      if channelname then return channelname
+      if ancestorlimit > 0
+        return find_channelname $el.parent(), ancestorlimit - 1
+      return false
+
+    if $button
+      if $button.is '.channeltoggle'
+        toggle_channellist $button
+      else if $button.is '.channeloutput'
+        channelname = find_channelname($target)
+        alt = e.altKey
+        @emit 'togglelineout', channelname: channelname, alt: e.altKey
+      else if $button.is '.channelplay'
+        channelname = find_channelname($target)
+        @emit 'toggleplay', channelname
+      else if $button.is '.channelsettings'
+        if $button.parent().is '.open'
+          console.log 'closing'
+          $button.parent().parent().parent().find('.open').removeClass 'open'
+        else
+          console.log 'opening'
+          $button.parent().parent().parent().find('.open').removeClass 'open'
+          $button.parent().addClass 'open'
+    else if $target.is '.channelselect, .channelname, .channellisteners, .listener'
+      newchannelname = find_channelname($target)
       console.log 'change channel to', newchannelname
       @emit 'changechannel', newchannelname
-      $('#channellist').trigger('close')
+      $('.channellist-container').trigger('close')
 
     else
       console.log 'do not know what to do about a click on this here element:'
@@ -704,7 +942,7 @@ global.otto.client = ->
   otto.console_click_handler = (e) ->
     $target = $(e.target)
 
-    if $target.is '#console'
+    if $target.is '.console-container'
       $target.focus()
       return true
 
@@ -726,9 +964,10 @@ global.otto.client = ->
 
   otto.window_focus_handler = (e) =>
     if e.type is 'focus'
-      @emit 'focus', 1
+      otto.clientstate.focus = 1
     else if e.type is 'blur'
-      @emit 'focus', 0
+      otto.clientstate.focus = 0
+    @emit 'focus', otto.clientstate.focus
 
 
   otto.window_idle_handler_init = =>
@@ -751,11 +990,11 @@ global.otto.client = ->
         #console.log 'this did not look like a letter to me'
         #console.log $letter
         return
-    e.stopPropagation();
+    e.stopPropagation()
 
     if $letter.is '.active'
       $letter.removeClass 'active'
-      $('#results').empty()
+      $('.browseresults-container').empty()
       return
 
     $('.active').removeClass 'active'
@@ -779,24 +1018,28 @@ global.otto.client = ->
 
 
       $alert.find('#ok').data 'run', ->
-        $('#results').empty()
+        $('.browseresults-container').empty()
         $letter.clone().removeClass('warn active').on('click', otto.letter_click_handler).click()
       $alert.find("#cancel").data 'run', ->
         $letter.parent().find("li").removeClass 'active'
-        $('#results').html '<div>canceled</div>'
-        $('#results').children().fadeOut 1500, ->
-          $('#results').empty()
-      $('#results').html $alert
+        $('.browseresults-container').html '<div>canceled</div>'
+        $('.browseresults-container').children().fadeOut 1500, ->
+          $('.browseresults-container').empty()
+      $('.browseresults-container').html $alert
       return
 
     if $letter.is '.shownewest'
       return otto.render_json_call_to_results '/load_newest_albums', {}, 'newest_albums'
-    if $letter.is '.showowners'
-      return otto.render_json_call_to_results '/load_owners', {}, 'show_owners'
+    if $letter.is '.showusers'
+      return otto.render_json_call_to_results '/load_users', {}, 'show_users'
     if $letter.is '.showall'
-      return otto.render_json_call_to_results '/all_albums', {}, 'allalbums'
+      return otto.render_json_call_to_results '/all_albums_by_year', {}, 'allalbums'
     if $letter.is '.showcubes'
-      return otto.call_module 'cubes', 'show'
+      otto.load_module 'cubes', ->
+        $('.browseresults-container').html otto.templates.cubeswithload
+        $('.loadingstatus').addClass('begin')
+        $('.loadingcubes').html otto.call_module 'cubes', 'show'
+      return
     if $letter.is '.showlists'
       return otto.render_json_call_to_results '/load_lists', { objects: 1 }, 'show_lists'
     if $letter.is '.showstars'
@@ -816,7 +1059,7 @@ global.otto.client = ->
 
 
   otto.results_lazyload_handler = (e) ->
-    $("#results").children().each ->
+    $(".browseresults-container").children().each ->
       $this = $ this
       # skip this container if it's marked nolazy
       if $this.is '.nolazy'
@@ -826,7 +1069,7 @@ global.otto.client = ->
       if $.belowthefold(this, s) || $.rightoffold(this, s) || $.abovethetop(this, s) || $.leftofbegin(this, s)
         return
       # now dive in to the top level items on a page
-      $("#results").children().each ->
+      $(".browseresults-container").children().each ->
         $this = $(this)
         # skip this container if it's marked nolazy
         if $this.is '.nolazy'
@@ -862,7 +1105,7 @@ global.otto.client = ->
       name = $('#logintext').val()
       if not (name=='')
         @emit 'login', name
-        #$.getJSON '/login', { user: name }, (data) ->
+        $('#logintext').val('')
 
 
   otto.adjust_volume_handler = (e, ui) ->
@@ -871,10 +1114,18 @@ global.otto.client = ->
     otto.call_module_ifloaded 'player', 'setvolume', otto.current_volume
 
 
-  otto.adjust_volume_lineout_handler = (e, ui) =>
-    console.log 'adjust_volume_lineout'
-    otto.current_volume_lineout = ui.value
-    @emit 'setvol', ui.value
+  otto.adjust_volumelineout_handler = (e, ui) =>
+    console.log 'adjust_volumelineout', ui.value
+
+    find_channelname = ($el, ancestorlimit=4) ->
+      channelname = $el.data('channelname')
+      if channelname then return channelname
+      if ancestorlimit > 0
+        return find_channelname $el.parent(), ancestorlimit - 1
+      return false
+
+    channelname = find_channelname( $(e.target) ) || otto.mychannel
+    @emit 'setvol', channelname: channelname, volume: ui.value
 
 
   # prevent mouse wheel events from bubbling up to the parent
@@ -893,23 +1144,50 @@ global.otto.client = ->
           e.preventDefault()
 
 
-  ##########
-  ########## non-handlers
-  ##########
+  ####
+  #### other stuff
+  ####
 
   otto.render_json_call_to_results = (url, params, template, message, callback) ->
-    $results = $('#results')
+    $results = $('.browseresults-container')
     if message
       $results.html message
     else
       $results.empty()
     $.getJSON url, params, (data) ->
-      $results.append otto.templates[template] data: data
-      #document.body.scrollTop=0
-      otto.mark_allthethings()
-      $results.trigger 'scrollstop'
-      if callback
-        callback(data)
+      # we could put the rendering under nextTick so the waiting spinner goes away
+      # and is not at risk of staying there if the rendering throws an exception
+      # *but* the rendering is often what takes the most time so we still
+      # want a spinner.
+      #nextTick ->
+      # we could also consider changing the spinnder to be the slower one once
+      # the rendering starts
+      # let's try catching any exceptions during rendering so we can exit
+      # cleanly and jquery can call out code to dismiss the spinner
+      try
+        $results.append otto.templates[template] data: data, params: params
+        #document.body.scrollTop=0
+        otto.mark_allthethings()
+        $results.trigger 'scrollstop'
+        if callback
+          callback(data)
+      catch error
+        console.error "render_json_call_to_results caught error #{error}"
+
+
+  otto.render_without_scrolling = ($target, render) ->
+    if not $target
+      render()
+    else
+      console.log 'before', $target.offset()
+      top_before = $target.offset().top
+      render()
+      top_after = $target.offset().top
+      if top_after isnt 0  # sometimes the element is removed (e.g. removing songs from ondeck panel)
+        console.log 'after', $target.offset()
+        amount_moved = top_after - top_before
+        console.log 'moved', amount_moved, $(window).scrollTop(), $(window).scrollTop() + amount_moved
+        $(window).scrollTop( $(window).scrollTop() + amount_moved )
 
 
   otto.dirbrowser = ->
@@ -918,7 +1196,7 @@ global.otto.client = ->
       item = $(e.target)
       id = item.attr('id')
       if item.is '.path'
-        $.getJSON '/load_dir', {'oid': id}, (data) ->
+        $.getJSON '/load_dir', {'id': id}, (data) ->
           $('#subdirs').html otto.templates.dirbrowser_subdir data: data
       else if item.is '.subdir'
         $('#path').append(
@@ -926,11 +1204,10 @@ global.otto.client = ->
               item.attr('data-filename')+'/'
             )
         )
-        $.getJSON '/load_dir', {'oid': id}, (data) ->
+        $.getJSON '/load_dir', {'id': id}, (data) ->
           $('#subdirs').html otto.templates.dirbrowser_subdir data: data
     dirbrowser_html.click dirbrowser_click_handler
-    $('#results').empty()
-    $('#results').append dirbrowser_html
+    $('.browseresults-container').html dirbrowser_html
 
     $.getJSON '/music_root_dirs', (data) ->
       $('#path').html otto.templates.dirbrowser_item data: data
@@ -944,28 +1221,28 @@ global.otto.client = ->
   otto.mark_queued_songs = () ->
     $('.inqueue').removeClass('inqueue')
     $('.first').removeClass('first')
-    $('.tempremove').remove()
-    $('.temphidden').show()
+    $('.enqueue.unqueue').removeClass('unqueue')
     first = true
     for song in otto.cache.queue
-      #if song.requestor  # if we only want to mark non auto picked songs
-      $items = $('#'+song.oid.toString())
-      $items.addClass('inqueue')
+      #if not song.requestor then continue  # if we only want to mark non auto picked songs
+      $items = $('.id'+song._id)
+      classstr = 'inqueue'
       if first
-        $items.addClass('first')
-        first = false
-      $items.parent().find('.enqueue').addClass('temphidden').hide()
-      $items.parent().prepend("<button id='#{song.mpdqueueid}' class='tempremove btn teeny control remove'><i class='remove'>")
-
+        classstr += ' first'
+      $items.addClass(classstr)
+      $items.parent().find('.enqueue').addClass('unqueue')
+      if first
+        $items.parent().find('.enqueue').addClass('first')
+      $items.data('mpdqueueid', song.mpdqueueid)
+      first = false
 
   otto.mark_listed_items = () ->
-
 
   otto.mark_starred_items = () ->
     $('.stars.n1, .stars.n2, .stars.n3, .stars.n4, .stars.n5, .stars.n6').removeClass('n1 n2 n3 n4 n5 n6').addClass('n0')
     if otto.cache.stars
       for item in otto.cache.stars
-        $('[data-oid='+item.child.toString()+'].stars').addClass('n'+item.rank)
+        $('[data-id='+item.child.toString()+'].stars').addClass('n'+item.rank)
 
 
   otto.compute_artistinfo = (album) ->
@@ -982,6 +1259,8 @@ global.otto.client = ->
         continue if artist.artist is 'Soundtrack'
         continue if artist.artist is 'Various'
         all.push(artist.artist)
+    else if album.artist
+      all.push(album.artist)
 
     if all.length > 2
       various = 'Various'
@@ -1006,7 +1285,7 @@ global.otto.client = ->
       # give some immediate feedback while the module loads
       $('#connect').html otto.templates.ouroboros size: 'small', direction: 'cw', speed: 'slow'
     otto.connect_state = 'connected'
-    otto.call_module 'player', 'connect', otto.mychannelname
+    otto.call_module 'player', 'connect', otto.mychannel
 
   otto.disconnect_player = ->
     otto.connect_state = 'disconnected'
@@ -1030,6 +1309,30 @@ global.otto.client = ->
         timeoutSet 10000, -> n.close()
 
 
+  otto.touch_init = ->
+    #disable shy controls on touch devices
+    #touch_device = 'ontouchstart' in document.documentElement
+    #touch_device = ('ontouchstart' in window) or window.DocumentTouch and document instanceof DocumentTouch
+    #touch_device = 'ontouchstart' in window or 'onmsgesturechange' in window # 2nd test for ie10
+
+    #touch_device = true  #detection not working for some reason wtf? FIXME
+    $('head').append '<script src="static/js/modernizr.custom.66957.js">'
+    touch_device = Modernizr.touch  # prob doesn't work for ie10
+    #http://stackoverflow.com/questions/4817029/whats-the-best-way-to-detect-a-touch-screen-device-using-javascript
+    if touch_device
+      otto.touchdevice = true
+      console.log 'touch device detected, disabling shy controls'
+      $('body').addClass 'noshy'
+      $('head').append '<script src="static/js/fastclick.js">'
+      FastClick.attach(document.body)
+
+      addToHomescreen skipFirstVisit: true, maxDisplayCount: 1
+      # http://blog.flinto.com/how-to-get-black-status-bars.html
+      if window.navigator.standalone
+        $("meta[name='apple-mobile-web-app-status-bar-style']'").remove()
+
+
+
   otto.ouroboros_init = ->
     # css animations seem to stop when the client is working (e.g. when rending the template
     # after receiving the data from the ajax call). i wonder if animated gifs do.
@@ -1050,21 +1353,50 @@ global.otto.client = ->
 
 
   otto.chat_init = =>
-    chatinput = (command) =>
-      if command != ''
-        $('#output').scrollToBottom()
-        if /^[.]/.test command
+    chatinput = (str) =>
+      $('.output').scrollToBottom()
+      str = $.trim(str)  # should strip tabs too FIXME
+      if str != ''
+        parts = str.match(/^([/.])([^ ]*)[ ]*(.*)$/)  # spaces *and* tabs FIXME
+        if parts
+          prefix  = parts[1]
+          command = parts[2]
+          therest = parts[3]
+          args = therest.split('/[ \\t]/')
           switch command
-            when '.cls' then $('#output').empty()
-            when '.reload' then @emit 'reloadme'
-            when '.reloadall' then @emit 'reloadall'
-
+            when 'cls' then $('.output').empty()
+            when 'reload' then @emit 'reloadme'
+            when 'reloadall' then @emit 'reloadall'
+            when 'nick' then @emit 'login', therest
+            when 'exit' then otto.enable_chat false
+            when 'leave' then otto.enable_chat false
+            when 'part' then otto.enable_chat false
+            when 'pause' then if otto.play_state is 'play' then toggle_play.call @
+            when 'play' then if otto.play_state is 'pause' then toggle_play.call @
+            when 'next' then next_track.call @
+            when 'help' then $('.output').append otto.templates.chathelp()
+            else $('.output').append otto.templates.chatunknowncommand prefix: prefix, command: command
+          $('.output').scrollToBottom()
         else
-          @emit 'chat', command
+          @emit 'chat', str
 
-    $('#inputr').cmd
+    $('#inputr').first().cmd
       prompt: ->  # empty function supresses the addition of a prompt
       width: '100%'
-      elementtobind: $('#console')
+      elementtobind: $('.console-container')
       commands: chatinput
       onCommandChange: otto.command_change_handler
+
+  otto.enable_chat = (state) =>
+    if state and not otto.clientstate.inchat and otto.myusername
+      $('.console-container').slideDown(200)
+      $('.console-container').focus()
+      otto.clientstate.inchat = 1
+      @emit 'inchat', 1
+      $('body').addClass 'inchat'
+    else if not state and otto.clientstate.inchat
+      $('.console-container').slideUp(200)
+      $('.channelbar-container').focus()
+      otto.clientstate.inchat = 0
+      @emit 'inchat', 0
+      $('body').removeClass 'inchat'

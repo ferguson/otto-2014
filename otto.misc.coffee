@@ -1,29 +1,11 @@
 fs = require 'fs'
+os = require 'os'
 net = require 'net'
 glob = require 'glob'
+connect = require 'zappajs/node_modules/express/node_modules/connect'
+Session = connect.middleware.session.Session
 
 global.otto = otto = global.otto || {}
-
-
-# temp shoved here for expedience
-otto.format_time = (seconds, minlen=4) ->
-  hours = parseInt(seconds / 3600)
-  seconds = seconds % 3600
-  minutes = parseInt(seconds / 60)
-  seconds = parseInt(seconds % 60)
-  if seconds < 10
-    seconds = '0' + seconds
-  else
-    seconds = '' + seconds
-  if minutes < 10 and (hours > 0 or minlen > 4)
-    minutes = '0' + minutes
-  else
-    minutes = '' + minutes
-  formatted = ''
-  if hours or minlen > 6
-    formatted = "#{hours}:#{minutes}:#{seconds}"
-  else
-    formatted = "#{minutes}:#{seconds}"
 
 
 module.exports = global.otto.misc = do ->  # note the 'do' causes the function to be called
@@ -67,8 +49,7 @@ module.exports = global.otto.misc = do ->  # note the 'do' causes the function t
       err = error
     if err
       if err.code? and err.code is 'ENOENT'
-          fs.mkdir path, (err) ->
-            if err then throw err
+        fs.mkdirSync path
       else
         throw err
     else
@@ -278,23 +259,32 @@ module.exports = global.otto.misc = do ->  # note the 'do' causes the function t
   # or fall back to ip address if no user can be determined
   misc.authenticate_user = (req, res, next) ->
     client_ip = req.connection.remoteAddress
-    if req.headers['x-forwarded-for'] and client_ip is '127.0.0.1' # doesn't work in all cases (e.g. IPV6)
-      client_ip = req.headers['x-forwarded-for']
-    #console.log 'type b', req.session
-    #console.log req.sessionID
-    req.user = req.session.user
-    req.session.address = client_ip
+    if req.headers['x-forwarded-for'] and (client_ip is '127.0.0.1' or client_ip is '::1')
+      # might not work in all cases (e.g. locahost on 127.0.0.2)
+      # but we can't just blindly accept potentially injected x-forwarded-for headers
+      ip_list = req.headers['x-forwarded-for'].split ','
+      client_ip = ip_list[ip_list.length-1]
+    localhost = false
+    for devicename,infolist of os.networkInterfaces()
+      for ip in infolist
+        if client_ip == ip.address
+          localhost = true
+          break
+      if localhost then break
+    otto.sessioniplist[req.sessionID] = { client_ip: client_ip, localhost: localhost }
+
     next()
+
 
   # use the session cookie set by express to connect
   # the session.io session to the express session
   # from http://www.danielbaulig.de/socket-ioexpress/
   # see also https://github.com/mauricemach/zappa/pull/90
-  # note: if we want to change the data in the session from the socket.io side,
-  # we'd still need to expand this to create an express type session object, see url
-  # (note: i'm now taking a crack at creating the express session object)
+  # and this might be of interest:
+  # https://www.npmjs.org/package/session.socket.io
+
   misc.socket_authenticate_user = (handshake, accept) ->
-    #console.log 'io.set authorization'
+    console.log 'io.set authorization'
     # check if there's a cookie header
     if handshake.headers.cookie
       # if there is, parse the cookies
@@ -305,35 +295,42 @@ module.exports = global.otto.misc = do ->  # note the 'do' causes the function t
           accept('cookie parse error', false)
         else
           # note that you will need to use the same secret key to grab the
-          # session id, as you specified in the Express setup.
-          sessionid = handshake.cookies['express.sid'].split(':')[1].split('.')[0]
-          console.log 'sessionid', sessionid
-          otto.sessionStore.get sessionid, (err, session) ->
+          # session id as you specified in the Express setup.
+          sessionID = handshake.cookies['express.sid'].split(':')[1].split('.')[0]
+          console.log 'sessionID', sessionID
+          otto.sessionStore.get sessionID, (err, session) ->
             if err || !session
               # if we cannot grab a session, turn down the connection
-              console.log 'error: no session found in database - ', err
+              console.log 'error: no session found in database during authentication - ', err
               accept('no session found in database', false)
             else
               # save the session data and accept the connection
+
+              # note that if you throw any exceptions in this 'else' section it'll be
+              # caught by sessionStore.get and the 'if' section will be called above!
 
               # first create a real express session object so we can actually change
               # session data inside socketio communications
               # we fake a req object relying on the connection Session constructor only
               # using two fields from it (sessionID and sessionStore)
               # i looked at the code and verified this for connection 2.6.0
-              #fake_req = {sessionID: sessionid, sessionStore: otto.sessionStore}
+              #fake_req = {sessionID: sessionID, sessionStore: otto.sessionStore}
               #handshake.session = new Session(fake_req, session)
 
-              # oh well, couldn't quite get that working yet
-              handshake.session = session
+              # we don't need this now
+              # # oh well, couldn't quite get that working yet
+              # #handshake.session = session
 
-              handshake.sessionID = sessionid
-              console.log "socket.io thinks the user is named #{handshake.session.user}"
+              handshake.sessionID = sessionID
+              console.log "socket.io thinks the sessionID is #{handshake.sessionID}"
               accept(null, true)
     else
       # if there isn't, turn down the connection with a message
       # and leave the function.
-      return accept('no express session ID cookie transmitted', false);
+      # hacked to allow app to connection via. socket.io FIXME
+      #return accept('no express session ID cookie transmitted', false)
+      accept(null, true)
+
 
   misc.debug_request = (req, res, next) ->
     was_image = false
@@ -348,5 +345,14 @@ module.exports = global.otto.misc = do ->  # note the 'do' causes the function t
         was_image = false
       next()
 
+
+  misc.dBscale = (x) ->
+    # logarithmic volume dB scale approximations
+    # http://www.dr-lex.be/info-stuff/volumecontrols.html
+    # http://www.360doc.com/content/09/1127/20/155970_9889546.shtml
+    n = Math.round( Math.pow(4, (x / (100 / 3.322))) )  # x^4
+    #n = Math.round( Math.pow(3, (x / (100 / 4.192))) )  # x^3
+    #n = Math.round( Math.pow(2, (x / (100 / 6.644))) )  # x^2
+    return n
 
   return misc

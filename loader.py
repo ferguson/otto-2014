@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 #import pdb
@@ -6,11 +7,12 @@
 import os
 import re
 import sys
-import json
 import codecs
 import getpass
 import hashlib
 import unicodedata
+#import simplejson as json # temp to make it work on my latop FIXME
+import json
 
 import ottodb
 
@@ -646,6 +648,7 @@ def convert_and_save_image(filename, data, sizes=COVER_SIZES):
     if images_processed.get(imagehash):
         return images_processed[imagehash]
             
+    #!# return False
     try:
         origimage = Image.open(StringIO.StringIO(data))
     except IOError, e:
@@ -835,8 +838,12 @@ def add_new_songs(checklist, loaded_filenames, search_path, default_ownername):
         n = 0
         for d in dirs:
             n += 1
-            if n > 1 and n < len(dirs)-1:  # don't check the last two (album and song presumably)
-                if re.match('^[^@ ]+[@][a-zA-Z0-9._-]+$', d):
+            #if n > 1 and n < len(dirs)-1:  # don't check the last two (album and song presumably)
+            if n > 1 and n < len(dirs):  # don't check the last two (album and song presumably)
+            #if True:  # override depth check
+                # this solves the 'Heart' problem but
+                # without the -1 it might find albums/artists that have email addresses as titles
+                if re.match('^[^@ ]+[@][a-zA-Z0-9._-]*$', d):
                     ownername = d
                     #break # nah, keep searching, there might be a more specific sub dir
         if not ownername:
@@ -978,9 +985,17 @@ def add_new_songs(checklist, loaded_filenames, search_path, default_ownername):
 
         if emitJSON:
             for newalbum in newalbumslist:
+                #import time
+                #time.sleep(2) #!# just for layout purposes FIXME
                 info = make_serializable_copy(newalbum)
                 info['fileunder'] = make_serializable_copy(fileunders)
+                songs = []
+                for song in songlist:
+                    if album['album'] in listy(song['album']):
+                        songs.append(make_serializable_copy(song))
+                info['songs'] = songs
                 print_json(info)
+
 
         progress.increment(len(files))
 
@@ -1097,22 +1112,29 @@ if __name__ == '__main__':
     if emitJSON:
         sys.stdout=JSONout(sys.stdout)
 
+    db = ottodb.DB()
+
     search_dir = None
     if len(sys.argv) == 2:
         search_dir = sys.argv[1]
     else:
-        for check_dir in MUSIC_DIR_SEARCH_ORDER:
-            check_dir = os.path.expanduser(check_dir)
-            if os.path.isdir(check_dir):
-                search_dir = check_dir
-                print 'defaulting to %s as the search_dir' % search_dir.encode('utf-8')
-                break
+        search_dir = db.load_musicsearchdir()
+        if search_dir:
+            search_dir = str(search_dir)
+            print 'loaded search_dir', search_dir, 'from preferences'
+        else:
+            for check_dir in MUSIC_DIR_SEARCH_ORDER:
+                check_dir = os.path.expanduser(check_dir)
+                if os.path.isdir(check_dir):
+                    search_dir = check_dir
+                    print 'defaulting to %s as the search_dir' % search_dir.encode('utf-8')
+                    break
     if not search_dir:
-        print 'error: <search_dir> not specified and none of the default dirs were found.'
+        print 'error: <search_dir> not specified, no previous default found, and none of the default dirs were found.'
         sys.exit(1)
-    
-    db = ottodb.DB()
 
+    db.save_musicsearchdir(search_dir)
+    
     print 'looking for songs in %s...' % search_dir.encode('utf-8')
     (checklist, filecount) = build_list_of_files(search_dir)
     print 'found %s songs in %s' % (filecount, search_dir.encode('utf-8'))

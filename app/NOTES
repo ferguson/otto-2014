@@ -1,10 +1,11 @@
-Creating a simple OS X App in Python (PyObjC, Cocoa, XIB)
+
 http://www.youtube.com/watch?v=N4Q8u7ajGuA
-uses Apple's py2applet tool thus:
-/System/Library/Frameworks/Python.framework/Versions/Current/Extras/bin/py2applet --make-setup Otto.py
+initially used Apple's py2applet tool thus:/System/Library/Frameworks/Python.framework/Versions/Current/Extras/bin/py2applet --make-setup Otto.py
 
 
 installing a local version of python for py2app to bundle up in an app:
+
+(be sure to unset any custom LD_* and DYLD_* env variables or you might have build problems.)
 
 # https://gist.github.com/pithyless/1208841
 $ brew install --universal readline sqlite gdbm
@@ -13,15 +14,50 @@ $ brew install python --universal --framework
 $ cd /usr/local
 $ virtualenv otto
 $ cd otto
-$ . activate
+  # edit bin/activate and change VIRTUAL_ENV="/usr/local/otto" to VIRTUAL_ENV="`pwd`"
+$ . activate   # don't confuse this activate with the one in bin/activate
+$ brew install --universal libtiff libjpeg webp little-cms2    # libpng too (not needed for Pillow)
+  # don't bother with openjpeg, brew installs openjpeg 1.5.1 so it doesn't help Pillow which wants >=2.0
+$ pip install -r requirements.pip
 
-$ brew install libtiff libjpeg webp littlecms
-#$ pip install yolk  # perhaps use pip list instead
-$ pip install Pillow
-$ pip install mutagen
-$ pip install chardet
-$ pip install pymongo
-x bson  # don't! pymongo does it, if you do it too it breaks??
-$ pip install pyobjc  # damn that takes a long, long time
+
+if you try to install pyobjc and encounter "'module' object has no attribute '_install_lib'"
+it's from pyobjc having lines like "for fn in install_lib._install_lib.get_outputs(self):"
+in it's setup.py. setuptools 3.5 changed this and the lines need to be changed to
+install_lib.orig.install_lib.get_outputs
+this is hard to do as pyobjc is a tree of about 35 packages.
+So instead you can edit /usr/local/otto/lib/python2.7/site-packages/setuptools/command/install_lib.py
+and add at the top:
+  from distutils.command.install_lib import install_lib as _install_lib
+see also https://bitbucket.org/ronaldoussoren/pyobjc/issue/86/
+
+
+modulegraph 0.12 seems to have a bug:
+http://stackoverflow.com/questions/25394320/py2app-modulegraph-missing-scan-code
+edit modulegraph.py and replace the three orrcurances of _scan_code with scan_code.
+
+wait! ronald says to use version 0.8: https://bitbucket.org/ronaldoussoren/py2app/issue/149/attributeerror-module-object-has-no
+$ pip install modulegraph==0.8    # fixed it, i'm adding it to requirements.pip
+probably fixed other issue above too i'm guessing
+nope! it's harder than all that. sigh. py2app seems to insist 
+
+went to a newer version of py2app (not sure that helped anything)
+$ pip install py2app==0.9 (now that way in requirements.pip)
+edited /usr/local/otto/lib/python2.7/site-packages/py2app/recipes/virtualenv.py
+  changed scan_code to _scan_code
+  changed load_module to _load_module
+that made it happy
+
+TypeError: dyld_find() got an unexpected keyword argument 'loader'
+https://bitbucket.org/ronaldoussoren/py2app/issue/137/py2app-problems-using-enthought-python
+edit lib/python2.7/site-packages/macholib/MachOGraph.py
+line 49: change loader=loader.filename to loader_path=loader.filename
+
+
+
+there seems to be an issue with python modules socketIO-client and newer versions of the
+websocket-client module. it causes Otto.py to endlessly loop while trying to connect to the server.
+the readme seems to indicate they changed something in websocket-client 0.14.0 and perhaps that's
+what broke things. for now just pip install websocket-client==0.12.0.
 
 

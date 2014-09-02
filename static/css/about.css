@@ -1,0 +1,153 @@
+body { 
+  margin: 0px;
+  font-family: 'Lato', helvetica, arial;
+  font-size: 24px;
+  font-weight: 300;
+  color: #333;
+  background-color: #333c46;
+  background-color: #F38C1D;
+  background-color: #E37C0D;
+  background-color: #A33F17;
+  background-color: #BF6F04;
+}
+
+.content {
+  max-width: 727px;
+  margin: 100px auto;
+}
+
+h1 {
+  text-align: center;
+  font-size: 60px;
+  font-weight: 300;
+  margin-bottom: 10px;
+}
+
+h2 {
+  font-size: 36px;
+  font-weight: 900;
+}
+
+h3 {
+  font-size: 24px;
+  font-weight: 600;
+  text-align: center;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  letter-spacing: 1px;
+}
+
+.betatag {
+  display: inline-block;
+  position: relative;
+  padding: 0px 5px;
+  color: darkred;
+  top: -10px;
+  left: 5px;
+  font-size: 12px;
+  border: 2px solid;
+  border-radius: 3px;
+}
+
+.note {
+  margin-top: 60px;
+  margin-bottom: 40px;
+  margin-left: 3.5em;
+  text-indent: -3.5em;
+}
+
+.notetag {
+  color: darkred;
+  font-weight: bold;
+}
+
+.mainscreenshot {
+  display: block;
+  margin: 50px auto 55px auto;
+  width: 720px;
+  height: 384px;
+  //border-radius: 10px;
+}
+
+.screenshot-container {
+  display: inline-block;
+  margin: 40px 0px 10px 40px;
+}
+
+.screenshot-container > p {
+  margin: 0px auto;
+  text-align: center;
+  font-weight: bold;
+}
+
+.screenshot {
+  width: 300px;
+  height: 247px;
+  border-radius: 10px;
+}
+
+.spacer {
+  height: 30px;
+}
+
+.gap {
+  display: inline-block;
+  width: 30px;
+}
+
+.homepagelink {
+  text-decoration: none;
+  color: #333;
+}
+
+.homepagelink:hover {
+  text-decoration: underline;
+}
+
+.button-cluster {
+  margin-top: 15px;
+}
+.button-cluster td:first-of-type {
+  padding-right: 30px;
+}
+
+.small-button {
+  height: 20px;
+  width: 80px;
+  display: inline-block;
+  background-color: #BF6F04;
+  //color: darkred;
+  //background-color: rgba(0,0,0,0);
+  color: #6C6C6C;
+  color: #333;
+  font-size: 11px;
+  line-height: 8px;
+  font-weight: bold;
+  text-align: center;
+  cursor: hand;  //fixme
+  border: none;
+  margin: 0;
+  vertical-align: top;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  border-radius: 3px;
+  border-width: 2px;
+  border-color: #404040;
+  border-style: solid;
+}
+
+.small-button:focus {
+  outline: none;
+}
+
+.small-button:hover {
+  color: #555;
+  border-color: #555;
+}
+
+.small-button:active {
+  color: #666;
+  border-color: #666;
+}

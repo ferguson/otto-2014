@@ -2,6 +2,8 @@
 *.pyc
 .DS_Store
 /.git-*
+/.gitignore-*
+/gitswitch
 /*.js
 /*.log
 /*.log-*

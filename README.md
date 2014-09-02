@@ -14,7 +14,7 @@ Download and open the .dmg disk image.
 Drag Otto.app to your Applications folder (or your Desktop if you prefer).
 Double-click Otto.app in it's new location.
 
-Otto will start and an Otto menubar menu will appear in your menubar.
+Otto will start and an Otto menu bar status icon will appear in your menu bar.
 Google Chrome will launch (or if you don't have Chrome, your default browser
 will be used) pointing to Otto's web interface via. http://localhost:8778/.
 
@@ -57,10 +57,7 @@ To uninstall Otto, simply drag Otto.app to the trash. If you also want to remove
 
 OSX Known Issues
 ----------------
-- The menubar menu "load" item currently doesn't do anything.
-- There is no regular application menu, the only way to quit is using the menubar menu.
-- The application isn't currently signed, so you will prbably get warnings about running an unsigned app. You can make an exception for Otto in the Securty tab in System Preferences. I've also heard that you can hold the shift key down while launching Otto to allow it to run.
-- The system might ask you if you want to all Otto to open several network ports. Otto open a port for it's web interface, and an additinal port for streaming each channel (two channels is the current default).
+- If you have the OSX firewall enabled it will ask you if you want to allow Otto to open several network ports. Otto opens a port for it's web interface, and an additional port for streaming each channel (three channels currently)
 - Otto requires 10.7 or later. It *might* run under 10.6, but I just don't know and have no plans to make it work any further back than 10.7.
 
 ------------------------------------------------------------

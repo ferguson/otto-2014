@@ -1,0 +1,8 @@
+Pillow==2.5.0
+chardet==2.2.1
+mutagen==1.23
+pymongo==2.7.1
+websocket-client==0.12.0
+socketIO-client==0.5.3
+requests==2.3.0
+simplejson==2.3.2

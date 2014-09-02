@@ -4,6 +4,7 @@ zappajs = require 'zappajs'
 jsonreq = require 'jsonreq'
 zipstream = require 'zipstream'
 querystring = require 'querystring'
+compression = require 'compression'
 connectmongo = require 'connect-mongo'
 connect = require 'zappajs/node_modules/express/node_modules/connect'
 Session = connect.middleware.session.Session
@@ -28,6 +29,10 @@ otto.server = ->
 
   otto.zeroconf.createMDNSAdvertisement()
 
+  otto.sessionlist = {}
+  otto.sessioniplist = {}
+  otto.socketlist = {}
+
 
 #############################################
 ## the zappa application function starts here
@@ -39,23 +44,32 @@ server_go = ->
   MongoStore = connectmongo(@express)
   otto.sessionStore = new MongoStore(otto.db.dbconf)
 
-  ourlisteners = new otto.listeners.Listeners()
+  otto.ourlisteners = new otto.listeners.Listeners()
 
   @use 'cookieParser'
   #@use session: { store: otto.sessionStore, secret: otto.SECRET, key: 'express.sid'}, =>
-  #  # we should wait for this callback before proceeding FIXME
+  #  # we should wait for this callback before proceeding FIXME <- wait!
+  #  #   it seems to trigger on each connection? or maybe each socket.io message?
   #  # otherwise we risk getting a "Error setting TTL index on collection" error
   #  # see https://github.com/kcbanner/connect-mongo/pull/58#issuecomment-32148111
   #  console.log 'session db connection established'
-  @use {session: { store: otto.sessionStore, secret: otto.SECRET, key: 'express.sid'}}
-  @app.configure 'development', =>
-    @app.use otto.misc.debug_request
+  @use {session: {store: otto.sessionStore, secret: otto.SECRET, key: 'express.sid', cookie: {maxAge: 365 * 24 * 60 * 60 * 1000}}}
+  #@app.configure 'development', =>
+  #  @app.use otto.misc.debug_request
+  @app.use compression()  # wondering how much this helps, esp. locally
   @app.use '/static', @express.static(__dirname + '/static')
   @app.use @express.favicon(__dirname + '/static/images/favicon.ico')
   @app.use otto.misc.authenticate_user
   @app.use (req, res, next) ->
-    ourlisteners.set_user req.session, req.sessionID
+    req.session.sessionID = req.sessionID
     next()
+  @app.use (req, res, next) ->
+    otto.ourlisteners.set_user req.session
+    next()
+  @app.use (req, res, next) ->
+    otto.sessionlist[req.sessionID] = req.session
+    next()
+  @io.set 'authorization', otto.misc.socket_authenticate_user
   @enable 'serve jquery', 'serve sammy', 'serve zappa'
   @use 'partials'
 
@@ -63,296 +77,370 @@ server_go = ->
   #@enable 'default layout'
 
   @io.set 'log level', 2
-  @io.set 'authorization', otto.misc.socket_authenticate_user
-
 
   @on 'connection': ->
     console.log 'socket.io connection'
-    @client.channelname = @client.channelname || 'main'
-    @join(@client.channelname)
+    otto.socketlist[@id] = @socket
+    session = socket_get_session @
+    #console.log 'session is', session
+    if not session
+      console.log 'telling client to resession'
+      @emit 'resession'
+    else
+      @emit 'proceed'
+      # now we wait for the client to say 'hello'
 
-    @client.handshake = @io.handshaken[@id]
-    handshake = @client.handshake
-    ourlisteners.add_socket @id, handshake.session, handshake.sessionID, @client.channelname
 
-    # now we wait for the client to say 'hello'
-
-
-  @on 'disconnect': (socket) ->
+  @on 'disconnect': ->
     console.log 'socket.io disconnection!'
-    handshake = @client.handshake
-    if handshake and handshake.session
-      ourlisteners.remove_socket @id, handshake.sessionID
+    session = socket_get_session @
+    if session
+      otto.ourlisteners.remove_socket session, @
 
 
   @on 'hello': ->
     console.log 'hello client!'
+    if not session = socket_get_session @ then return
+
     data = {}
     data.channellist = otto.channelinfolist
-    otto.db.load_all_lists false, (lists) =>
-      data.lists = lists
-      handshake = @client.handshake
-      if handshake.session and handshake.session.user and /[^0-9.]/.test(handshake.session.user)
-        data.myusername = handshake.session.user
-      #otto.db.load_stars handshake.session.user, false, (stars) =>  # only if sesion.user?
-      if true  # didn't want to unindent
-        #data.stars = stars
-        #console.log 'emitting welcome packet', data
-        @emit 'welcome', data
-        ourlisteners.update()
+    sessionip = socket_get_sessionip @
+    console.log 'sessionip', sessionip
+
+    # the [^0-9.] test is checking if it's just an ip address
+    if session.user and /[^0-9.]/.test(session.user)
+      username = session.user
+    else if sessionip and sessionip.localhost
+      # auto login the local app
+      username = process.env['USER'] || ''
+    else
+      username = ''
+
+    channelname = session.channelname || 'main'
+
+    sessionSet session, user: username, channelname: channelname, =>
+      otto.ourlisteners.change_user session
+
+      data.myusername = session.user
+      console.log 'telling client their username is', data.myusername
+
+      otto.ourlisteners.add_socket session, @
+      # prime the client state
+      for state,val of @data
+        if state is 'idle'
+          val = if @data then (new Date()).getTime() else 0
+        otto.ourlisteners.set_state session.sessionID, @id, state, val
+
+      data.mychannel = session.channelname
+      console.log 'telling client their channel is', data.mychannel
+      if sessionip
+        data.localhost = sessionip.localhost
+      otto.ourlisteners.change_channel session
+      @join(data.mychannel)
+      data.haslineout = process.platform is 'darwin'
+      data.largedatabase = otto.db.largedatabase
+      data.emptydatabase = otto.db.emptydatabase
+      data.musicroot = '/Users/' + process.env['USER'] + '/Music'  # FIXME
+      #console.log 'emitting welcome packet', data
+      @emit 'welcome', data
+
+
+  # we ask the client to hit this when we need to reload their session
+  @get '/resession': ->
+    console.log '/resession'
+    return ''
+
+  @on 'updateme': ->
+    console.log 'updateme'
+    # initiated by the client
+    # i'm sure parts of this causes all clients to be updated, perhaps we can FIXME someday
+
+    if not session = socket_get_session @ then return
+
+    channellist = []
+    for own channelname of otto.channels.channel_list
+      channel = otto.channels.channel_list[channelname]
+      channellist.push {name: channel.name, fullname: channel.fullname}
+    # hmmm... we don't even use what we just built FIXME
+    @emit 'channellist', otto.channelinfolist
+
+    channelinfo = otto.channels.channel_list[session.channelname]
+    if channelinfo
+      #otto.channels.channel_list[session.channelname].refresh()
+      @emit 'queue',    channelinfo.queue
+      @emit 'state',    channelinfo.state
+      @emit 'time',     channelinfo.time
+      allstatus = {}
+      alllineout = {}
+      alloutputs = {}
+      for name,channel of otto.channels.channel_list
+        allstatus[name] = channel.status
+        alllineout[name] = channel.lineout
+        alloutputs[name] = channel.outputs
+      @emit 'status',  allstatus
+      @emit 'lineout', alllineout
+      @emit 'outputs', alloutputs
+
+    if session.user and /[^0-9.]/.test(session.user)
+      #console.log "telling the client their username #{session.user}"
+      #@emit 'myusername', session.user
+      otto.db.load_stars session.user, false, (stars) =>
+        @emit 'stars', stars
+    otto.db.load_all_lists false, (err, data) =>
+      @emit 'lists', data
+    # hack to force a listeners update
+    otto.ourlisteners.update()
+
+
+  @on 'begin': ->
+    if not session = socket_get_session @ then return
+    channel = otto.channels.channel_list[session.channelname]
+    if channel
+      zappa.io.sockets.in(session.channelname).emit 'begun'
+      channel.autofill_queue ->
+        channel.play 0, ->
+
+
+  @on 'selectfolder': ->
+    console.log 'selectfolder!'
+    if not session = socket_get_session @ then return
+    # bounce this message from the webview client to Otto.py
+    #zappa.io.sockets.in(session.channelname).emit 'selectfolder'  # sends to everyone, for now FIXME
+    @broadcast 'selectfolder'  # sends to everyone (except self), for now FIXME
+
+
+  @on 'changechannel': ->
+    if not session = socket_get_session @ then return
+    newchannelname = @data
+    console.log 'changing channel to', newchannelname
+    channel = otto.channels.channel_list[newchannelname]
+    if channel
+      oldchannelname = session.channelname
+      sessionSet session, channelname: newchannelname, =>
+        if session.channelname != oldchannelname
+          otto.ourlisteners.change_channel session
+          apply_across_all_tabs session, ->
+            @leave(oldchannelname)
+            @join(session.channelname)
+            @emit 'mychannel', name: channel.name, fullname: channel.fullname
+          otto.ourlisteners.update()
+    else
+      console.log 'not a valid channel name'
 
 
   @on 'login': ->
     name = @data
     console.log 'login', name
-    handshake = @client.handshake
-    if handshake.sessionID
-      session = handshake.session
-      sessionid = handshake.sessionID
-      console.log sessionid
-      otto.sessionStore.get sessionid, (err, session2) =>
-        if err or not session2
-          console.log 'error: no session found in database - ', err
-          console.log session2
-        else
-          session.user = name
-          session2.user = name
-          otto.sessionStore.set sessionid, session2, ->
-          console.log "telling the client their username #{session.user}, #{session2.user}"
-          @emit 'myusername', session.user
-          otto.db.load_stars session.user, false, (stars) =>
-            console.log 'about to emit preloaded stars'
-            @emit 'stars', stars
-          ourlisteners.change_user session, sessionid
-          ourlisteners.update()
-
-
-  # not used
-  @get '/login': ->
-    name = @req.query.user
-    console.log 'login', name
-    return @res.json {ok: false} if not @req.session
-    session = @req.session
-    console.log 'session', session
-    session.user = name
-    console.log "telling the client their username #{session.user}"
-    for socketID in ourlisteners.list_socketids @req.sessionID
-      socket = zappa.io.sockets.socket(socketID)
-      socket.emit 'myusername', session.user
-      otto.db.load_stars session.user, false, (stars) =>
-        console.log 'about to emit preloaded stars'
-        socket.emit 'stars', stars
-    ourlisteners.change_user @req.session, @req.sessionID
-    ourlisteners.update()
-    @res.json {ok: true}
+    if not session = socket_get_session @ then return
+    if session
+      console.log session.sessionID
+      sessionSet session, user: name, =>
+        console.log "telling the client their username #{session.user}"
+        @emit 'myusername', session.user
+        otto.db.load_stars session.user, false, (stars) =>
+          console.log 'about to emit preloaded stars'
+          @emit 'stars', stars
+        otto.ourlisteners.change_user session
+        otto.ourlisteners.update()
 
 
   @on 'logout': ->
     console.log 'logout'
-    handshake = @client.handshake
-    if handshake.sessionID
-      session = handshake.session
-      sessionid = handshake.sessionID
-      console.log sessionid
-      session.user = null
-      otto.sessionStore.get sessionid, (err, session2) =>
-        if err or not session2
-          console.log 'error: no session found in database - ', err
-          console.log session2
-        else
-          session2.user = null
-          otto.sessionStore.set sessionid, session2, ->
-          console.log 'telling the client they are logged out'
-          @emit 'loggedout'
-          #otto.db.load_stars session.user, false, (stars) =>
-          #  console.log 'about to emit preloaded stars'
-          #  @emit 'stars', stars
-          ourlisteners.change_user session, sessionid
-          ourlisteners.update()
-
-
-  @get '/logout': ->
-    console.log 'logout'
-    if @req.session
-      session = @req.session
-      session.user = null
-      console.log "telling the client they are logged out"
-      for socketID in ourlisteners.list_socketids @req.sessionID
-        socket = zappa.io.sockets.socket(socketID)
-        socket.emit 'loggedout'
-        #otto.db.load_stars session.user, false, (stars) =>
-        #  console.log 'about to emit preloaded stars'
-        #  @emit 'stars', stars
-      ourlisteners.change_user @req.session, @req.sessionID
-      ourlisteners.update()
-      @res.json {ok: true}
-    else
-      @res.json {ok: false}
-
-
-  @on 'updateme': ->
-    # initiated by the client so that someday multiple socket.io
-    # disconnects and reconnects become a non-event and can be debounced
-    # i'm sure this causes all clients to be updated, perhaps we can FIXME someday
-    if otto.channels.channel_list[@client.channelname]
-      otto.channels.channel_list[@client.channelname].refresh()
-    #channellist = [{name:'one', fullname:'One!'},{name:'two',fullname:'Two.'}]
-    channellist = []
-    for own channelname of otto.channels.channel_list
-      channel = otto.channels.channel_list[channelname]
-      channellist.push {name: channel.name, fullname: channel.fullname}
-    #@emit 'channellist', channellist
-    #console.log 'otto.channelinfolist', otto.channelinfolist
-    @emit 'channellist', otto.channelinfolist
-    otto.db.load_all_lists false, (err, data) =>
-      @emit 'lists', data
-    handshake = @client.handshake
-    if handshake.session and handshake.session.user and /[^0-9.]/.test(handshake.session.user)
-      console.log "telling the client their username #{handshake.session.user}"
-      @emit 'myusername', handshake.session.user
-      otto.db.load_stars handshake.session.user, false, (stars) =>
-        @emit 'stars', stars
-    # hack to force a listeners update
-    ourlisteners.update()
-
-
-  @on 'changechannel': ->
-    newchannelname = @data
-    console.log 'changing channel to', newchannelname
-    channel = otto.channels.channel_list[newchannelname]
-    if channel
-      @leave(@client.channelname)
-      @client.channelname = channel.name
-      @join(@client.channelname)
-      @emit 'changechannel', name: channel.name, fullname: channel.fullname
-    else
-      console.log 'not a valid channel name'
+    if not session = socket_get_session @ then return
+    if session.sessionID
+      console.log session.sessionID
+      sessionSet session, user: '', =>
+        console.log 'telling the client they are logged out'
+        @emit 'myusername', session.user
+        otto.ourlisteners.change_user session
+        otto.ourlisteners.update()
 
 
   @on 'play': (socket) ->
-    if otto.channels.channel_list[@client.channelname]
-      otto.channels.channel_list[@client.channelname].play @data, ->
-      #zappa.io.sockets.in(@client.channelname).emit 'state', 'play'
+    if not session = socket_get_session @ then return
+    if otto.channels.channel_list[session.channelname]
+      otto.channels.channel_list[session.channelname].play @data, ->
+      #zappa.io.sockets.in(session.channelname).emit 'state', 'play'
 
+  # pause also unpauses
   @on 'pause': (socket) ->
     console.log 'pause!'
-    if otto.channels.channel_list[@client.channelname]
-      otto.channels.channel_list[@client.channelname].pause ->
-      #zappa.io.sockets.in(@client.channelname).emit 'state', 'pause'
+    if not session = socket_get_session @ then return
+    if otto.channels.channel_list[session.channelname]
+      otto.channels.channel_list[session.channelname].pause ->
+      #zappa.io.sockets.in(session.channelname).emit 'state', 'pause'
 
-  # next is not currently used
+  # this just pauses, Otto.py uses it for 'stop'
+  # don't want to use mpd command stop as that might disconnect things
+  @on 'pauseifnot': (socket) ->
+    console.log 'pauseifnot!'
+    if not session = socket_get_session @ then return
+    if otto.channels.channel_list[session.channelname]
+      otto.channels.channel_list[session.channelname].pauseifnot ->
+      #zappa.io.sockets.in(session.channelname).emit 'state', 'pause'
+
+  @on 'toggleplay': (socket) ->
+    console.log 'toggleplay!'
+    if not session = socket_get_session @ then return
+    channelname = @data || session.channelname
+    console.log 'channel', channelname
+    if otto.channels.channel_list[channelname]
+      otto.channels.channel_list[channelname].toggleplay ->
+
+  # next is not currently used, it's not very useful
+  # it only works once playing has started, and it resumes play if paused
   @on 'next': (socket) ->
     console.log 'next!'
-    if otto.channels.channel_list[@client.channelname]
-      otto.channels.channel_list[@client.channelname].next ->
-  @get '/next': ->
-    otto.channels.channel_list['main'].next ->
+    if not session = socket_get_session @ then return
+    if otto.channels.channel_list[session.channelname]
+      otto.channels.channel_list[session.channelname].next ->
 
   @on 'seek': (socket) ->
     console.log 'seek!', @data
-    if otto.channels.channel_list[@client.channelname]
-      otto.channels.channel_list[@client.channelname].seek @data, ->
+    if not session = socket_get_session @ then return
+    if otto.channels.channel_list[session.channelname]
+      otto.channels.channel_list[session.channelname].seek @data, ->
 
-  @on 'outputs': (socket) ->
-    if otto.channels.channel_list[@client.channelname]
-      otto.channels.channel_list[@client.channelname].outputs @data, ->
-
+  # no longer used
   @on 'lineout': (socket) ->
-    if otto.channels.channel_list[@client.channelname]
-      otto.channels.channel_list[@client.channelname].lineout @data, ->
+    console.log 'lineout!', @data
+    if not session = socket_get_session @ then return
+    if otto.channels.channel_list[session.channelname]
+      otto.channels.channel_list[session.channelname].set_lineout @data, ->
+
+  @on 'togglelineout': ->
+    console.log 'togglelineout', @data
+    channelname = @data.channelname
+    alt = @data.alt
+    if otto.channels.channel_list[channelname]
+      if otto.channels.channel_list[channelname].lineout == '1'
+        otto.channels.channel_list[channelname].set_lineout 0
+      else
+        if not alt
+          for name,channel of otto.channels.channel_list
+            if channel.lineout == '1'
+              channel.set_lineout 0
+        otto.channels.channel_list[channelname].set_lineout 1
+
 
   @on 'setvol': (socket) ->
-    if otto.channels.channel_list[@client.channelname]
-      otto.channels.channel_list[@client.channelname].setvol @data, ->
+    if not session = socket_get_session @ then return
+    channelname = @data.channelname
+    volume = @data.volume
+    if otto.channels.channel_list[channelname]
+      otto.channels.channel_list[channelname].setvol volume, ->
+
 
   @on 'reloadme': (socket) ->
     @emit 'reload'
 
 
   @on 'reloadall': (socket) ->
-    if @client.handshake.session and @client.handshake.session.user
-      user = @client.handshake.session.user
-      if user is 'jon'
+    if not session = socket_get_session @ then return
+    if session and session.user
+      if session.user is 'jon'
         console.log 'reload all'
         zappa.io.sockets.emit 'reload'
       else
-        console.log "#{user} tried to .reloadall! awesome."
+        console.log "#{session.user} tried to .reloadall! awesome."
 
 
   @on 'deleteid': (socket) ->
     console.log('deleteid! ' + @data)
-    if !@client.handshake.session or !@client.handshake.session.user
+    if not session = socket_get_session @ then return
+    if not session or not session.user
       console.log 'error: don\'t know the user, ignoring socket event'
       #@emit 'reload'
       return
-    user = @client.handshake.session.user
-    if otto.channels.channel_list[@client.channelname]
-      otto.channels.channel_list[@client.channelname].remove_from_queue @data, user
+    if otto.channels.channel_list[session.channelname]
+      otto.channels.channel_list[session.channelname].remove_from_queue @data, session.user
+
+
+  # used by 'next' in Otto.py
+  @on 'delete': (socket) ->
+    console.log('delete!')
+    if not session = socket_get_session @ then return
+    if not session or not session.user
+      console.log 'error: don\'t know the user, ignoring socket event'
+      #@emit 'reload'
+      return
+    if otto.channels.channel_list[session.channelname]
+      otto.channels.channel_list[session.channelname].remove_from_queue '', session.user
 
 
   @on 'enqueue': (socket) ->
-    if !@client.handshake.session or !@client.handshake.session.user
+    if not session = socket_get_session @ then return
+    if not session or not session.user
       console.log 'error: do not know the user, ignoring socket event'
       #@emit 'reload'
       return
-    user = @client.handshake.session.user
-    client_channel = otto.channels.channel_list[@client.channelname]
+    client_channel = otto.channels.channel_list[session.channelname]
     if client_channel
-      client_channel.add_to_queue @data, user
+      client_channel.add_to_queue @data, session.user
 
 
   @on 'stars': (socket) ->
-    if !@client.handshake.session or !@client.handshake.session.user
+    if not session = socket_get_session @ then return
+    if not session or not session.user
       console.log 'error: do not know the user, ignoring socket event'
       #@emit 'reload'
       return
-    user = @client.handshake.session.user
-    if not user or not /[^0-9.]/.test(user)
+    if not session.user or not /[^0-9.]/.test(session.user)
       return
-    otto.db.add_to_user_list user, @data.id, @data.rank, (success) ->
+    otto.db.add_to_user_list session.user, @data.id, @data.rank, (success) ->
       if success
-        otto.db.load_stars user, no, (stars) ->
+        otto.db.load_stars session.user, no, (stars) ->
           console.log 'stars', stars
           zappa.io.sockets.emit 'stars', stars
 
 
   @on 'unlist': (socket) ->
-    if !@client.handshake.session or !@client.handshake.session.user
+    if not session = socket_get_session @ then return
+    if not session or not session.user
       console.log 'error: do not know the user, ignoring socket event'
       #@emit 'reload'
       return
-    user = @client.handshake.session.user
-    if not user or not /[^0-9.]/.test(user)
+    if not session.user or not /[^0-9.]/.test(session.user)
       return
-    jsonreq.post_with_body 'http://localhost:8778/remove_from_list', querystring.stringify({ user: user, oid: @data }), (err, data) ->
+    jsonreq.post_with_body 'http://localhost:8778/remove_from_list', querystring.stringify({ user: session.user, id: @data }), (err, data) ->
       jsonreq.get 'http://localhost:8778/load_lists', (err, data) ->
         zappa.io.sockets.emit 'lists', data
 
 
   @on 'chat': (socket) ->
-    otto.report_event 'chat', @client.channelname, 0, @client.handshake.session.user, @data
+    if not session = socket_get_session @ then return
+    otto.report_event 'chat', session.channelname, 0, session.user, @data
 
 
   @on 'inchat': (socket) ->
-    ourlisteners.set_state @client.handshake.sessionID, @id, 'inchat', @data
+    if not session = socket_get_session @ then return
+    otto.ourlisteners.set_state session.sessionID, @id, 'inchat', @data
     if @data
       [eventname, message] = ['joinedchat', 'joined the chat']
     else
       [eventname, message] = ['leftchat', 'left the chat']
-    otto.report_event eventname, @client.channelname, 0, @client.handshake.session.user, message
+    otto.report_event eventname, session.channelname, 0, session.user, message
 
 
   @on 'typing': (socket) ->
-    ourlisteners.set_state @client.handshake.sessionID, @id, 'typing', @data
+    if not session = socket_get_session @ then return
+    otto.ourlisteners.set_state session.sessionID, @id, 'typing', @data
 
 
   @on 'focus': (socket) ->
-    ourlisteners.set_state @client.handshake.sessionID, @id, 'focus', @data
+    if not session = socket_get_session @ then return
+    otto.ourlisteners.set_state session.sessionID, @id, 'focus', @data
 
 
   @on 'idle': (socket) ->
+    if not session = socket_get_session @ then return
     val = if @data then (new Date()).getTime() else 0
-    ourlisteners.set_state @client.handshake.sessionID, @id, 'idle', val
+    otto.ourlisteners.set_state session.sessionID, @id, 'idle', val
+
+  @on 'console.log': (socket) ->
+    console.log.apply @data
+  @on 'console.dir': (socket) ->
+    console.dir.apply @data
 
 
   #@coffee '/shared.js': ... # use @coffee if you want the code to be shared between server and client
@@ -368,37 +456,11 @@ server_go = ->
   @get '/otto.client.js': ->
     @res.setHeader('Content-Type', 'text/javascript')
     #return ';(' + otto.client + ')();'
-    return ';zappa.run(' + otto.client + ');'
+    return ';window.otto = window.otto || {};zappa.run(' + otto.client + ');'
 
   @get '/otto.client.templates.js': ->
     @res.setHeader('Content-Type', 'text/javascript')
-    js = """
-      window.otto = window.otto || {};
-      otto.large_database = #{otto.db.large_database}; /* there are better ways to do this FIXME */
-      otto.haslineout = #{process.platform is 'darwin'};
-    """
-    return js + ';(' + otto.client.templates + ')();'
-
-  @get '/Xotto.client.templates.js': ->
-    @res.setHeader('Content-Type', 'text/javascript')
-    js = """
-      window.otto = window.otto || {};
-      otto.large_database = #{otto.db.large_database}; /* there are better ways to do this FIXME */
-      otto.templates = (function() {
-        templates = {};
-        templates.x = {};
-         """
-    for own template of otto.client.templates
-      if template is 'x' then continue
-      js += "templates.#{template} = #{otto.client.templates[template]};\n"
-    for own x of otto.client.templates.x
-      js += "templates.x.#{x} = #{otto.client.templates.x[x]};\n"
-    js += """
-        return(templates);
-      }());
-          """
-    return js
-
+    return ';window.otto = window.otto || {};(' + otto.client.templates + ')();'
 
   @get '/otto.client.:modulename.js': ->
     modulename = @req.params.modulename
@@ -420,6 +482,14 @@ server_go = ->
 
   @get '/all_albums': ->
     otto.db.all_albums (objects) =>
+      @res.json(objects)
+
+  @get '/all_albums_by_year': ->
+    otto.db.all_albums_by_year (objects) =>
+      @res.json(objects)
+
+  @get '/all_albums_by_fileunder': ->
+    otto.db.all_albums_by_fileunder (objects) =>
       @res.json(objects)
 
 
@@ -451,13 +521,13 @@ server_go = ->
 
   @get '/load_object': ->
     query = @req.query
-    otto.db.load_object query.oid, query.load_parents, (object) =>
+    otto.db.load_object query.id, query.load_parents, (object) =>
       @res.json(object)
 
 
   @get '/album_details': ->
     query = @req.query
-    otto.db.album_details query.oid, (object) =>
+    otto.db.album_details query.id, (object) =>
       @res.json(object)
 
 
@@ -471,14 +541,13 @@ server_go = ->
   #@get
     #'/music_root_dirs': proxy_api_request
     #'/load_dir': proxy_api_request
-    #'/load_fileunder': proxy_api_request
     #'/load_lists': proxy_api_request
 
 
-  @get '/load_owners': ->
+  @get '/load_users': ->
     query = @req.query
-    otto.db.load_owner null, (owners) =>
-      @res.json(owners)
+    otto.db.load_users (users) =>
+      @res.json(users)
 
 
   @get '/load_stars': ->
@@ -493,13 +562,19 @@ server_go = ->
       @res.json(albums)
 
 
+  @get '/load_fileunder': ->
+    artistid = @req.query.artistid
+    otto.db.load_fileunder artistid, (results) =>
+      @res.json(results)
+
+
   proxy_stream = (format) ->
     host = @req.headers.host
     add_stream_callback = (@req, channel, format) =>
-      ourlisteners.add_stream @req.session, @req.sessionID
+      otto.ourlisteners.add_stream @req.session
     remove_stream_callback = (@req, channel, format) =>
-      ourlisteners.remove_stream @req.sessionID
-    console.dir @req.params
+      otto.ourlisteners.remove_stream @req.session
+    #console.dir @req.params
     channelname = @req.params.channelname || 'main'
     format = format || @req.params.format || 'mp3'
     console.log 'channelname', channelname, 'format', format
@@ -519,31 +594,31 @@ server_go = ->
   @get '/stream': proxy_stream
 
 
-  @get '/download/:oid': ->
-    if not @req.user or not /[^0-9.]/.test(@req.user)
+  @get '/download/:id': ->
+    if not @req.session.user or not /[^0-9.]/.test(@req.session.user)
       return @res.send('not logged in', 403)
-    oid = @req.params.oid # parseInt(@req.params.oid) <- not anymore!
+    id = @req.params.id # parseInt(@req.params.id) <- not anymore!
     jsonreq.get 'http://localhost:8778/load_lists?objects=1', (err, data) =>
       filenames = []
       archivename = no
       for user in data
-        console.log "oid #{oid}, user.oid #{user.oid}"
-        if oid == user.oid
+        console.log "id #{id}, user.id #{user.id}"
+        if id == user.id
           archivename = "#{user.owner}.zip"
-          console.log "archiving #{archivename} for oid #{user.oid}"
+          console.log "archiving #{archivename} for id #{user.id}"
           for item in user.list
             if item.otype == 10
               filename = path.join(user.owner, path.basename(item.filename))
               filenames.push( [item.filename, filename] )
-              console.log "adding song #{item.filename} as #{filename}"
+              #console.log "adding song #{item.filename} as #{filename}"
             else if item.otype == 20
               albumdirname = path.basename(item.dirpath)
-              console.log "adding album #{albumdirname}"
+              #console.log "adding album #{albumdirname}"
               if item.items and item.items.length
                 for song in item.items
                   filename = path.join(user.owner, albumdirname, path.basename(song.filename))
                   filenames.push( [song.filename, filename] )
-                  console.log "adding album song #{song.filename} as #{filename}"
+                  #console.log "adding album song #{song.filename} as #{filename}"
       if archivename
         console.log 'writeHead'
         @res.writeHead 200,
@@ -578,7 +653,7 @@ server_go = ->
     """
     #EXTM3U
     #EXTINF:-1,otto.local-
-    http://#{host}/stream/1/#{@req.user}/#{host}
+    http://#{host}/stream/1/#{@req.session.user}/#{host}
     """
 
 
@@ -588,50 +663,79 @@ server_go = ->
     """
     [playlist]
     numberofentries=1
-    File1=http://#{host}/stream/1/#{@req.user}/Otto%20(#{host})
+    File1=http://#{host}/stream/1/#{@req.session.user}/Otto%20(#{host})
     Title1=Otto (#{host})
     Length1=-1
     Version=2
     """
 
-  @get '/loader': ->
-    otto.loader.load(@req, @res, zappa)
+  @on 'loadmusic': (socket) ->
+    console.log 'loadmusic', @data
+    otto.loader.load(zappa, @data)
 
-
-  # a node_webkit hook
-  @get '/phase': ->
-    @render phaser: {}
-  #@view layout: ->  # 'layout' is a magic name
-  @view phaser: ->
-    script ->
-      """
-        console.log('in phaser:');
-        gui = require('nw.gui');
-        console.log('gui = ', gui);
-        setTimeout( function() {
-          win = gui.Window.open('http://localhost:8778', {
-            'width': 1200,
-            'height': 1000,
-            'show': true,
-            'toolbar': true,
-            'frame': true });
-        }, 3000);
-      """
+  #@get '/loader': ->
+  #  otto.loader.load(@req, @res, zappa)
 
 
   ########################################
 
 
+  socket_get_session = (s) -> otto.sessionlist[s.io.handshaken[s.id].sessionID]
+  socket_get_sessionip = (s) -> otto.sessioniplist[s.io.handshaken[s.id].sessionID]
+
+  # loop across all socket.io connections for a given session and call func with @ set to each socket
+  apply_across_all_tabs = (session, func) ->
+    sessionsockets = otto.ourlisteners.get_sockets session
+    for id of sessionsockets
+      func.apply otto.socketlist[id]
+
+
+  sessionSet = (session, dict, callback) ->
+    console.log 'sessionSet'
+    otto.sessionStore.get session.sessionID, (err, session2) =>
+      if err or not session2
+        console.log 'error: no session found in database? - ', err
+        console.log session
+        # not sure if we should call the callback or not on err
+        # at least the in memory session doesn't get changed
+        callback()
+      else
+        for key,val of dict
+          session[key] = val
+          session2[key] = val
+        otto.sessionStore.set session.sessionID, session2, ->
+          callback()
+
+
   otto.channels.set_global_event_handler (eventname, channel, args...) ->
     switch eventname
-      when 'update'
-        zappa.io.sockets.in(channel.name).emit 'playlistinfo', channel.queue
-
+      when 'queue'
+        zappa.io.sockets.in(channel.name).emit 'queue', channel.queue
       when 'state'
         zappa.io.sockets.in(channel.name).emit 'state', channel.state
-
+      when 'status'
+        allstatus = {}
+        for name,channel of otto.channels.channel_list
+          allstatus[name] = channel.status
+        zappa.io.sockets.emit 'status', allstatus
       when 'time'
         zappa.io.sockets.in(channel.name).emit 'time', channel.time
+      when 'lineout'
+        #zappa.io.sockets.in(channel.name).emit 'lineout', channel.lineout
+        alllineout = {}
+        for name,channel of otto.channels.channel_list
+          alllineout[name] = channel.lineout
+        zappa.io.sockets.emit 'lineout', alllineout
+      when 'outputs'
+        #zappa.io.sockets.in(channel.name).emit 'outputs', channel.outputs
+        alloutputs = {}
+        for name,channel of otto.channels.channel_list
+          alloutputs[name] = channel.outputs
+        zappa.io.sockets.emit 'outputs', alloutputs
+
+      when 'started'
+        message = "playing #{args[0].song}"
+        otto.report_event 'started', channel.name, args[0], user, message
 
       when 'finished'
         previously_playing = args[0]
@@ -639,7 +743,7 @@ server_go = ->
         if previously_playing.requestor
           message += " requested by #{previously_playing.requestor}"
         message += " #{previously_playing.song}"
-        otto.report_event 'finished', channel.name, previously_playing.oid, undefined, message
+        otto.report_event 'finished', channel.name, previously_playing.id, undefined, message
 
       when 'addtoqueue'
         song = args[0]
@@ -657,10 +761,10 @@ server_go = ->
             message = "#{eventname} song requested by #{song.requestor}"
         else
           message = "#{eventname} song #{song.song}"
-        otto.report_event eventname, channel.name, song.oid, user, message
+        otto.report_event eventname, channel.name, song.id, user, message
 
 
-  listeners_event_handler = (eventname, listeners, data) ->
+  otto.ourlisteners.on '*', (eventname, listeners, data) ->
     switch eventname
       when 'update'
         zappa.io.sockets.emit 'listeners', data
@@ -680,17 +784,15 @@ server_go = ->
       when 'streamingstop'
         otto.report_event 'stopstreaming', 'main', 0, data.user, 'stopped streaming'
 
-  ourlisteners.on '*', listeners_event_handler
-
 
   #eventlog = fs.createWriteStream 'static/html/events.html', 'flags': 'a', ->
   #  # not working:
   #  otto.report_event 'ottostarted', undefined, undefined, undefined, (new Date).toUTCString()
 
-  otto.report_event = (name, channelname, oid, user, message) =>
+  otto.report_event = (name, channelname, id, user, message) =>
     event =
       timestamp: new Date()
-      oid: oid
+      id: id
       user: user
       name: name
       channel: channelname

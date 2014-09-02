@@ -22,7 +22,7 @@ global.otto.mpd = do ->  # note 'do' calls the function
 
   mpd.MPD = class MPD extends otto.events.EventEmitter
     constructor: (@name, @slot=0) ->
-      super ['*', 'start', 'time', 'state', 'playlist'] # valid events
+      super ['*', 'start', 'time', 'state', 'status', 'playlist', 'outputs', 'died'] # valid events
       if mpd_list[@name]
         throw new Error "already an mpd with name #{@name}"
       mpd_list[@name] = @
@@ -34,11 +34,11 @@ global.otto.mpd = do ->  # note 'do' calls the function
             break
         if !@slot
           @slot = mpd_slots.length+1
-      #if @slot < 1 or @slot > 99   # perhaps we don't need to limit this to 99
+      #if @slot < 1 or @slot > 99   # perhaps we don't need to limit this to 99 (ha!)
       #  throw new Error "error: bad mpd slot number #{@slot}, can only be from 1 to 99"
       mpd_slots[@slot-1] = @
       @slotstr = "#{@slot}"
-      if @slotstr.length < 2 then @slotstr = '0'+@slotstr  # make 1..9 in to 01..09
+      if @slotstr.length < 2 then @slotstr = '0'+@slotstr  # convert 1..9 to 01..09
 
       @cache = {}
       @streamcount = 0
@@ -75,8 +75,8 @@ global.otto.mpd = do ->  # note 'do' calls the function
       if @mpdsocket
         throw new Error "mpd already connected for #{@name}"
       @spawn =>
-        #@mpdsocket = new mpdsocket 'localhost', @control_port
-        @mpdsocket = new mpdsocket @control_socket
+        #@mpdsocket = new mpdsocket 'localhost', @control_port, false
+        @mpdsocket = new mpdsocket @control_socket, '', false
         @mpdsocket.on 'connect', =>
           #console.log "mpd connected on port #{@control_port}"
           console.log "mpd connected for #{@name} on socket #{@control_socket}"
@@ -88,47 +88,85 @@ global.otto.mpd = do ->  # note 'do' calls the function
 
 
     setup: (callback) ->
+      console.log 'mpd setup'
       @mpdsocket.send 'repeat 0', =>
         @mpdsocket.send 'random 0', =>
           @mpdsocket.send 'single 0', =>
             @mpdsocket.send 'consume 1', =>
               @mpdsocket.send 'crossfade 10', =>
                 @mpdsocket.send 'replay_gain_mode track', =>
-                  @start()
+                  @start callback
                   if @name is 'main'
                     #@mpdsocket.send 'play 0', =>
                     #@mpdsocket.send 'pause 0', =>
-                    @playifnot ->
-                  callback() if callback?
+                    #@playifnot ->
+                    console.log ''
 
 
     start: (callback) ->
       #console.log "mpd starting for #{@name}"
       # prime the pump
-      @refresh()
+      @refresh callback
       # then setup the intervals
       @status_interval = otto.misc.intervalSet 100, => @status_watchdog()
       @playlist_interval = otto.misc.intervalSet 200, => @playlist_watchdog()
       @outputs_interval = otto.misc.intervalSet 1000, => @outputs_watchdog()
       @trigger 'start'
+      if callback
+        callback()
 
 
     stop: (callback) ->
       clearInterval @status_interval
       clearInterval @playlist_interval
       clearInterval @outputs_interval
+      if callback
+        callback()
 
 
     send: (req, callback) ->
       try
-        @mpdsocket.send req, (r) ->
-          callback r
-      catch mpdNotOpenExeption
-        # mpd seems to have died
-        console.log "********\n******** mpd #{@slot} died! trying to revive it\n********"
-        @revive =>
-          # try sending the failed command again
-          @send req, callback
+        @mpdsocket.send req, callback
+      catch mpdsocketNotOpenExeption
+        if not @revive_pending
+          @revive_pending = true
+          # mpd seems to have died
+          console.log "********\n******** mpd #{@slot} died! trying to revive it\n********"
+          @reset =>
+            @trigger 'died'
+            @revive =>
+              @revive_pending = false
+              ## try sending the failed command again (not sure this is a good idea)
+              #@send req, callback
+              # we're just going to abandon all callbacks and let the upper layer reset itself
+              # with the 'died' event above
+        else
+          #callback()  # not gonna work (won't have the right arguments, like r for example)
+
+
+    reset: (callback) ->
+      # stop everything, clear out the state file
+      # and delete the mpdsocket
+      @stop()
+      try
+        fs.unlinkSync @state_file
+      catch ENOENT
+      delete @mpdsocket
+      if callback
+        callback()
+
+
+    restoreoutputs: (cache, callback) ->
+      if cache.metavolume?
+        @setvol cache.metavolume, ->
+      console.log 'restoring outputs'
+      if cache.outputs
+        for output in cache.outputs
+          if output.outputenabled is '1'
+            @send "enableoutput #{output.outputid}", ->
+          else
+            @send "disableoutput #{output.outputid}", ->
+      callback()
 
 
     revive: (callback) ->
@@ -136,18 +174,31 @@ global.otto.mpd = do ->  # note 'do' calls the function
       # to remove the potentially bad track and then restore it's state
       # we don't currently restore the rest of the playlist FIXME
       wasplaying = @cache.state is 'play'
-      @stop()
-      try
-        fs.unlinkSync @state_file
-      catch ENOENT
+      oldcache = @cache
       @connect =>
-        if wasplaying
-          # hack: give it some time to get the queue filled
-          # (currently fails because picking songs is so damn slow)
-          # (bumped it up from 500ms to 2000ms)
-          # (wouldn't be an issue if we restored the playlist) FIXME
-          otto.misc.timeoutSet 2000, =>
+        @restoreoutputs oldcache, =>
+          # restore the playlist (minus the suspect song)
+          if oldcache.playlist
+            console.log 'restoring playlist'
+            newplaylist = []
+            for song in oldcache.playlist
+              newplaylist.push 'file://'+song.file
+            if oldcache.status?.song?
+              newplaylist.splice(oldcache.status.song, 1)
+            else
+              newplaylist.splice(0, 1)  # gotta remove something :)
+            for file in newplaylist
+              @addid file, null, ->
+            console.log 'done restoring playlist'
+          if wasplaying
+            # hack: give it some time to get the queue filled
+            # (currently fails because picking songs is so damn slow)
+            # (bumped it up from 500ms to 3000ms)
+            # (wouldn't be an issue if we restored the playlist) FIXME
+            #otto.misc.timeoutSet 3000, =>
+            #  @play 0, ->
             @play 0, ->
+          callback()
 
 
     #####
@@ -170,9 +221,10 @@ global.otto.mpd = do ->  # note 'do' calls the function
     seekcur: (seconds, callback) ->
       # newer mpds have a seekcur command, let's fake it
       @status (r) =>
-        song = r[0].song
-        console.log 'seek', song, seconds
-        @send "seek #{Number(song)} #{Number(seconds)}", callback
+        songpos = r[0].song
+        console.log 'songpos', songpos
+        console.log 'seek', songpos, seconds
+        @send "seek #{Number(songpos)} #{Number(seconds)}", callback
         @status_watchdog()
 
     next: (callback) ->
@@ -180,8 +232,15 @@ global.otto.mpd = do ->  # note 'do' calls the function
       @playlist_watchdog()
 
     enableoutput: (id, callback) ->
-      @send "enableoutput #{id}", callback
-      @outputs_watchdog()
+      @status (r) =>
+        # help hide mpd's '-1' volume when no output is enabled
+        if r[0].volume == '-1'
+          @send "enableoutput #{id}", =>
+            @setvol @cache.metavolume, callback
+          @outputs_watchdog()
+        else
+          @send "enableoutput #{id}", callback
+          @outputs_watchdog()
 
     disableoutput: (id, callback) ->
       @send "disableoutput #{id}", callback
@@ -189,6 +248,8 @@ global.otto.mpd = do ->  # note 'do' calls the function
 
     setvol: (vol, callback) ->
       @send "setvol #{vol}", callback
+      # help hide mpd's '-1' volume when no output enabled
+      @cache.metavolume = vol
       @status_watchdog()
 
     # attempt to get mpd to load new files it might not have in it's database yet
@@ -287,11 +348,14 @@ global.otto.mpd = do ->  # note 'do' calls the function
         # when using the full filename in addid (not file:/// apparently?)
         @addid filename, null, singlecallback
       i = 0
+      console.log 'addsongs', mpdfilenames.length
       recurse = ->
         addonesong mpdfilenames[i], ->
           if ++i < mpdfilenames.length
+            console.log 'recurse', i
             recurse()
           else
+            console.log 'callback', i
             callback()
       recurse()
 
@@ -301,11 +365,19 @@ global.otto.mpd = do ->  # note 'do' calls the function
     #####
 
 
-    refresh: ->
+    refresh: (callback) ->
       @cache = {}
-      @status_watchdog()
-      @playlist_watchdog()
-      @outputs_watchdog()
+      callcount = 3
+      @status_watchdog   ->
+        if callcount-- == 1 and callback
+          callback()
+      @playlist_watchdog =>
+        if callcount-- == 1 and callback
+          callback()
+          @trigger 'playlist', @cache.playlist  # triggers autofill
+      @outputs_watchdog  ->
+        if callcount-- == 1 and callback
+          callback()
 
 
     status_watchdog: (callback) ->
@@ -318,25 +390,53 @@ global.otto.mpd = do ->  # note 'do' calls the function
         if not _.isEqual newstate, @cache.state
           @cache.state = newstate
           @trigger 'state', @cache.state
-        if callback
-          callback @
+        newstatus = _.omit r[0], ['elapsed']
+        # also consider omitting bitrate, time, playlist{,length}, nextsong{,id}
 
+        # work around a feature of mpd that messes up our ui
+        # if output isn't enabled the volume status is reported as -1
+        # let's hide that
+        # one side effect of this is that when the server is restarted
+        # channels that don't have an output enabled have their volume
+        # bar set wrong until the output is enabled. to FIXME we'll need
+        # to store the metavolume in the database
+        # or maybe it's the "cannot call methods on slider prior to initialization"
+        # error i'm getting in the console
+        if newstatus.volume == '-1'
+          newstatus.volume = @cache.metavolume
+        else
+          @cache.metavolume = newstatus.volume
+        if not _.isEqual newstatus, @cache.status
+          @cache.status = newstatus
+          @trigger 'status', @cache.status
+        if callback
+          callback
+
+
+    playlist: (callback) ->
+      @status (r1) =>
+        songpos = r1[0].song
+        @playlistinfo (r2) =>
+          r2.songpos = songpos
+          callback r2
 
     playlist_watchdog: (callback) ->
-      @status (r1) =>
-        song = r1[0].song
-        @playlistinfo (r2) =>
-          r2.song = song
-          if not _.isEqual(r2, @cache.playlistinfo) or song isnt @cache.song
-            @cache.playlistinfo = r2
-            @cache.song = song
-            if not callback
-              @trigger 'playlist', @cache.playlistinfo
-          if callback
-            callback @
+      @playlist (r) =>
+        if not _.isEqual(r, @cache.playlist)
+          @cache.playlist = r
+          @trigger 'playlist', @cache.playlist
+        if callback
+          callback
 
 
     outputs_watchdog: (callback) ->
+      @outputs (r) =>
+        newtime = r[0].time
+        if not _.isEqual r, @cache.outputs
+          @cache.outputs = r
+          @trigger 'outputs', @cache.outputs
+        if callback
+          callback
 
 
    #####
@@ -495,6 +595,7 @@ global.otto.mpd = do ->  # note 'do' calls the function
             console.log "warning: we never saw the socket on #{host}:#{port} open up!"
             res.send('stream not found!', 503)
           else
+            console.log 'about to proxy_raw_icy_stream'
             proxy_raw_icy_stream outsocket, headers, open_callback, close_callback, port, host
 
 
@@ -527,11 +628,11 @@ global.otto.mpd = do ->  # note 'do' calls the function
   # note: the ICY response codes break the node+connect http parsing code
   # so we just jam the sockets together and keep our nose out of it
   proxy_raw_icy_stream = (outsocket, headers, open_callback, close_callback, port=8101, host='localhost') ->
-    #console.log 'proxy_raw_icy_stream'
+    console.log 'proxy_raw_icy_stream'
     insocket = net.connect port, host, ->
-      #console.log 'net connected'
+      console.log 'net connected'
       insocket.write headers
-      #console.log 'headers written'
+      console.log 'headers written'
 
       #insocket.addListener 'data', (data) ->
       #  console.log(data.length)
