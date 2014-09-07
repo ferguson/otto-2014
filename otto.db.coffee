@@ -753,9 +753,11 @@ module.exports = global.otto.db = do ->  # note the 'do' causes the function to 
       q = { otype: 1, owner: username }
     else
       q = { otype: 1}
-    c.objects.findOne q, {}, (err, owner) ->
+    #c.objects.findOne q, {}, (err, owner) ->  #oops
+    c.objects.find(q, {}).toArray (err, owner) ->
       if err then throw err
       callback owner
+
 
   db.load_users = (callback) ->
     # load list of owners
@@ -873,6 +875,7 @@ module.exports = global.otto.db = do ->  # note the 'do' causes the function to 
 
 
   db.load_stars = (username, loadobjectstoo, callback) ->
+    console.log 'load_stars', username
     db.load_owner username, (owners) ->
       if not owners
         return callback({})
@@ -884,7 +887,7 @@ module.exports = global.otto.db = do ->  # note the 'do' causes the function to 
       #console.log 'ownerids', ownerids
       q = ctype: 12, parent: { $in: ownerids }
       c.connections.find( q ).sort( { ownerids: 1, rank: -1 } ).toArray (err, allstarreditems) ->
-        #console.log 'allstarreditems', allstarreditems
+        console.log 'allstarreditems', allstarreditems
         if err then throw err
         if loadobjectstoo
           loadids = []

@@ -1,4 +1,5 @@
 :bugs:
+stars for other users don't show in showstars view
 v letterbar not being clipped on narrow browser window
 v chat output div slightly too wide, long lines make it sideways scrollable
 channel list should not be completely rebuilt just by listener changes
@@ -45,6 +46,7 @@ odd big gap between owner and file in queue
 just use orig sized image instead of 600x600 (and don't generate and store 600x600 images)
 make TV mode one of the -/+ sizes
 logging out leaves things active on letter bar (and there are prob. other things that need to be reset too)
+. need to reprocess stars on login
 clicking on album name or artist name in now play renders .browserresults w/o "otto" logo footer
 make "otto" footer only appear when there are .browserresults (and maybe only when they require scrolling down?)
 perhaps clicking on 'otto' logo at bottom should shoot to to the top of page?

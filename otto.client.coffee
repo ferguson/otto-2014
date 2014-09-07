@@ -387,9 +387,10 @@ global.otto.client = ->
   @on 'stars': ->
     console.log 'on stars', @data
     if @data
-      otto.process_stars
+      otto.process_stars @data
 
   otto.process_stars = (stars) ->
+    console.log 'process_stars'
     for own username of stars
       console.log 'username', username
       console.log 'myusername', otto.myusername
@@ -722,7 +723,7 @@ global.otto.client = ->
       @emit 'loadmusic', $('.folder .path').text()
 
     else if $button.is '.loadmusic2'
-      @emit 'loadmusic'  # loader.py defaults to last directory loaded from
+      @emit 'loadmusic'  # scan.py defaults to last directory scanned
 
     else if $button.is '.begin'
       console.log 'begin!'

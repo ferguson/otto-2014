@@ -31,7 +31,6 @@ COVER_SIZES = ['orig', '300', '120', '40']
 # if the music dir isn't specified on the command line,
 # otto will use the first directory it finds in this list:
 MUSIC_DIR_SEARCH_ORDER = [
-    '/otto/u',
     '~/Music',
     ]
 

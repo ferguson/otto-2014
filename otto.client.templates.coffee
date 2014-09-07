@@ -1108,7 +1108,7 @@ global.otto.client.templates = ->
 
     templates.loader = coffeecup.compile ->
       div class: 'event loader', ->
-        span class: 'message', "loader: #{@event}"
+        span class: 'message', "scan: #{@event}"
 
 
     templates.show_users = coffeecup.compile ->
