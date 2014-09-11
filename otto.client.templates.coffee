@@ -400,10 +400,7 @@ global.otto.client.templates = ->
 
     t.filename_widget = ccc ->
       if @song?.filename
-        span class: 'shy', ->
-          #filename = musicroot.relative(@song.filename)
-          filename = @song.filename
-          div '.filename', filename
+        span '.filename.shy', @song.filename
 
     t.currentcover_widget = ccc ->
       if @song
@@ -721,8 +718,9 @@ global.otto.client.templates = ->
 
     templates.artist = coffeecup.compile ->
       div '.artistlist', ->
-        if otto.myusername
-          button '.stars.control.teeny.shy.n0', 'data-id': @item._id
+        if not @nostars
+          if otto.myusername
+            button '.stars.control.teeny.shy.n0', 'data-id': @item._id
         div '.artistname-container', ->
           span '.artistname.expand', {'data-id': @item._id }, @item.name # was @item.artist before fileunder
           ul '.thumbnails', ->
@@ -907,9 +905,7 @@ global.otto.client.templates = ->
                 else
                   owner = ''
                 span '.owner.sep', -> owner
-                #filename = musicroot.relative(song.filename)
-                filename = song.filename
-                span '.filename.sep', -> filename
+                span '.filename.sep', -> song.filename
 
 
     templates.featured = coffeecup.compile ->
@@ -938,9 +934,7 @@ global.otto.client.templates = ->
               else
                 owner = ''
               span '.owner.sep', -> owner
-              #filename = musicroot.relative(song.filename)
-              filename = song.filename
-              span '.filename.sep', -> filename
+              span '.filename.sep', -> song.filename
 
 
     templates.alert = coffeecup.compile ->
@@ -975,8 +969,6 @@ global.otto.client.templates = ->
             ul class: 'songs', ->
               for song in @data.songs
                 songs_list[song._id] = true
-                #filename = musicroot.relative(song.filename)
-                filename = song.filename
                 li ->
                   text otto.templates.enqueue_widget()
                   span ".song.id#{song._id}", { 'data-id': song._id }, song.song
@@ -991,7 +983,7 @@ global.otto.client.templates = ->
                     if song.owners
                       owner = song.owners[0].owner
                     span '.owner.sep', owner
-                    span '.filename.sep', filename
+                    span '.filename.sep', song.filename
           other_cleaned = []
           if @data.other
             for song in @data.other
@@ -1148,33 +1140,33 @@ global.otto.client.templates = ->
                   if otto.myusername
                     span class: 'shy', -> button class: 'download btn teeny control', 'data-id': user._id, -> i class: 'download-alt'
 
-            #ul '.songs', ->
-            div '.songs', ->
+            div '.songs', ->  # .songs? that isn't good FIXME
               if starlist and starlist.length
                 for item in starlist
-                  if item.otype == 40
-                    text otto.templates.artist item: item
-                  else if item.otype == 20
-                    album = item
-                    console.log 'stars album', album
-                    div ->
-                      otto.templates.album item: album
-                  else
-                    song = item
-                    #filename = musicroot.relative(song.filename)
-                    filename = song.filename
-                    div ->
+                  switch item.otype
+                    when 40 then addclass = '.starredartist'
+                    when 20 then addclass = '.starredalbum'
+                    else addclass = '.starredsong'
+                  div '.starreditem'+addclass, ->
+                    if otto.myusername and user is otto.myusername
+                      button '.stars.control.teeny.shy.n0', 'data-id': item._id
+                    else
+                      button ".stars.control.teeny.n#{item.rank}.immutable.noupdate", 'data-id': item._id
+                    if item.otype == 40
+                      text otto.templates.artist item: item, nostars: true
+                    else if item.otype == 20
+                      text otto.templates.album item: item, nostars: true
+                    else
+                      song = item
                       text otto.templates.enqueue_widget()
                       span ".song.id#{song._id}", { 'data-id': song._id }, song.song
                       span '.album.sep', song.album
                       span '.artist.sep', song.artist
-                      if otto.myusername
-                        button '.stars.control.teeny.shy.n0', 'data-id': song._id
                       span '.sep.shy', otto.format_time(song.length)
                       if song.owners
                         owner = song.owners[0].owner
                         span '.owner.sep.shy', owner
-                      span '.filename.sep.shy', filename
+                      span '.filename.sep.shy', song.filename
 
         if nostar
           div '.nostars', 'Nothing starred yet'

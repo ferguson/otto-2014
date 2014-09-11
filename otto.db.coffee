@@ -493,7 +493,7 @@ module.exports = global.otto.db = do ->  # note the 'do' causes the function to 
       sort = { 'child': 1, 'rank':1 }
       c.objects.find(find).sort(sort).toArray (err, parents) ->
         if err then throw new Error "error loading parent objects: #{err}"
-        console.log parents.length, 'parents'
+        #console.log parents.length, 'parents'
         object_lookup = {}
         for object in objects
           object_lookup[object._id] = object
@@ -522,14 +522,14 @@ module.exports = global.otto.db = do ->  # note the 'do' causes the function to 
     find = { 'parent': {'$in': ids}, 'ctype': {'$nin':[4,6]} }
     c.connections.find(find).toArray (err, connections) ->
       if err then throw new Error "error fetching child connections: #{err}"
-      console.log connections.length, 'connections'
+      #console.log connections.length, 'connections'
       childids = connections.map (i) -> i.child
       otypes = [].concat (options.otype || 1)
       find = { '_id': { '$in': childids }, 'otype': {'$in':otypes} }
       sort = { 'child': 1, 'rank':1 }
       c.objects.find(find).sort(sort).toArray (err, children) ->
         if err then throw new Error "error loading child objects: #{err}"
-        console.log children.length, 'children'
+        #console.log children.length, 'children'
         object_lookup = {}
         for object in objects
           object_lookup[object._id] = object
@@ -803,7 +803,6 @@ module.exports = global.otto.db = do ->  # note the 'do' causes the function to 
                 else
                   for owner in owners
                     if owner_stats[owner._id]
-                      console.log owner_stats[owner._id]
                       _.extend owner, owner_stats[owner._id]
                   console.log "#{elapsed.seconds()} stats totaled"
                   seq = new Sequence owners, (owner) ->
@@ -819,7 +818,7 @@ module.exports = global.otto.db = do ->  # note the 'do' causes the function to 
   db.find_or_create_owner = (username, callback) ->
     db.load_owner username, (owner) ->
       if owner
-        callback owner
+        callback owner[0]
       else
         c.objects.save { otype: 1, owner: username }, (err, newowner) ->
           if err then throw err
@@ -887,7 +886,7 @@ module.exports = global.otto.db = do ->  # note the 'do' causes the function to 
       #console.log 'ownerids', ownerids
       q = ctype: 12, parent: { $in: ownerids }
       c.connections.find( q ).sort( { ownerids: 1, rank: -1 } ).toArray (err, allstarreditems) ->
-        console.log 'allstarreditems', allstarreditems
+        #console.log 'allstarreditems', allstarreditems
         if err then throw err
         if loadobjectstoo
           loadids = []
@@ -916,9 +915,9 @@ module.exports = global.otto.db = do ->  # note the 'do' causes the function to 
     return stars
 
 
-  db.add_to_user_list = (username, oid, rank, callback) ->
+  db.add_to_user_list = (username, _id, rank, callback) ->
     db.find_or_create_owner username, (owner) ->
-      db.load_object oid, no, (object) ->
+      db.load_object _id, no, (object) ->
         if object
           c.connections.findOne { ctype: 12, parent: owner._id, child: object._id }, (err, connection) ->
             if err then throw err
@@ -937,7 +936,7 @@ module.exports = global.otto.db = do ->  # note the 'do' causes the function to 
   db.remove_from_user_list = (username, oid, callback) ->
     db.load_owner username, (owner) ->
       if owner
-        db.remove_from_connections owner._id, oid, 12, ->
+        db.remove_from_connections owner[0]._id, oid, 12, ->
           callback true
       else
         callback false
@@ -1053,12 +1052,12 @@ module.exports = global.otto.db = do ->  # note the 'do' causes the function to 
 
 
   db.get_random_starred_songs = (howmany=1, username, callback) ->
-    console.log 'get_random_starred_songs', howmany, 'for', username
+    #console.log 'get_random_starred_songs', howmany, 'for', username
     db.load_stars username, true, (stars) ->
       objects = stars[username]
       if not objects
       	return callback []
-      console.log objects.length, 'objects'
+      #console.log objects.length, 'objects'
       songs = []
       for object in objects
         if object.otype is 10
@@ -1070,7 +1069,7 @@ module.exports = global.otto.db = do ->  # note the 'do' causes the function to 
           async_count += 1
           db.load_subobjects object, 10, no, [5,6], (object) ->
             async_count -= 1
-            console.log 'looping over album songs'
+            #console.log 'looping over album songs'
             if object.songs?
               for song in object.songs
                 songs.push song
@@ -1082,13 +1081,13 @@ module.exports = global.otto.db = do ->  # note the 'do' causes the function to 
 
 
   db.pick_random_songs_from_array = (howmany, songs) ->
-    console.log 'picking random', howmany, 'songs from', songs.length, 'total songs'
+    #console.log 'picking random', howmany, 'songs from', songs.length, 'total songs'
     if howmany > songs.length then howmany = songs.length
     picked = []
     attempts = 0
     while picked.length < howmany and attempts < songs.length
       attempts++
-      console.log 'picking'
+      #console.log 'picking'
       candidate = songs[Math.floor Math.random() * songs.length]
       alreadypicked = false
       for pick in picked
@@ -1096,11 +1095,11 @@ module.exports = global.otto.db = do ->  # note the 'do' causes the function to 
           alreadypicked = true
           break
       if alreadypicked
-        console.log 'already'
+        #console.log 'already'
         continue
-      console.log 'picked'
+      #console.log 'picked'
       picked.push candidate
-    console.log 'done. got', picked.length
+    #console.log 'done. got', picked.length
     return picked
 
 
@@ -1150,7 +1149,7 @@ module.exports = global.otto.db = do ->  # note the 'do' causes the function to 
 
 
   db.load_fileunder = (artistid, callback) ->
-    console.log 'load_fileunder', artistid
+    #console.log 'load_fileunder', artistid
     db.load_object artistid, load_parents=40, (artist) ->
       callback artist.fileunder
 

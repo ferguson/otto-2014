@@ -1240,10 +1240,12 @@ global.otto.client = ->
   otto.mark_listed_items = () ->
 
   otto.mark_starred_items = () ->
-    $('.stars.n1, .stars.n2, .stars.n3, .stars.n4, .stars.n5, .stars.n6').removeClass('n1 n2 n3 n4 n5 n6').addClass('n0')
+    $('.stars.n1:not(.noupdate), .stars.n2:not(.noupdate), .stars.n3:not(.noupdate), .stars.n4:not(.noupdate), .stars.n5:not(.noupdate), .stars.n6:not(.noupdate)').removeClass('n1 n2 n3 n4 n5 n6').addClass('n0')
     if otto.cache.stars
       for item in otto.cache.stars
-        $('[data-id='+item.child.toString()+'].stars').addClass('n'+item.rank)
+        $el = $('[data-id='+item.child.toString()+'].stars')
+        if not $el.is('.noupdate')
+          $el.addClass('n'+item.rank)
 
 
   otto.compute_artistinfo = (album) ->

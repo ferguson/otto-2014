@@ -65,7 +65,7 @@ Otto will scan for music files in your music folder. Otto doesn't move or modify
 
 The first time you run Otto it will ask which folder to scan for music. The default will be ~/Music (the Music folder in your home folder).
 
-If you add additional music to your music folder you can press the "scan" button located on the "stacked cubes" screen in the browser window. Otto will then look for new files in the last scanned music. If you want to scan a different folder, see "Scanning from the command line".
+If you add additional music to your music folder you can press the "scan" button located on the "stacked cubes" screen in the browser window. Otto will then look for new files in the last scanned music. If you want to scan a different folder, see "Scanning Music from the Command Line".
 
 
 Music Owners

@@ -562,7 +562,7 @@ img.albumimg {
   height: 15px;
   overflow: hidden;
 }
-.filename {
+.filename-container .filename {
   margin-left: 66px;
 }
 
@@ -1149,6 +1149,11 @@ body.loggedout .ondeckchattoggle-container {
 .control:active {
   color: #AAA;
   border-color: #AAA;
+}
+
+.control.immutable {
+  pointer-events: none;
+  cursor: inherit;
 }
 
 .control.medium {
@@ -2195,22 +2200,48 @@ input[type="checkbox"] + label:hover, input[type="checkbox"] + label:hover span 
     margin-left: 80px;
 }
 
-.artistlist .stars {
+.artistlist > .stars {
   display: inline-block;
   position: absolute;
   top: 24px;
 }
 
-.songs .artistlist {
-  display: inline-block;
-  position: relative;
-  left: -46px;
-  margin-top: 3px;
-  margin-bottom: 3px;
+.starreditem {
+  margin-top: 1px;
+  margin-left: 25px;
 }
 
-.songs .artistlist .stars {
-  top: 10px;
+.starredartist .stars {
+  top: 12px;
+}
+
+.starredalbum .stars {
+  top: 20px;
+}
+
+.starreditem .artistlist {
+  display: inline-block;
+  margin-top: 2px;
+  margin-left: -43px;
+  margin-bottom: 5px;
+}
+
+.starredalbum {
+  margin-top: -1px;
+  margin-bottom: 7px;
+}
+
+.starreditem .albumlist {
+  display: inline-block;
+  margin-left: -12px;
+}
+
+.search .artistlist {
+  margin-left: -15px;
+}
+
+.search .albumlist {
+  margin-left: 15px;
 }
 
 .albumall {

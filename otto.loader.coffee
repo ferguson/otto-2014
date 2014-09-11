@@ -34,8 +34,8 @@ global.otto.loader = do ->  # note the 'do' causes the function to be called
       #if process.env['USER'] is 'root'
       #  opts.uid = posix.getpwnam('jon').uid  # mpd can't use file:/// as root, also: not Windows
 
-      console.log 'spawning loader.py'
-      args = ['-u', otto.OTTO_ROOT + '/loader.py', '-j']
+      console.log 'spawning scan.py'
+      args = ['-u', otto.OTTO_ROOT + '/scan.py', '-j']
       if path then args.push path
       child = child_process.spawn otto.OTTO_BIN + '/python', args, opts
       #console.log 'child', child
