@@ -830,7 +830,8 @@ global.otto.client.templates = ->
         div '.albumcover-container', ->
           if @album.cover
             div '.thumb.px200', ->
-              img src: "/image/300?id=#{@album.cover}", alt: @album.album, title: @album.album
+              #img src: "/image/300?id=#{@album.cover}", alt: @album.album, title: @album.album
+              img src: "/image/orig?id=#{@album.cover}", alt: @album.album, title: @album.album
           else
             div '.noimg.px200', ->
               if @album.artistinfo.various
@@ -883,6 +884,10 @@ global.otto.client.templates = ->
                     button '.stars.control.teeny.shy.n0', 'data-id': song._id
                     #button '.stars.control.teeny.shy.n0', {'data-id': song._id}, otto.templates.icon 'star'
                   span '.time.sep.shy', otto.format_time(song.length)
+
+        div '.albumdir.dirpath.shy', ->
+           @album.dirpath
+
 
     templates.ondeck = coffeecup.compile ->
       table '.ondeck', ->

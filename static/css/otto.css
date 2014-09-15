@@ -175,6 +175,10 @@ li.h {
   font-weight: 100;
 }
 
+.albumname > .stars {
+  margin-top: 8px;
+}
+
 .thumbnails {
   display: inline-block;
   position: relative;
@@ -366,7 +370,7 @@ img.albumimg {
   color: #6C6C6C;
 }
 
-.filename {
+.filename, .dirpath {
   position: absolute;
   font-size: 12px;
   max-height: 1.5em;
@@ -1260,12 +1264,21 @@ li.showstars {
 
 li.showall {
   font-size: 28px;
+  width: 16px;
   top: -3px;
-  margin-right: -5px;
+}
+li.showall .icon-grid {
+  position: relative;
+  left: -6px;
 }
 li.showcubes {
   font-size: 20px;
+  width: 16px;
   top: 0px;
+}
+li.showcubes .icon-stack2 {
+  position: relative;
+  left: -2px;
 }
 
 .shy {
@@ -1644,6 +1657,11 @@ input[type="checkbox"] + label:hover, input[type="checkbox"] + label:hover span 
   margin-top: 10px;
   padding-bottom: 30px;
   min-height: 250px;
+  overflow: hidden;
+}
+
+.albuminfo > .album .stars {
+  margin-top: 4px;
 }
 
 .albumcover-container {
@@ -1719,6 +1737,12 @@ input[type="checkbox"] + label:hover, input[type="checkbox"] + label:hover span 
   font-family: fenwick-1, fenwick-2, serif;
   font-family: Andale Mono, monospace;
   font-size: 14px;
+}
+
+.albumdir {
+  position: absolute;
+  bottom: 5px;
+  left: 288px;
 }
 
 .inqueue {
@@ -2211,11 +2235,11 @@ input[type="checkbox"] + label:hover, input[type="checkbox"] + label:hover span 
   margin-left: 25px;
 }
 
-.starredartist .stars {
+.starredartist > .stars {
   top: 12px;
 }
 
-.starredalbum .stars {
+.starredalbum > .stars {
   top: 20px;
 }
 

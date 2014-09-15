@@ -676,6 +676,10 @@ server_go = ->
   #@get '/loader': ->
   #  otto.loader.load(@req, @res, zappa)
 
+  @on 'loadmusiccancel': (socket) ->
+    console.log 'loadmusiccancel'
+    otto.loader.cancel(zappa)
+
 
   ########################################
 

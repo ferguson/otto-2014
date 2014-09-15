@@ -26,7 +26,8 @@ import StringIO
 #import Image
 from PIL import Image
 
-COVER_SIZES = ['orig', '300', '120', '40']
+#COVER_SIZES = ['orig', '300', '120', '40']
+COVER_SIZES = ['orig', '120', '40']
 
 # if the music dir isn't specified on the command line,
 # otto will use the first directory it finds in this list:

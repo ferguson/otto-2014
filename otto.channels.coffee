@@ -196,19 +196,34 @@ global.otto.channels = do -> # note 'do' calls the function
         console.log 'autofill_pending', @autofill_pending
         switch @type
           when 'standard'
-            otto.db.get_random_songs 100, (randomsongs) =>
+            otto.db.get_random_songs 300, (randomsongs) =>  # was 100
               console.log 'auto filling queue with random songs'
+              vettedsongs = []
+              for song in randomsongs
+                genre = false
+                if song.genre?
+                  genre = song.genre.toLowerCase()
+                if genre
+                  if /book/.test(genre) then continue
+                  if /audio/.test(genre) then continue
+                  if /speech/.test(genre) then continue
+                  if /spoken/.test(genre) then continue
+                  if /podcast/.test(genre) then continue
+                  if /academic/.test(genre) then continue
+                  #if /comedy/.test(genre) then continue  # also '57'
+                  if genre in ['183', '184', '186', '101'] then continue
+                vettedsongs.push song
               channels.pick_a_lucky_listener (luckylistener) =>
                 mpdfilenames = []
                 if luckylistener
-                  for randomsong in randomsongs
+                  for randomsong in vettedsongs
                     if randomsong.owners[0].owner is luckylistener
                       mpdfilenames.push channels.otto_filename_to_mpd(randomsong.filename)
                     if mpdfilenames.length >= howmany
                       break
                 if mpdfilenames.length < howmany
                   console.log "not enough songs for #{luckylistener}, backfilling"
-                  for randomsong in randomsongs
+                  for randomsong in vettedsongs
                     if channels.otto_filename_to_mpd(randomsong.filename) not in mpdfilenames
                       mpdfilenames.push channels.otto_filename_to_mpd(randomsong.filename)
                     if mpdfilenames.length >= howmany

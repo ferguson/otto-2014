@@ -534,7 +534,7 @@ def openMainWindow():
     #print webview.preferences().userStyleSheetLocation()
 
     #webview.setCustomUserAgent_('Otto')
-    webview.setApplicationNameForUserAgent_('Otto')  # client uses this to tell if they are running in our webview
+    webview.setApplicationNameForUserAgent_('Otto_OSX')  # client uses this to tell if they are running in our webview
     #anfua = webview.applicationNameForUserAgent()
     #print '%%%%%%%%%%%%%%%% appnameforUA', anfua
     #cua = webview.customUserAgent()

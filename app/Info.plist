@@ -13,9 +13,9 @@
   <key>CFBundleIconFile</key>
   <string>Otto.icns</string>
   <key>CFBundleShortVersionString</key>
-  <string>0.3.2RC3</string>
+  <string>2014.09.14.0</string>
   <key>CFBundleVersion</key>
-  <string>2014.0831.1212</string>
+  <string>2014.09.14.0</string>
   <key>CFBundleInfoDictionaryVersion</key>
   <string>6.0</string>
   <key>CFBundlePackageType</key>

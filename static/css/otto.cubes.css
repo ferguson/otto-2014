@@ -214,6 +214,11 @@
   line-height: 11px;
 }
 
+.loadmusic2 .ouroboros {
+  position: relative;
+  top: 1px;
+}
+
 .browseresults-container .cubeswithload-container {
   margin-right: 75px;
 }

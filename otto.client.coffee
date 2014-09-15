@@ -20,12 +20,16 @@ global.otto.client = ->
   otto.current_volume = 80
   otto.soundfx = no
   otto.notifications = no
+  if /Otto_OSX/.test(navigator.userAgent)
+    delete Notification
+
 
   ## should only do this in dev mode, but we need to tell the client we are in dev mode somehow FIXME
   #window.console.log = ->
   #  @emit 'console.log', Array().slice.call(arguments)
   #window.console.dir = ->
   #  @emit 'console.dir', Array().slice.call(arguments)
+
 
   #alternately:
   #$('body').append $ '<script src="http://jsconsole.com/remote.js?656D8845-91E3-4879-AD29-E7C807640B61">'
@@ -573,17 +577,16 @@ global.otto.client = ->
       @emit 'enqueue', id
 
     else if $button.is '.stars'
-      console.log '.stars', e
+      #console.log '.stars', e
       console.log $button
-      console.log 'e.pageX', e.pageX
+      #console.log 'e.pageX', e.pageX
       console.log '$button.offset().left', $button.offset().left
       if $('html').is '.doubler'
         clickpoint = e.pageX - ($button.offset().left * 2) - 8
         clickpoint = clickpoint / 2
       else
         clickpoint = e.pageX - $button.offset().left - 4
-      console.log 'clickpoint', clickpoint
-      console.log clickpoint
+      #console.log 'clickpoint', clickpoint
       if clickpoint < 2
         halfstars = 0
       else if clickpoint < 11
@@ -598,7 +601,7 @@ global.otto.client = ->
         halfstars = 5
       else
         halfstars = 6
-      console.log halfstars
+      #console.log halfstars
       id = find_id $button
       console.log "stars #{halfstars} " + id
       $button.removeClass('n0 n1 n2 n3 n4 n5 n6').addClass('n' + halfstars)
@@ -723,7 +726,12 @@ global.otto.client = ->
       @emit 'loadmusic', $('.folder .path').text()
 
     else if $button.is '.loadmusic2'
-      @emit 'loadmusic'  # scan.py defaults to last directory scanned
+      if $button.text() is 'scan'
+        $button.html otto.templates.ouroboros size: 'small', direction: 'cw', speed: 'slow'
+        @emit 'loadmusic'  # scan.py defaults to last directory scanned
+      else
+        $button.html('scan')
+        @emit 'loadmusiccancel'
 
     else if $button.is '.begin'
       console.log 'begin!'
@@ -852,13 +860,16 @@ global.otto.client = ->
         width = $target.innerWidth()
         adjust = -2
       seconds = Math.round( (e.offsetX+adjust) / (width-1) * otto.current_song_time.total)
+      console.log 'seconds', seconds
       @emit 'seek', seconds
       if otto.connect_state isnt 'disconnected'
         otto.reconnect_player() # make it stop playing instantly (flush buffer)
-    else if $target.is '.loadmusic' # i don't understand why this is needed here, why button_click_handler doesn't see it
-      #@emit 'loadmusic', $('.folder .path').text()
-      console.log 'this one'
-      @emit 'loadmusic', '/Users/jon/Music'
+
+    #else if $target.is '.loadmusic' # i don't understand why this is needed here, why button_click_handler doesn't see it
+    #  #@emit 'loadmusic', $('.folder .path').text()
+    #  console.log 'this one'
+    #  @emit 'loadmusic', '/Users/jon/Music'
+
     else
       console.log 'do not know what to do with clicks on this element:'
       console.dir $target
@@ -1151,6 +1162,7 @@ global.otto.client = ->
 
   otto.render_json_call_to_results = (url, params, template, message, callback) ->
     $results = $('.browseresults-container')
+    $('.active').removeClass 'active'
     if message
       $results.html message
     else

@@ -13,6 +13,7 @@ global.otto.loader = do ->  # note the 'do' causes the function to be called
   loader = {}
 
   loading = false
+  child = false
 
   #loader.load = (req, res, zappa) ->  # from when it used to be triggered by a GET
   loader.load = (zappa, path) ->
@@ -70,8 +71,9 @@ global.otto.loader = do ->  # note the 'do' causes the function to be called
                 console.log 'spotted one!', song.song
 
       child.on 'exit', (code, signal) ->
-        return if otto.exiting
+        child = false
         loading = false
+        return if otto.exiting
         console.log "loader exited with code #{code}"
         if signal then console.log "...and signal #{signal}"
         #res.end()
@@ -96,6 +98,11 @@ global.otto.loader = do ->  # note the 'do' causes the function to be called
             else
               channel.autofill_queue ->
                 console.log 'initial autofill done, channelname ', channelname
+
+
+  loader.cancel = (zappa) ->
+    if loading and child
+      child.kill()
 
 
   hash_code = (str) ->

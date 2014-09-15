@@ -44,6 +44,7 @@ global.otto.client.cubes = ->
         $progress = $progress || $('.loadingprogress')
         $progress.html otto.templates.countprogress count: data.count, total: data.total
         $('.loadingstatus').removeClass('searching begin nonefound finished')
+        $('.loadmusic2').html('scan')
       else if data.album
         nothing = false
         console.log 'loader says album:', data

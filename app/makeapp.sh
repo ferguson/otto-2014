@@ -25,7 +25,7 @@ export PATH=$ROOT/bin:/usr/bin:/bin:/usr/sbin:/sbin
 
 #arch -32 python setup.py py2app $*
 #arch -32 python2.7 setup.py py2app --iconfile ../static/images/ottoicon.icns
-python setup.py py2app $*
+python setup.py py2app $* >/dev/null  # hopefully errors will still show
 rm -rf *.egg
 
 if [ ! -d $RES ]; then
@@ -83,8 +83,8 @@ ln -s python $RES/bin/python2
 ln -s python $RES/bin/python2.7
 cp -p $ROOT/.Python $RES
 
-#rsynclist='.git LICENSE NOTES README.md TODO activate dev.sh loader.py otto* package.json reset.sh slosh go.sh static'
-rsynclist='LICENSE NOTES README.md TODO activate dev.sh loader.py otto* package.json reset.sh slosh go.sh static'
+#rsynclist='.git LICENSE NOTES README.md TODO activate dev.sh scan.py otto* package.json reset.sh slosh go.sh static'
+rsynclist='LICENSE NOTES README.md TODO activate dev.sh scan.py otto* package.json reset.sh slosh go.sh static'
 if [ "$1" = "-A" ]; then
     echo "-A mode, only linking files"
     for f in $rsynclist; do

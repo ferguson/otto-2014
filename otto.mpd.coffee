@@ -93,7 +93,8 @@ global.otto.mpd = do ->  # note 'do' calls the function
         @mpdsocket.send 'random 0', =>
           @mpdsocket.send 'single 0', =>
             @mpdsocket.send 'consume 1', =>
-              @mpdsocket.send 'crossfade 10', =>
+              #@mpdsocket.send 'crossfade 10', =>
+              @mpdsocket.send 'crossfade 5', =>
                 @mpdsocket.send 'replay_gain_mode track', =>
                   @start callback
                   if @name is 'main'
