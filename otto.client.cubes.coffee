@@ -62,6 +62,7 @@ global.otto.client.cubes = ->
           adjust_parent_height()
 
       else if data is 'finished'
+        $('.loadmusic2').html('scan')
         if $('.loadingstatus').parent().is '.cubeswithload-container'
           if $progress then $progress.empty()
           if $current then $current.empty()
@@ -72,6 +73,7 @@ global.otto.client.cubes = ->
           else
             $('.loadingstatus').removeClass('loading searching begin nonefound').addClass('nonefound')
       else if data is 'error'
+        $('.loadmusic2').html('scan')
         if $('.loadingstatus').parent().is '.cubeswithload-container'
           if $progress then $progress.empty()
           if $current then $current.empty()

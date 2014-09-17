@@ -957,17 +957,56 @@ global.otto.client.templates = ->
         if not @data.fileunders.length and not @data.albums.length and not @data.songs.length
           div class: 'noresults'
         else
+
           if @data.fileunders.length
             div class: 'section', 'Artists'
             div ->
               for fileunder in @data.fileunders
                 #li -> fileunder.name
                 div -> otto.templates.artist item: fileunder
+
           if @data.albums.length
             div class: 'section', 'Albums'
             div class: 'albums', ->
               for album in @data.albums
                 div -> otto.templates.album item: album
+
+          if @data.songcomposers? and @data.songcomposers.length
+            div '.section', 'Composers'
+            ul class: 'songs', ->
+              for song in @data.songcomposers
+                filename = song.filename
+                li ->
+                  button '.enqueue.control.teeny.shy', 'data-oid': song.oid
+                  composers = ''
+                  if song.tags['©wrt']
+                    composers = song.tags['©wrt']
+                    composers = composers.replace /^\[u\'/, ''
+                    composers = composers.replace /\'\]$/, ''
+                  if song.tags['TCOM']
+                    if composers
+                      composers = composers + ', '
+                    composers = song.tags['TCOM']
+                  span "[#{composers}] &nbsp;"
+                  span id: song.oid, class: 'song', -> song.song
+                  span class: 'sep'
+                  span class: 'album', -> song.album
+                  span class: 'sep'
+                  span class: 'artist', -> song.artist
+                  if otto.myusername
+                    button '.stars.control.teeny.shy.n0', 'data-oid': song.oid
+                  span class: 'shy', ->
+                    span class: 'sep'
+                    span -> otto.format_time(song.length)
+                    if song.owners
+                      owner = song.owners[0].owner
+                    else
+                      owner = ''
+                    span class: 'sep'
+                    span class: 'queue owner', -> owner
+                    span class: 'sep'
+                    span class: 'queue filename', -> filename
+
           songs_list = {}
           if @data.songs.length
             div class: 'section', 'Songs'

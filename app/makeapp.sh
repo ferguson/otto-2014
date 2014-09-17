@@ -63,10 +63,12 @@ scp -p /usr/local/lib/libtiff* $RES/lib   # i wonder... is this needed? maybe py
 # ha! it seems this was not needed and in fact was causing my /usr/local/lib embedded path problem that
 # i wrote fixlibpaths.sh to fix
 # wait, yes i *do* need to copy this. sigh.
-# fix it's embedded /usr/local/lib...
+# now to fix it's embedded /usr/local/lib...
 echo "fixing libtiff's libjpegsearch path..."
-for f in $RES/lib/libtoff*.dylib; do
+for f in $RES/lib/libtiff*.dylib; do
+    chmod +w $f
     install_name_tool -change /usr/local/lib/libjpeg.8.dylib @executable_path/libjpeg.8.dylib $f
+    chmod -w $f
 done
 
 cp -p $ROOT/bin/{activate*,bsondump,chardetect,mongo*,mutagen*,ncmpc,mpc,node,node-waf} $RES/bin

@@ -160,6 +160,7 @@ li.h {
 .expand.active, .expand.active:hover, .expand:active, .gotothere.active, .gotothere.active:hover, .gotothere:active
 {
   color: #AAA;
+  color: #BF6F04;
   text-shadow: none;
 }
 
@@ -205,7 +206,9 @@ li.h {
 
 .thumb.active {
   border-color: #AAA;
+  color: #BF6F04;
   border: 3px solid #AAA;
+  border: 3px solid #BF6F04;
 }
 
 .thumb.px40 {
@@ -222,6 +225,7 @@ li.h {
 .thumb.px40.active
 {
   border: 2px solid #AAA;
+  border: 2px solid #BF6F04;
 }
 
 .thumb.px120 {
@@ -789,6 +793,7 @@ img.albumimg {
 
 .letterbar .active, .letterbar .active:hover, .letterbar:active {
   color: #AAA;
+  color: #BF6F04;
 }
 
 .channelbar-container {
@@ -962,6 +967,7 @@ img.albumimg {
   //border: 0;
   outline: 0;
   border-color: #AAA;
+  border-color: #BF6F04;
 }
 
 /*
@@ -1043,6 +1049,7 @@ body.loggedout .ondeckchattoggle-container {
   //border: 0;
   outline: 0;
   border-color: #AAA;
+  border-color: #BF6F04;
 }
 
 .ouroboros-container {
@@ -1152,7 +1159,9 @@ body.loggedout .ondeckchattoggle-container {
 
 .control:active {
   color: #AAA;
+  color: #BF6F04;
   border-color: #AAA;
+  border-color: #BF6F04;
 }
 
 .control.immutable {
@@ -1649,7 +1658,7 @@ input[type="checkbox"] + label:hover, input[type="checkbox"] + label:hover span 
 .newestowner {
   margin-top: 40px;
   margin-bottom: 10px;
-  margin-left: 62px;
+//  margin-left: 62px;
 }
 
 .albumdetails {

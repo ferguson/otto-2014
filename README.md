@@ -3,7 +3,7 @@ Otto Audio Jukebox - beta
 
 <http://ottoaudiojukebox.com>
 
-### Version 0.3.0 - Mar 11th 2014 - Initial public release
+### Version 2014.09.17.0 - Fix libtiff path fix, search on composer, orange color for active, some layout fixes, scan button tweaks
 
 See "History" for previous releases
 
@@ -246,3 +246,5 @@ know about any music. See "Scanning Music".
 
 History
 -------
+
+### Version 0.3.0 - Mar 11th 2014 - Initial public release

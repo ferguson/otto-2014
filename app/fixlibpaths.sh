@@ -5,7 +5,7 @@ if [ "$LIB" == "" ]; then
   LIB="dist/Otto.app/Contents/Resources/lib"
 fi
 
-TAB="	"   # verbatium tab character
+TAB="	"   # verbatim tab character
 BADPATH="/usr/local/lib/"
 REGEXP="^${TAB}$BADPATH"  
 #REGEXP="^ +name $BADPATH"  # at some point osx > 10.7 changes the output to include "name" (w/o tabs)

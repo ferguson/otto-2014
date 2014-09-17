@@ -22,13 +22,19 @@ sometimes right-click for reload can fix stuff?
 x bind mpd sockets to localhost to avoid firewall messages (already is)
 
 :stoppers:
+test owners in otto.json
+lib search paths broken 
+v fix for search broke current selected items
 v need waiting indicator on scan button in cubes page
 v search doesn't reset active letterbar icon
 v hide notifications icon in app until it actually works
 
 :layout:
+v make selections orange
+orange logo for a splash of color?
 need better indenting for wrapping long titles, e.g. in album view or search results
 stars get pushed down a little when an artist line wraps in starts with view
+v move username separators left in new albums to match style on search, stars
 v inbox on letterbar has extra gap
 v stars layout problem when expanding things on stars page
 v stars in search expanded artists
@@ -36,6 +42,7 @@ v stars in search albums off a bit
 v stars in expanded albums (and others?) in all stars view
 
 :bugs:
+sometimes mpd hangs on certian songs i think, detect this and kill mpd & remove song from queue
 seeking is scaled wrong in TV mode (it's 'doubled'), stars too
 volume slider has trouble in TV mode too
 searching for 'the' on big collections(?) crashes?
@@ -103,6 +110,8 @@ x font size off in firefox esp. for chat prompt (not font size i don't think, di
 
 
 :short/missing features:
+finish search on composer feature (strings need to not have u[''] in them, make sure you are searching all types not just mp3/m4a)
+integrate composer better (make them appear under artists etc.)
 save events and chat
 +3 random
 play album

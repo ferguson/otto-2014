@@ -1110,6 +1110,7 @@ global.otto.client = ->
       search_word = $searchtext.val()
       $searchtext.select()
       if not (search_word=='')
+        $('.active').removeClass 'active'
         otto.render_json_call_to_results '/search', {value: search_word}, 'search', \
             "&nbsp;&nbsp;&nbsp;&nbsp;Searching <span class='highlight'>#{search_word}</span>"
 
@@ -1162,7 +1163,6 @@ global.otto.client = ->
 
   otto.render_json_call_to_results = (url, params, template, message, callback) ->
     $results = $('.browseresults-container')
-    $('.active').removeClass 'active'
     if message
       $results.html message
     else

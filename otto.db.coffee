@@ -1145,7 +1145,14 @@ module.exports = global.otto.db = do ->  # note the 'do' causes the function to 
               if err then throw new Error "error: db.search - #{err}"
               for song in songs
                 song.oid = song._id  # for backwards compatability
-              callback null, fileunders: fileunders, albums: albums, songs: songs
+              c.objects.find({otype: 10, "tags.©wrt": regexp}).sort({"tags.©wrt": 1}).toArray (err, songcomposers)->
+                if err then throw new Error "error: db.search - #{err}"
+                c.objects.find({otype: 10, "tags.TCOM": regexp}).sort({"tags.TCOM": 1}).toArray (err, songcomposers2)->
+                  if err then throw new Error "error: db.search - #{err}"
+                  songcomposers = songcomposers.concat songcomposers2
+                  for song in songcomposers
+                    song.oid = song._id  # for backwards compatability
+                  callback null, fileunders: fileunders, albums: albums, songs: songs, songcomposers: songcomposers
 
 
   db.load_fileunder = (artistid, callback) ->

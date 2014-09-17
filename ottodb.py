@@ -90,6 +90,8 @@ class DB():
         self.db.objects.create_index([ ('otype', ASCENDING), ('owner', ASCENDING) ])
         self.db.objects.create_index([ ('otype', ASCENDING), ('dirpath', ASCENDING) ])
         self.db.objects.create_index([ ('otype', ASCENDING), ('filename', ASCENDING) ])
+        self.db.objects.create_index([ ('otype', ASCENDING), ('tags.©wrt', ASCENDING) ])
+        self.db.objects.create_index([ ('otype', ASCENDING), ('tags.TCOM', ASCENDING) ])
 
         self.db.connections.create_index('child')
         self.db.connections.create_index('parent')
