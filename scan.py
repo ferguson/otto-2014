@@ -299,7 +299,7 @@ def parse_song_info(db, filename):
         album = tags.get('\xA9alb', [None])[0]
         if tags.get('\xA9day'):
             year = tags['\xA9day'][0][:4]
-        if tags.get('\xA9gen'):
+        if tags.get('\xA9gen'):  # what about 'genre'? https://code.google.com/p/mp4v2/wiki/iTunesMetadata FIXME
             genre = tags['\xA9gen'][0]
     else:
         songname = tags.get('title', [None])[0]

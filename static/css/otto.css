@@ -1410,7 +1410,9 @@ li:hover > .shy, div:hover > .shy, td:hover > .shy, span:hover > .shy, .reveal:h
   margin: 0 auto;
   width: 115px;
   height: 30px;
-  background-image: url('/static/images/otto-6C-460x100.png');
+  //background-image: url('/static/images/otto-6C-460x100.png');
+  background-image: url('/static/images/otto-BF6F04-10-460x100.png');
+  //background-image: url('/static/images/otto-BF6F04-6C-460x100.png');
   background-size: contain;
   background-repeat: no-repeat;
 }

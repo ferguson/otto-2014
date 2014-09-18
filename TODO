@@ -19,21 +19,23 @@ notifications don't work in app, use a notifications capable browser
 debugging section in readme? mention syslog -C
 an empty queue can sometimes be fixed by adding a song
 sometimes right-click for reload can fix stuff?
+file selection dialog box can be slow to come up on osx, esp. if on network drive?
 x bind mpd sockets to localhost to avoid firewall messages (already is)
 
 :stoppers:
 test owners in otto.json
-lib search paths broken 
+> lib search paths broken 
 v fix for search broke current selected items
 v need waiting indicator on scan button in cubes page
 v search doesn't reset active letterbar icon
 v hide notifications icon in app until it actually works
 
 :layout:
-v make selections orange
+make album text in selected thumbnail not be orange?
 orange logo for a splash of color?
 need better indenting for wrapping long titles, e.g. in album view or search results
 stars get pushed down a little when an artist line wraps in starts with view
+v make selections orange
 v move username separators left in new albums to match style on search, stars
 v inbox on letterbar has extra gap
 v stars layout problem when expanding things on stars page

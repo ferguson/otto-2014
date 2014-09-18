@@ -3,7 +3,7 @@ Otto Audio Jukebox - beta
 
 <http://ottoaudiojukebox.com>
 
-### Version 2014.09.17.0 - Fix libtiff path fix, search on composer, orange color for active, some layout fixes, scan button tweaks
+### Version 2014.09.18.0 - Fix for broken scan.py (unicode char in creating composer index), orange logo
 
 See "History" for previous releases
 
@@ -248,3 +248,4 @@ History
 -------
 
 ### Version 0.3.0 - Mar 11th 2014 - Initial public release
+### Version 2014.09.17.0 - Fix libtiff path fix, search on composer, orange color for active, some layout fixes, scan button tweaks
