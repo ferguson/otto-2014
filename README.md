@@ -178,9 +178,9 @@ The format for setting the owner in "otto.json" is:
     { "owner": "<email address>" }
 
 Here is an example otto.json file that sets the owner to
-"jon@ottoaudiojukebox.com":
+"teddy@ottoaudiojukebox.com":
 
-    { "owner": "jon@ottoaudiojukebox.com" }
+    { "owner": "teddy@ottoaudiojukebox.com" }
 
 If a music file is not in a folder with an "@" in it, and there is no otto.json
 file, the owner will default to the current user running the application.
@@ -201,11 +201,11 @@ To scan from the command line:
 
    - On OSX:
 
-        $ cd /Applications/Otto.app/Contents/Resources
+            $ cd /Applications/Otto.app/Contents/Resources
 
    - On Linux:
 
-        $ cd /usr/local/otto
+            $ cd /usr/local/otto
 
  - Then run the scan script:
 
