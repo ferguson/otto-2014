@@ -422,9 +422,9 @@ global.otto.channels = do -> # note 'do' calls the function
       if otto.misc.is_dirSync(testroot.dir)
         root = testroot
         break
-    if not root
-      console.log 'error: could not find the music root directory. exiting.'
-      process.exit(1)
+    #if not root
+    #  console.log 'error: could not find the music root directory. exiting.'
+    #  process.exit(1)
     console.log 'using ' + root.dir + ' as the music root directory.'
 
     callcount = otto.channelinfolist.length

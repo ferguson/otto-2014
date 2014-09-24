@@ -71,7 +71,8 @@ for f in $RES/lib/libtiff*.dylib; do
     chmod -w $f
 done
 
-cp -p $ROOT/bin/{activate*,bsondump,chardetect,mongo*,mutagen*,ncmpc,mpc,node,node-waf} $RES/bin
+#cp -p $ROOT/bin/{activate*,bsondump,chardetect,mongo*,mutagen*,ncmpc,mpc,node,node-waf} $RES/bin
+cp -p $ROOT/bin/{activate*,chardetect,mongo,mongod,mutagen*,ncmpc,mpc,node,node-waf} $RES/bin
 
 ln -s ../node_modules/.bin/cake $RES/bin/
 ln -s ../node_modules/.bin/coffee $RES/bin/

@@ -10,7 +10,8 @@ require './otto.misc'      # attaches to global.otto.misc
 
 otto.MUSICROOT_SEARCHLIST =
 [
-  { dir: '~/Music', strip: 'Music' }
+  { dir: '~/Music', strip: 'Music' },
+  { dir: '/otto/u', strip: false }
 ]
 
 otto.SECRET = 'FiiY3Xeiwie3deeGahBiu9ja'  # need to randomly generate this for each install FIXME

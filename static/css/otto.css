@@ -1133,6 +1133,8 @@ body.loggedout .ondeckchattoggle-container {
 
 .control.enabled {
   visibility: visible !important;
+  color: #BF6F04;
+
 }
 
 .control.large {

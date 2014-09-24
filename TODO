@@ -1,40 +1,34 @@
 :known issues:
 rename mpd executable?
-cubes are stacked wrong on initial load page (put in readme?)
-strange error 22 on file sockets sometimes on osx (10.7?)
-fix - add to readme:
-  ls -aled
-  group:everyone deny delete
-  ERROR: listen(): bind() failed errno:22 Invalid argument for socket: /Users/jon/Library/Otto/var/mongod.sock
-  chmod -N /Users/jon
-  chmod -N /Users/jon/Library
-  chmod -RN /Users/jon/Library/Otto
-  ignore: "Failed to clear ACL on file mongod.sock: Invalid argument" or similar
-add section on how to have two user ~/Music dirs
-reload browser if no current song
-sometimes adding a song fixes an empty queue
-quicktime media keys play button hack
-32-bit mode for fake media keys
-notifications don't work in app, use a notifications capable browser
-debugging section in readme? mention syslog -C
-an empty queue can sometimes be fixed by adding a song
-sometimes right-click for reload can fix stuff?
-file selection dialog box can be slow to come up on osx, esp. if on network drive?
+readme: debugging section?
+v readme: cubes are stacked wrong on initial scan page
+v strange error 22 on file sockets sometimes on osx (10.7?)
+v add section on how to have two user ~/Music dirs
+v readme: reload browser if no current song
+v readme: sometimes adding a song fixes an empty queue
+v readme: quicktime media keys play button hack
+v readme: 32-bit mode for fake media keys
+v readme: notifications don't work in app, use a notifications capable browser
+v mention syslog -C
+v readme: an empty queue can sometimes be fixed by adding a song
+v readme: sometimes right-click for reload can fix stuff?
+v readme: file selection dialog box can be slow to come up on osx, esp. if on network drive?
 x bind mpd sockets to localhost to avoid firewall messages (already is)
 
 :stoppers:
 test owners in otto.json
-> lib search paths broken 
+v lib search paths broken 
 v fix for search broke current selected items
 v need waiting indicator on scan button in cubes page
 v search doesn't reset active letterbar icon
 v hide notifications icon in app until it actually works
 
 :layout:
+add hover for notifications and sound fx
 make album text in selected thumbnail not be orange?
-orange logo for a splash of color?
 need better indenting for wrapping long titles, e.g. in album view or search results
 stars get pushed down a little when an artist line wraps in starts with view
+v orange logo for a splash of color?
 v make selections orange
 v move username separators left in new albums to match style on search, stars
 v inbox on letterbar has extra gap
@@ -44,6 +38,7 @@ v stars in search albums off a bit
 v stars in expanded albums (and others?) in all stars view
 
 :bugs:
+move zero years to end in all albums view
 sometimes mpd hangs on certian songs i think, detect this and kill mpd & remove song from queue
 seeking is scaled wrong in TV mode (it's 'doubled'), stars too
 volume slider has trouble in TV mode too
@@ -131,7 +126,7 @@ need more controls
 .crossfade (none/auto, 5s/10s) (auto enables adjacent track crossfade supression, and is the default)
 .auto levels
 .fx only from other people
-more info in album view including directory
+more info in album view (v including directory)
 action pending cues on or over the buttons themselves
 create browsing content in chunks for speed
 animate eyes in otto logo
@@ -153,12 +148,12 @@ x scrolling content cues
 
 
 :ui issues:
-put years in all albums view
+put year spearators in all albums view
 rework channelbar interaction:
 . current channel should be expanded
 . clicking on channel name should switch to that channel even locally
 fix upper panels in place? click on otto to scroll to top?
-medium style top bar on scrollup?
+medium.com style top bar on scrollup?
 ? checkbox for now playing background color (or better ui element. switch?)
 guide / faq / instructions / help
 song changes too late due to 10s crossfade, anticipate crossfade (when enabled) and change before mpd reports it
@@ -177,8 +172,6 @@ filters for browsing and channels
 better album arrangement (non-varous first, sorted by date then title)
 better lists, favorites, ratings (stars?), tagging, problem tracks
 checkbox for artists
-"the social crowdsourced jukebox"
-"the anti-cloud music player"
 search hints and compleation
 chat "/" commands
 commands in search box too
