@@ -201,15 +201,15 @@ To scan from the command line:
 
    - On OSX:
 
-       $ cd /Applications/Otto.app/Contents/Resources
+        $ cd /Applications/Otto.app/Contents/Resources
 
    - On Linux:
 
-       $ cd /usr/local/otto
+        $ cd /usr/local/otto
 
  - Then run the scan script:
 
-     $ ./scan.sh
+        $ ./scan.sh
 
 That will scan whatever folder was last scanned (or will default to
 `~/Music` if there has never been a scan). You can give an argument to
@@ -250,7 +250,7 @@ To reset the database:
 
  - On Linux
 
-     $ rm -rf /usr/local/otto/var
+        $ rm -rf /usr/local/otto/var
 
 The next time you run Otto it will ask you about scanning for Music
 just like the first time you ran it. See "Scanning Music".
@@ -295,11 +295,11 @@ bad song from the MPD queue:
 
     - On Osx:
 
-        $ /Applications/Otto.app/Content/Resources/reset.sh
+            $ /Applications/Otto.app/Content/Resources/reset.sh
 
     - On Linux:
 
-        $ /usr/local/otto/reset.sh
+            $ /usr/local/otto/reset.sh
 
     - Be aware that reset.sh will try to kill off all mpd, mongod, and node
       processes, so you might not want to use it if you are using MongoDB
@@ -309,11 +309,11 @@ bad song from the MPD queue:
 
     - On Osx:
 
-        $ rm ~/Library/Otto/var/mpd/??state
+            $ rm ~/Library/Otto/var/mpd/??state
 
     - On Linux:
 
-        $ rm /usr/local/otto/var/mpd/??state
+            $ rm /usr/local/otto/var/mpd/??state
 
  - Restart Otto and see how it goes
 
@@ -368,8 +368,8 @@ Download and install Node.js <http://nodejs.org/download/>:
 
  - Once node is installed, install the required npm modules:
 
-     $ cd /usr/local/otto
-     $ npm install
+        $ cd /usr/local/otto  
+        $ npm install
 
 Installing MPD:
 
@@ -383,7 +383,7 @@ Installing MPD:
  - You can check if mpd was compiled with `--enable-httpd-server` by
    typing
 
-     $ mpd --version
+        $ mpd --version
 
    Look for `httpd` in the list of supported outputs
 
@@ -428,7 +428,7 @@ To start the Otto server on Linux:
   - You can ignore "Failed to load database" errors from MPD and dire looking
     warnings about the "Apple Bonjour compatibility layer of Avahi".
 
-  - Press ctrl-C to stop the server
+  - Press `Ctrl-C` to stop the server
 
 Point a web browser on your machine to <http://localhost:8778/>
 
