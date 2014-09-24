@@ -1,5 +1,5 @@
 Otto Audio Jukebox - beta
--------------------------
+=========================
 
 Home page <http://ottoaudiojukebox.com>
 
@@ -10,15 +10,17 @@ Home page <http://ottoaudiojukebox.com>
 
 ------------------------------------------------------------
 Otto is an open source music jukebox application that disguises itself as an
-iTunes replacement without all the extra baggage. It is also a web-first, fully
-streaming, anti-cloud, social music server that is always playing music and
-allows multiple people to listen to the same stream of music at the same time
-(and act as DJs for each other). It gracefully organizes very large music
-collections.
+iTunes replacement without all the extra baggage.
+
+It is also a web-first, fully streaming, anti-cloud, social music server that
+is always playing music and allows multiple people to listen to the same stream
+of music at the same time (and act as DJs for each other).
+
+It gracefully organizes very large music collections.
 
 Otto utilizes and integrates a large number of other open source projects and
 would not be possible without them, especially the excellent Music Player
-Daemon (MPD) <http://www.musicpd.org/> which is what gives Otto it's voice.
+Daemon (MPD) <http://www.musicpd.org/> which is what gives Otto its voice.
 
 
 OSX Installation
@@ -47,7 +49,7 @@ To uninstall Otto:
    trash
 
 If you want to be extra clean when uninstalling (optional):
- - Find the com.ottoaudiojukebox.otto.plist file in the Preferences folder
+ - Find the `com.ottoaudiojukebox.otto.plist` file in the Preferences folder
    (in the Library folder in your home folder) and drag it to the trash
  - Or type `defaults delete com.ottoaudiojukebox.otto.plist` on the command
    line
@@ -78,7 +80,7 @@ Otto tries to do the right thing with the media keys (next track, play/pause)
 on keyboards that have them. However, it can't do the right thing with the
 'play/pause' key because iTunes will wake up and interfere, even if it's not
 running. You can work around this by quitting iTunes and launching the
-QuickTime Player. Keep the Quicktime Player running, but close all of it's
+QuickTime Player. Keep the Quicktime Player running, but close all of its
 media windows. This should keep iTunes from reacting to play/pause.
 
 If you don't have media keys on your keyboard but still want a key you can
@@ -93,11 +95,11 @@ capable browser at <http://localhost:8778/> and toggle the "notifications"
 control in the top banner (next to the lightning bolt "sound cues" control).
 
 The folder selection dialog box can be slow to come up on OSX when you click
-the folder icon during the initial scan. This might be especially slow if you
+the folder icon during the initial scan. This might be especially slow if your
 music is on a network drive.
 
 If you have the OSX firewall enabled you may be prompted to allow incoming
-network connections.  Otto opens an incoming network port for it's web
+network connections.  Otto opens an incoming network port for its web
 interface, and an additional port for streaming each channel (three channels
 currently). The name of the application given by OSX might be "node" or "mpd"
 or "mpd-0.16.3-working". You can deny these connections but the "node" one is
@@ -108,26 +110,28 @@ It's possible that the Otto application may crash in such a way as to leave
 music playing in the background. Running Otto again should reconnect it to the
 background music player daemon(s) and then you can quit Otto to stop the music.
 
+The initial OSX application window is too big for some laptop screens.
+
 Otto prints out a lot of debugging log messages. On OSX you can type `syslog
 -C` on the command line to see recent messages.
 
 
 If Otto isn't starting, type `syslog -C` and if you are getting messages that look like this:
 
-   ERROR: listen(): bind() failed errno:22 Invalid argument for
-   socket: /Users/jon/Library/Otto/var/mongod.sock
+    ERROR: listen(): bind() failed errno:22 Invalid argument for
+    socket: /Users/jon/Library/Otto/var/mongod.sock
 
 You might have a OSX Access Control List permissions problem.
 
 Here's how I fixed this on my machine (Change `/Users/jon` to your actual home
 directory):
 
-  $ ls -aled /Users/jon  # to check for the problematic ACL
-  group:everyone deny delete  # there is it
+    $ ls -aled /Users/jon  # to check for the problematic ACL
+    group:everyone deny delete  # there is it
 
-  $ chmod -N /Users/jon  # -N removes ACLs from a file
-  $ chmod -N /Users/jon/Library
-  $ chmod -RN /Users/jon/Library/Otto
+    $ chmod -N /Users/jon  # -N removes ACLs from a file
+    $ chmod -N /Users/jon/Library
+    $ chmod -RN /Users/jon/Library/Otto
 
 You can ignore: `Failed to clear ACL on file mongod.sock: Invalid argument` or
 similar errors on the last command.
@@ -158,10 +162,10 @@ Music Owners
 ------------
 
 Otto associates an owner with the music it scans. Multiple owners can have
-music loaded in Otto and Otto will pick and play music depending on who is
+music scanned in to Otto and Otto will pick and play music depending on who is
 listening and which owners it knows about.
 
-If a music is stored inside a folder that looks like an email address (the
+If music is stored inside a folder that looks like an email address (the
 folder name has an "@" in it), it will use that email address as the owner of
 all music found in that folder, and any subfolders.
 
@@ -197,15 +201,15 @@ To scan from the command line:
 
    - On OSX:
 
-    $ cd /Applications/Otto.app/Contents/Resources
+       $ cd /Applications/Otto.app/Contents/Resources
 
    - On Linux:
 
-    $ cd /usr/local/otto
+       $ cd /usr/local/otto
 
  - Then run the scan script:
 
-    $ ./scan.sh
+     $ ./scan.sh
 
 That will scan whatever folder was last scanned (or will default to
 `~/Music` if there has never been a scan). You can give an argument to
@@ -223,28 +227,28 @@ When scanning a folder Otto only looks at new music files it hasn't scanned
 before. If you make any changes to your music (delete/move/rename files, change
 meta tags, add/change album art) after Otto has scanned it, the changes won't
 be seen. The only way to get such changes into Otto, and the only way to remove
-previously scanned music from Otto, is to delete the database and load it from
+previously scanned music from Otto, is to delete the database and scan it from
 scratch again (see "Resetting the Database").
 
 
 Resetting the database
 ----------------------
 
-If you make any changes to your music (other than adding more music)
-and you want Otto to reflect those changes, you'll need to reset the
-database and scan your music again. Please note that this means you
-will lose the information about any songs, albums, or artists you have
-starred in Otto. Your stars list is going to be empty.
+If you make any changes to your music (other than adding more music) and you
+want Otto to reflect those changes, you'll need to reset the database and scan
+your music again. Please note this means you will lose the information about
+any songs, albums, or artists you have starred in Otto. Your stars list is
+going to be empty.
 
 To reset the database:
 
-   - Make sure Otto is not running
+ - Make sure Otto is not running
 
-   - On OSX
-     - Find the "Otto" folder in the Library folder in your home folder
-     - Throw it in the trash
+ - On OSX
+   - Find the "Otto" folder in the Library folder in your home folder
+   - Throw it in the trash
 
-   - On Linux
+ - On Linux
 
      $ rm -rf /usr/local/otto/var
 
@@ -255,14 +259,14 @@ just like the first time you ran it. See "Scanning Music".
 Known Issues
 ============
 
-Interface is not currently usable on phone. Tablets are not much better.
+Interface is not currently usable on phones. Tablets are not much better.
 
-During the initial first-time load, the cubes can be stacked under the wrong
+During the initial first-time scan, the cubes can be stacked under the wrong
 names. The "stacked cubes" display will be correct inside the application after
 the inital scan.
 
-Otto has some issues loading multiple albums from the same directory, stuff may
-get filed wrong, especially for Various and unknown artists.
+Otto has some issues scanning multiple albums from the same directory, stuff
+may get filed wrong, especially for Various and unknown artists.
 
 If there is no "currently playing" track information displayed, try reloading
 the browser (use a right-click and pick 'reload' from the pop-up menu in the
@@ -271,7 +275,7 @@ OSX application).
 An empty queue can sometimes be fixed by adding a song. Also try shutting down
 and restarting Otto.
 
-Otto will sometimes fail to finish it's initial scan and transition cleanly to
+Otto will sometimes fail to finish its initial scan and transition cleanly to
 the normal playing interface. Try some of the above tricks (reload browser,
 restart Otto).
 
@@ -291,13 +295,13 @@ bad song from the MPD queue:
 
     - On Osx:
 
-    $ /Applications/Otto.app/Content/Resources/reset.sh
+        $ /Applications/Otto.app/Content/Resources/reset.sh
 
     - On Linux:
 
-    $ /usr/local/otto/reset.sh
+        $ /usr/local/otto/reset.sh
 
-    - Be aware that this will try to kill off all mpd, mongod, and node
+    - Be aware that reset.sh will try to kill off all mpd, mongod, and node
       processes, so you might not want to use it if you are using MongoDB
       or NodeJS on you machine for other purposes.
 
@@ -305,11 +309,11 @@ bad song from the MPD queue:
 
     - On Osx:
 
-    $ rm ~/Library/Otto/var/mpd/??state
+        $ rm ~/Library/Otto/var/mpd/??state
 
     - On Linux:
 
-    $ rm /usr/local/otto/var/mpd/??state
+        $ rm /usr/local/otto/var/mpd/??state
 
  - Restart Otto and see how it goes
 
@@ -320,7 +324,7 @@ Linux Installation
 
 Otto is not yet packaged together as a singular application or installation
 package for Linux like it is on OSX. Therefore Linux installation is fraught
-wirth peril, especially when it comes to getting a correctly compiled version
+with peril, especially when it comes to getting a correctly compiled version
 of MPD installed (you might want to start with that, see below).
 
 You will also need to install Node.js, Node.js packages, MongoDB and setup a
@@ -364,8 +368,8 @@ Download and install Node.js <http://nodejs.org/download/>:
 
  - Once node is installed, install the required npm modules:
 
-    $ cd /usr/local/otto
-    $ npm install
+     $ cd /usr/local/otto
+     $ npm install
 
 Installing MPD:
 
@@ -379,9 +383,9 @@ Installing MPD:
  - You can check if mpd was compiled with `--enable-httpd-server` by
    typing
 
-    $ mpd --version
+     $ mpd --version
 
-    Look for `httpd` in the list of supported outputs
+   Look for `httpd` in the list of supported outputs
 
  - Otto is currently battle tested with MPD version 0.16.3
 
@@ -393,8 +397,8 @@ Installing MPD:
  - MPD has many dependencies which may also be hard to install (e.g. ffmpeg)
 
  - You might be able to use your OS package manager as a starting point and
-   tweak it's configuration files to enable a recompile with
-   the `--enable-http-server` option.
+   tweak its configuration files to enable a recompile with
+   the `--enable-http-server` option
 
  - You might be able to sift through
    <https://github.com/Homebrew/homebrew/blob/master/Library/Formula/mpd.rb>
