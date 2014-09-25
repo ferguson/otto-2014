@@ -32,14 +32,13 @@ global.otto.client.templates = ->
       nav '.channellist-container', ''
       div '#mainpage', ''
       div '.ouroboros-container', ''
-      div '.footer-container', otto.templates.footer()
+      #div '.footer-container', otto.templates.footer()
       div '.cursor-hider', ''
 
     t.welcome = ccc ->
       div '.wecome-container', ->
         div '.welcome', ->
-          div '.logo-container', ->
-            span '.logo', ''
+          text otto.templates.logo()
           div '.greeting', ->
             div '.hi', 'hello!'
             div '.explain', 'I love to play your music for you, but first I need to scan it'
@@ -63,8 +62,7 @@ global.otto.client.templates = ->
     t.initialload = ccc ->
       div '.welcome-container', ->
         div '.welcome', ->
-          div '.logo-container', ->
-            span '.logo', ''
+          text otto.templates.logo()
         div '.initialload-container', otto.templates.cubesloader @
 
 
@@ -142,6 +140,11 @@ global.otto.client.templates = ->
             div '.count-container', otto.templates.count_widget(@)
 
 
+    t.logo = ccc ->
+      div '.logo-container', ->
+        #span '.logo', ''
+        a '.logo', href: 'http://ottoaudiojukebox.com/', target: '_blank', ->
+
     templates.mainpage = coffeecup.compile ->
       if @channel.layout is 'webcast'
           text otto.templates.channelbar channel: @channel
@@ -160,10 +163,10 @@ global.otto.client.templates = ->
         div '.ondeckchattoggle-container', ->
           div '.ondeck-container', ''
           div '.chattoggle-container', ->
-            button '.control.medium.chattoggle.shy', otto.templates.icon 'chat'
+            button '.control.medium.chattoggle.shy', {title: 'chat'}, otto.templates.icon 'chat'
         text otto.templates.console()
         text otto.templates.browse()
-      div '.footer-backer', ''
+      #div '.footer-backer', ''
 
 
     templates.console = coffeecup.compile ->
@@ -204,7 +207,7 @@ global.otto.client.templates = ->
         div '.channelbar', ->
 
           div '.channelbar-left', ->
-            button '.control.medium.channeltoggle.shy', otto.templates.icon 'menu'
+            button '.control.medium.channeltoggle.shy', {title: 'channels'}, otto.templates.icon 'menu'
 
           div '.channelbar-center', ->
             div '.channelname-container', ->
@@ -217,19 +220,19 @@ global.otto.client.templates = ->
                 r = /^(http:\/\/)?([^\/]*)/.exec(document.URL)
                 host = if r and r.length is 3 then r[2] else ''
                 host
-            div '.logo-container', ->
-              span '.logo', ''
+
+            text otto.templates.logo()
 
             div '.topcontrols-container', ->
               #input '#fxtoggle', type: 'checkbox', checked: false
               #label '#fx.shy', for: 'fxtoggle', ->
               #  span 'sound cues'
-              button '.control.medium2.soundfxtoggle.shy', otto.templates.icon 'soundfx'
+              button '.control.medium2.soundfxtoggle.shy', {title: 'sound cues'}, otto.templates.icon 'soundfx'
               if Notification?
                 #input '#notificationstoggle', type: 'checkbox', checked: false
                 #label '#notifications.shy', for: 'notificationstoggle', ->
                 #  span 'notifications'
-                button '.control.medium2.notificationstoggle.shy', otto.templates.icon 'notifications'
+                button '.control.medium2.notificationstoggle.shy', {title: 'notifications'}, otto.templates.icon 'notifications'
 
           div '.channelbar-right', ->
             #div '.chattoggle-container', ->
@@ -276,10 +279,10 @@ global.otto.client.templates = ->
 
 
     t.play_widget = ccc ->
-      button '#play.control.medium2', otto.templates.icon 'play'
+      button '#play.control.medium2', {title: 'play/pause'}, otto.templates.icon 'play'
 
     t.next_widget = ccc ->
-      button '#next.control.medium2.shy', otto.templates.icon 'kill'
+      button '#next.control.medium2.shy', {title: 'next'}, otto.templates.icon 'kill'
 
     # no longer used
     t.lineout_widget = ccc ->
@@ -293,13 +296,13 @@ global.otto.client.templates = ->
         div '.volume', ''
 
     t.volumelineout_widget = ccc ->
-      div '.volumelineout-container', ->
+      div '.volumelineout-container', {title: 'lineout volume'}, ->
         div '.volumelineout', ''
 
     t.size_widget = ccc ->
       div '.size-widget.shy', ->
-        button '#size.smaller.control.small', otto.templates.icon 'smaller'
-        button '#size.bigger.control.small', otto.templates.icon 'bigger'
+        button '#size.smaller.control.small', {title: 'smaller'}, otto.templates.icon 'smaller'
+        button '#size.bigger.control.small', {title: 'bigger'}, otto.templates.icon 'bigger'
 
     t.currentsong_widget = ccc ->
       div '.currenttrack.autosize', {
@@ -362,7 +365,7 @@ global.otto.client.templates = ->
           sizePercent = scale * 100
           progressPercent = Math.min((@current / @total * 100), 100)
 
-          div '.progress-maximum', ->
+          div '.progress-maximum', {title: 'seek'}, ->
             div '.progress-container', style: "width: #{sizePercent}%;", ->
               div '.progress', ->
                 div '.progress-indicator', style: "width: #{progressPercent}%;", ''
@@ -454,7 +457,7 @@ global.otto.client.templates = ->
               img src: 'static/images/disconnected.svg', height: 20, width: 20
           div '.shy', otto.templates.volume_widget
 
-        div '.size-container', otto.templates.size_widget
+        div '.size-container.size1', otto.templates.size_widget
         div '.next-container.size1', otto.templates.next_widget
         div '.currenttrack-container.size1', otto.templates.currenttrack(@)
 
@@ -474,24 +477,29 @@ global.otto.client.templates = ->
           div '.letterbar-container', ->
             ul '.letterbar', ->
               bigwarning = if @largedatabase then '.warn.big' else ''  # bzzz! not passed in FIXME
-              li '.letter.control.shownewest.gap', otto.templates.icon 'newest'
-              li '.letter.control.showall.gap'+bigwarning, otto.templates.icon 'all'
-              li '.letter.control.showusers.gap', otto.templates.icon 'users'
-              li '.letter.control.showstars.gap', otto.templates.icon 'star'
-              li '.letter.control.showcubes.gap'+bigwarning, otto.templates.icon 'cubes'
+              li '.letter.control.shownewest.gap', {title: 'newest'}, otto.templates.icon 'newest'
+              li '.letter.control.showall.gap'+bigwarning, {title: 'all'}, otto.templates.icon 'all'
+              li '.letter.control.showusers.gap', {title: 'users'}, otto.templates.icon 'users'
+              li '.letter.control.showstars.gap', {title: 'starred'}, otto.templates.icon 'star'
+              li '.letter.control.showcubes.gap'+bigwarning, {title: 'cubes'}, otto.templates.icon 'cubes'
               # other fun character considerations: ⁂ ? № ⁕ ⁖ ⁝ ⁞ ⃛ ⋯ +⚂ ⚐ ⚑
               # someday add back: st va
               li '.letter.gap', 'A'
               for letter in 'B C D E F G H I J K L M N O P Q R S T U V W X Y Z # ⋯'.split(' ')
-                li '.letter', letter
+                if letter is '#'
+                  li '.letter', {title: 'numbers'}, letter
+                else if letter is '⋯'
+                  li '.letter', {title: 'other'}, letter
+                else
+                  li '.letter', letter
               #li '.letter.gap.warn.beta', '/'
               #li '.letter.showlists.gap', '✓'
         div '.browseresults-container', ''
 
 
     t.footer = ccc ->
-      div '.logo-container', ->
-        span '.logo', ''
+      div '.logo-container.footer-logo-container', ->
+        span '.logo.footer-logo', ''
 
 
     templates.login = coffeecup.compile ->
@@ -636,9 +644,9 @@ global.otto.client.templates = ->
         for i in [1..1]
           for channel in @channellist
             classes = '.changechannel'
-            classes = classes + '.currentchannel' if channel.name is otto.mychannel
+            classes = classes + '.currentchannel.open' if channel.name is otto.mychannel
             li classes, 'data-channelname': channel.name, ->
-              button '.channelsettings.control.small.shy', otto.templates.icon 'menu'
+              button '.channelsettings.control.small.shy', {title: 'more info'}, otto.templates.icon 'info'
               div '.channelselect', ->
                 div '.channelname.autosize', {
                     'data-autosize-max': 20,
@@ -652,13 +660,16 @@ global.otto.client.templates = ->
                     # if we reactive the count we should consider omitting if it's 1
                     #span '.listeners.count', count || ''
                     text otto.templates.format_listeners_for_channel_in_channelbar listeners: @listeners, channelname: channel.name
-              button '.channeloutput.control.small.shy', otto.templates.icon 'output'
+              button '.channeloutput.control.small.shy', {title: 'toggle lineout'}, otto.templates.icon 'output'
               div '.settings', ->
                 #button '.channelsettings.control.small', otto.templates.icon 'close'
-                button '.channelplay.control.medium2', otto.templates.icon 'play'
+                button '.channelplay.control.medium2', {title: 'play/pause'}, otto.templates.icon 'play'
                 text otto.templates.volumelineout_widget()
                 div '.channelerrata-container', ''
-                #button '.channelfork.control.small', otto.templates.icon 'fork'
+                #button '.channelfork.control.small', {title: 'fork'}, otto.templates.icon 'fork'
+
+                button '.crossfade.control.small', {title: 'crossfade'}, 'CF'
+                button '.replaygain.control.small', {title: 'replay gain'}, 'RG'
 
 
     templates.page_it_out = (items, pagesize, lazychunksize, element, render) ->
@@ -1278,6 +1289,7 @@ global.otto.client.templates = ->
         when 'notifications' then span '.icon-bubble3', ''
         when 'soundfx'      then span '.icon-lightning', ''
         when 'folder'       then span '.icon-folder-open', ''
+        when 'info'         then span '.icon-info', ''
         else                     span '.icon-blocked', ''
 
 

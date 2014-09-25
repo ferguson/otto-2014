@@ -173,13 +173,16 @@ server_go = ->
       allstatus = {}
       alllineout = {}
       alloutputs = {}
+      allreplaygain = {}
       for name,channel of otto.channels.channel_list
         allstatus[name] = channel.status
         alllineout[name] = channel.lineout
         alloutputs[name] = channel.outputs
+        allreplaygain[name] = channel.replaygain
       @emit 'status',  allstatus
       @emit 'lineout', alllineout
       @emit 'outputs', alloutputs
+      @emit 'replaygain', allreplaygain
 
     if session.user and /[^0-9.]/.test(session.user)
       #console.log "telling the client their username #{session.user}"
@@ -323,6 +326,19 @@ server_go = ->
         otto.channels.channel_list[channelname].set_lineout 1
 
 
+  @on 'togglecrossfade': ->
+    channelname = @data.channelname
+    if otto.channels.channel_list[channelname]
+      otto.channels.channel_list[channelname].toggle_crossfade()
+
+
+  @on 'togglereplaygain': ->
+    console.log 'togglereplaygain', @data
+    channelname = @data.channelname
+    if otto.channels.channel_list[channelname]
+      otto.channels.channel_list[channelname].toggle_replaygain()
+
+
   @on 'setvol': (socket) ->
     if not session = socket_get_session @ then return
     channelname = @data.channelname
@@ -390,7 +406,7 @@ server_go = ->
     otto.db.add_to_user_list session.user, @data.id, @data.rank, (success) ->
       if success
         otto.db.load_stars session.user, no, (stars) ->
-          console.log 'stars', stars
+          #console.log 'stars', stars
           zappa.io.sockets.emit 'stars', stars
 
 
@@ -730,6 +746,12 @@ server_go = ->
         for name,channel of otto.channels.channel_list
           alllineout[name] = channel.lineout
         zappa.io.sockets.emit 'lineout', alllineout
+      when 'replaygain'
+        #zappa.io.sockets.in(channel.name).emit 'lineout', channel.lineout
+        allreplaygain = {}
+        for name,channel of otto.channels.channel_list
+          allreplaygain[name] = channel.replaygain
+        zappa.io.sockets.emit 'replaygain', allreplaygain
       when 'outputs'
         #zappa.io.sockets.in(channel.name).emit 'outputs', channel.outputs
         alloutputs = {}

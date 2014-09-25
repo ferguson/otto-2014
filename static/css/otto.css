@@ -432,14 +432,20 @@ img.albumimg {
   right: 92px;
 }
 #size.bigger, #size.smaller {
-  position: relative;
+  //position: relative;
+  position: absolute;
+  left: 5px;
   z-index: 2;
 }
+.size1 #size.smaller, .size2 #size.bigger {
+  visibility: hidden !important;
+}
+
 #size.bigger .icon-zoomin {
   position: relative;
-  font-size: 20px;
-  top: -2px;
-  left: -2px;
+  //font-size: 20px;
+  //top: -2px;
+  //left: -2px;
 }
 .next-container.size2 {
   position: absolute;
@@ -898,6 +904,7 @@ img.albumimg {
 }
 .listener.inchat {
   color: #6C6C6C;
+  color: #BF6F04;
 }
 .listener.typing {
   text-shadow: 2px 2px 20px #6C6C6C;
@@ -905,7 +912,6 @@ img.albumimg {
 .listener.idle {
   font-style: italic;
 }
-
 
 .browse-container {
   margin-top: 17px;
@@ -1131,10 +1137,9 @@ body.loggedout .ondeckchattoggle-container {
   user-select: none;
 }
 
-.control.enabled {
+.control.enabled, .control.enabled:hover {
   visibility: visible !important;
   color: #BF6F04;
-
 }
 
 .control.large {
@@ -1417,6 +1422,16 @@ li:hover > .shy, div:hover > .shy, td:hover > .shy, span:hover > .shy, .reveal:h
   //background-image: url('/static/images/otto-BF6F04-6C-460x100.png');
   background-size: contain;
   background-repeat: no-repeat;
+}
+
+.footer-logo-container {
+  margin-left: -33px; /* half of the browse-container left margin */
+  margin-top: 100px;
+  margin-bottom: 9px;
+}
+
+.footer-logo {
+  cursor: n-resize;
 }
 
 #connect {
@@ -2321,7 +2336,7 @@ input[type="checkbox"] + label:hover, input[type="checkbox"] + label:hover span 
 }
 
 .currentchannel .channelselect { 
-  font-weight: 700;
+  color: #BF6F04;
 }
 
 .channellisteners {
@@ -2342,7 +2357,7 @@ input[type="checkbox"] + label:hover, input[type="checkbox"] + label:hover span 
   left: 3px;
 }
 
-.channelsettings .icon-menu {
+.channelsettings .icon-info {
   font-size: 20px;
 }
 
@@ -2356,7 +2371,7 @@ input[type="checkbox"] + label:hover, input[type="checkbox"] + label:hover span 
   height: 0;
   margin: 10px 16px 0 15px;
   padding: 0px 0 0 20px;
-  border-top: 2px solid #111;
+  //border-top: 2px solid #111;
   overflow: hidden;
   transition: height 0.2s ease 0.14s;
 }
@@ -2421,6 +2436,20 @@ input[type="checkbox"] + label:hover, input[type="checkbox"] + label:hover span 
   font-size: 12px;
 }
 
+.changechannel .crossfade, .changechannel .replaygain {
+  position: relative;
+  bottom: 6px;
+  font-size: 14px;
+}
+
+.changechannel .crossfade {
+  left: 175px;
+}
+
+.changechannel .replaygain {
+  left: 190px;
+}
+
 .changechannel .settings .channelsettings .icon-close {
   font-size: 16px;
 }
@@ -2445,6 +2474,8 @@ input[type="checkbox"] + label:hover, input[type="checkbox"] + label:hover span 
 
 .currentchannel .channeloutput .icon-volume-mute:before { 
   visibility: visible;
+  font-weight: 700;
+  color: #BF6F04;
   content: "\e63a";
 }
 

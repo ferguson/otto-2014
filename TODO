@@ -16,7 +16,7 @@ v readme: file selection dialog box can be slow to come up on osx, esp. if on ne
 x bind mpd sockets to localhost to avoid firewall messages (already is)
 
 :stoppers:
-test owners in otto.json
+v test owners in otto.json
 v lib search paths broken 
 v fix for search broke current selected items
 v need waiting indicator on scan button in cubes page
@@ -29,6 +29,9 @@ make album text in selected thumbnail not be orange?
 need better indenting for wrapping long titles, e.g. in album view or search results
 stars get pushed down a little when an artist line wraps in starts with view
 application window is too big for some laptop screens
+make favicon orange to match logo
+menubar icon orange too? try it and see. background wrong too
+splash screen logo orange?
 v orange logo for a splash of color?
 v make selections orange
 v move username separators left in new albums to match style on search, stars
@@ -40,15 +43,16 @@ v stars in expanded albums (and others?) in all stars view
 
 :bugs:
 move zero years to end in all albums view
-sometimes mpd hangs on certian songs i think, detect this and kill mpd & remove song from queue
+sometimes mpd hangs on certain songs i think, detect this and kill mpd & remove song from queue
 seeking is scaled wrong in TV mode (it's 'doubled'), stars too
 volume slider has trouble in TV mode too
 searching for 'the' on big collections(?) crashes?
 strange state where users isn't fully logged in or something causes stars to crash
-sometimes current song doesn't load when attaching with browser
+often current song doesn't load when attaching with browser
 remote play should mute local lineout if it wasn't playing
 should we double the resolution of thumbnails for zooming?
 channel list should not be completely rebuilt just by listener changes
+channel list menu broken after a reconnect
 progress bar not updating when you change channels
 app: use output (lineout) status to trigger "listening" on listener list
 timeout 'typing' in chat window after a sufficent period
@@ -76,8 +80,6 @@ remember 1/+ size setting (cookie? or local storage?)
 logging out leaves things active on letter bar (and there are prob. other things that need to be reset too)
 . need to reprocess stars on login
 clicking on album name or artist name in now playing renders .browserresults w/o "otto" logo footer
-make "otto" footer only appear when there are .browserresults (and maybe only when they require scrolling down?)
-perhaps clicking on 'otto' logo at bottom should shoot to to the top of page?
 add "x" to search box to dismiss search results
 queue updates need to be split between now playing and queue changes to prevent blinking
 click on landscape doesn't reset cubes
@@ -86,6 +88,8 @@ once saw ouroboros disappear after about 60 seconds on long load (or maybe crash
 v /nick in chat should change username
 . eventually need to seperate chat nick name from username so people can have a choice
 v? leaving stream too sensitive, esp. in channelbar display
+v make "otto" footer only appear when there are .browserresults (and maybe only when they require scrolling down?)
+v perhaps clicking on 'otto' logo at bottom should shoot to to the top of page?
 v don't random pick 'audiobook' or 'podcast' labeled items
 v odd big gap between owner and file in queue
 v make expanded albums covers bigger? or at least check them with new /orig image url
@@ -116,7 +120,7 @@ play album
 album shuffle
 save queue
 scrollback in chat/event window
-'load more' in inbox
+'scan' in inbox
 better imageless album text (autosize, v space between title & artist)
 directory browser
 toggle for browsing various

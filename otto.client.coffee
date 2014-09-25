@@ -97,6 +97,7 @@ global.otto.client = ->
     $(document.body).html otto.templates.body_startup()
 
     $('body').on 'click', otto.button_click_handler
+    $('body').on 'click', otto.logo_click_handler
     $('body').on 'click', otto.letterbar_click_handler
     $('body').on 'change', otto.checkbox_click_handler
     $('body').on 'submit', otto.form_submit_handler
@@ -489,7 +490,23 @@ global.otto.client = ->
           if parseInt($vol.slider('value')) != parseInt(status.volume)
             #console.log '$vol.value', $vol.slider('value'), 'status.volume', status.volume
             $vol.slider 'option', 'value', status.volume
-          $el.find('.channelerrata-container').html otto.templates.channel_status_errata_widget status: status
+        $el.find('.crossfade').each ->
+          if status.xfade is '0'
+            $(@).removeClass 'enabled'
+          else
+            $(@).addClass 'enabled'
+        $el.find('.channelerrata-container').html otto.templates.channel_status_errata_widget status: status
+
+
+  @on 'replaygain': ->
+    if @data
+      for channelname,replaygain of @data
+        $el = $('.channellist-container .changechannel[data-channelname="'+channelname+'"]')
+        $el.find('.replaygain').each ->
+          if replaygain is 'off'
+            $(@).removeClass 'enabled'
+          else
+            $(@).addClass 'enabled'
 
 
   otto.process_channellist = (channellist, skiphtml) =>
@@ -621,15 +638,13 @@ global.otto.client = ->
       next_track.call @
 
     else if $button.is '.smaller'
-      console.log 'yup'
       #if $('html').is '.doubler'
       #  console.log 'undoubler'
       #  $('html').removeClass('doubler')
       #else
       #  $('.currenttrack-container').addClass('size1').removeClass('size2')
       #  $('.next-container').addClass('size1').removeClass('size2')
-      $('.currenttrack-container').addClass('size1').removeClass('size2')
-      $('.next-container').addClass('size1').removeClass('size2')
+      $('.currenttrack-container,.next-container,.size-container').addClass('size1').removeClass('size2')
       otto.autosize_adjust()
     else if $button.is '.bigger'
       #window.resizeTo(1920, 1080)  # just for debugging tv mode
@@ -638,8 +653,7 @@ global.otto.client = ->
       #else
       #  $('.currenttrack-container').addClass('size2').removeClass('size1')
       #  $('.next-container').addClass('size2').removeClass('size1')
-      $('.currenttrack-container').addClass('size2').removeClass('size1')
-      $('.next-container').addClass('size2').removeClass('size1')
+      $('.currenttrack-container,.next-container,.size-container').addClass('size2').removeClass('size1')
       otto.autosize_adjust()
 
     else if $button.is '.close'
@@ -929,15 +943,19 @@ global.otto.client = ->
         channelname = find_channelname($target)
         alt = e.altKey
         @emit 'togglelineout', channelname: channelname, alt: e.altKey
+      else if $button.is '.crossfade'
+        channelname = find_channelname($target)
+        @emit 'togglecrossfade', channelname: channelname
+      else if $button.is '.replaygain'
+        channelname = find_channelname($target)
+        @emit 'togglereplaygain', channelname: channelname
       else if $button.is '.channelplay'
         channelname = find_channelname($target)
         @emit 'toggleplay', channelname
       else if $button.is '.channelsettings'
         if $button.parent().is '.open'
-          console.log 'closing'
           $button.parent().parent().parent().find('.open').removeClass 'open'
         else
-          console.log 'opening'
           $button.parent().parent().parent().find('.open').removeClass 'open'
           $button.parent().addClass 'open'
     else if $target.is '.channelselect, .channelname, .channellisteners, .listener'
@@ -994,6 +1012,17 @@ global.otto.client = ->
       otto.clientstate.idle = 0
 
 
+  otto.logo_click_handler = (e) =>
+    $logo = $(e.target)
+    if not $logo.is '.logo'
+      return
+    if $logo.is '.footer-logo'
+      $(window).scrollTop(0)
+    # had to use a real link so Otto.py could intercept it
+    #else
+    #  window.open('http://ottoaudiojukebox.com/')
+
+
   otto.letterbar_click_handler = (e) =>
     $letter = $(e.target)
     if not $letter.is '.letter'
@@ -1048,7 +1077,8 @@ global.otto.client = ->
       return otto.render_json_call_to_results '/all_albums_by_year', {}, 'allalbums'
     if $letter.is '.showcubes'
       otto.load_module 'cubes', ->
-        $('.browseresults-container').html otto.templates.cubeswithload
+        $('.browseresults-container').html otto.templates.cubeswithload()
+        $('.browseresults-container').append otto.templates.footer()
         $('.loadingstatus').addClass('begin')
         $('.loadingcubes').html otto.call_module 'cubes', 'show'
       return
@@ -1182,6 +1212,11 @@ global.otto.client = ->
         #document.body.scrollTop=0
         otto.mark_allthethings()
         $results.trigger 'scrollstop'
+        console.log 'top', $results.offset().top
+        console.log 'height', $results.height()
+        console.log 'window', $(window).height()
+        if $results.offset().top + $results.height() > $(window).height() - 50
+          $results.append otto.templates.footer()
         if callback
           callback(data)
       catch error

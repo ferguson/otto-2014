@@ -332,10 +332,10 @@ def closeSplash():
     #splash.close()
 
 
-about = False
-aboutpolicy = False
+linkpolicy = False
 
-class AboutPolicyDelegate(NSObject):
+class LinkPolicyDelegate(NSObject):
+
     def webView_decidePolicyForNavigationAction_request_frame_decisionListener_(self, webView, actionInformation, request, frame, listener):
         print 'link clicked:', request.URL()
         listener.ignore()
@@ -347,9 +347,18 @@ class AboutPolicyDelegate(NSObject):
             #NSWorkspace.sharedWorkspace().openURL_(request.URL())  # this crashes for some reason
             subprocess.call(['open', str(request.URL())])
 
+    # this one is for links with a 'target' attribute
+    def webView_decidePolicyForNewWindowAction_request_newFrameName_decisionListener_(self, webView, actionInformation, request, newFrameName, listener):
+        # punt to the regular link handeler
+        self.webView_decidePolicyForNavigationAction_request_frame_decisionListener_(webView, actionInformation, request, None, listener)
+        
+
+
+about = False
+
 def openAbout():
     global about
-    global aboutpolicy
+    global linkpolicy
     if not about:
         about = NSWindow.alloc()
         rect = Foundation.NSMakeRect(0,0,300,370)
@@ -368,8 +377,9 @@ def openAbout():
         aboutreq = Foundation.NSURLRequest.requestWithURL_(pageurl)
         webview.mainFrame().loadRequest_(aboutreq)
 
-        aboutpolicy = AboutPolicyDelegate.alloc().init()
-        webview.setPolicyDelegate_(aboutpolicy)
+        if not linkpolicy:
+            linkpolicy = LinkPolicyDelegate.alloc().init()
+        webview.setPolicyDelegate_(linkpolicy)
 
         about.setReleasedWhenClosed_(False)
         about.setContentView_(webview)
@@ -501,6 +511,7 @@ selectfolderdelegate = False;
 
 def openMainWindow():
     global win
+    global linkpolicy
     global selectfolderdelegate
 
     if win:
@@ -547,6 +558,10 @@ def openMainWindow():
     req = Foundation.NSURLRequest.requestWithURL_(pageurl)
     webview.mainFrame().loadRequest_(req)
     #print '$$$$$$$$$$$$$$$$$$$$', webview.stringByEvaluatingJavaScriptFromString_('window.otto = window.otto || {}; otto.app = true;')
+
+    if not linkpolicy:
+        linkpolicy = LinkPolicyDelegate.alloc().init()
+    webview.setPolicyDelegate_(linkpolicy)
 
     win.setReleasedWhenClosed_(False)
     win.setContentView_(webview)

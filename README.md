@@ -3,8 +3,13 @@ Otto Audio Jukebox - beta
 
 Home page <http://ottoaudiojukebox.com>
 
-> Version 2014.09.18.0 - Fix for broken scan.py (unicode char in creating
-> composer index), orange logo
+> Version 2014.09.24.0 - added home page link to logo, bottom logo jumps back to top,
+> one logo at a time on screen, added tooltips to most controls, fixed hover color
+> for notifications and sound cues controls, cleaned up channel list appearance,
+> current channel now open, changed icon for expanding channel info, current channel
+> expanded by default, added toggle for crossfade and replay gain, consolidated
+> zoom in and zoom out controls into one control, fixed setting owner with otto.json,
+> app is now less than half it's previous size, tweaked README
 
 (See "History" for previous releases)
 
@@ -355,12 +360,18 @@ Setup a python virtual environment (requires virtualenv):
 
 Download and install MongoDB <http://www.mongodb.org/downloads>:
 
+ - The latest version should work just fine
+ - Version 2.4.9 is what is currently used in the Otto OSX application
  - You can install the MongoDB executables in /usr/local/otto/bin, or you can
    install it elsewhere and put a link to just the 'mongod' executable in
    /usr/local/otto/bin.
 
-Download and install Node.js <http://nodejs.org/download/>:
+Download and install Node.js version 0.8:
 
+ - Otto has only been tested with Node.js version 0.8.17
+ - But I'm sure any newer version of 0.8 would work
+ - You can download 0.8.17 at <http://nodejs.org/dist/v0.8.17/>
+ - Other versions at <http://nodejs.org/dist/>
  - You can install node directly in `/usr/local/otto`, or link to
    the `node` and `npm` executables in `/usr/local/otto/bin`. Make sure npm
    stays as a soft link to `npm-cli.js` or else it won't be able to find its
@@ -441,7 +452,10 @@ yet know about any music. See "Scanning Music".
 History
 =======
 
-> Version 0.3.0 - Mar 11th 2014 - Initial public release
+> Version 2014.09.18.0 - Fix for broken scan.py (unicode char in creating
+> composer index), orange logo
 
 > Version 2014.09.17.0 - Fix libtiff path fix, search on composer,
 > orange color for active, some layout fixes, scan button tweaks
+
+> Version 0.3.0 - Mar 11th 2014 - Initial public release

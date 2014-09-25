@@ -12,7 +12,7 @@ global.otto.channels = do -> # note 'do' calls the function
   channels.Channel = class Channel extends otto.events.EventEmitter
     constructor: (@name, @info) ->
       # valid events:
-      super ['*', 'time', 'queue', 'state', 'status', 'lineout', 'outputs', 'started', 'finished', 'addtoqueue', 'killed', 'removed']
+      super ['*', 'time', 'queue', 'state', 'status', 'lineout', 'replaygain', 'outputs', 'started', 'finished', 'addtoqueue', 'killed', 'removed']
       if channels.channel_list[@name]
         throw new Error "channel name #{@name} already exists!"
       channels.channel_list[@name] = @
@@ -102,6 +102,10 @@ global.otto.channels = do -> # note 'do' calls the function
           for name,channel of channels.channel_list
             alloutputs[name] = channel.outputs
           @trigger 'outputs', alloutputs
+
+        when 'replaygain'
+          @replaygain = args[0]
+          @trigger 'replaygain'
 
         when 'died'
           @autofill_pending = false
@@ -343,7 +347,7 @@ global.otto.channels = do -> # note 'do' calls the function
     get_outputs: (callback) ->
       @mpd.outputs callback
     #lineout is just a specific input
-    set_lineout: (enable, callback) ->
+    set_lineout: (enable) ->
       @mpd.outputs (r) =>
         for output in r
           if output.outputname is 'Otto Line Out'
@@ -352,7 +356,7 @@ global.otto.channels = do -> # note 'do' calls the function
             else
               @mpd.disableoutput output.outputid, ->
             break
-    toggle_lineout: (enable, callback) ->
+    toggle_lineout: ->
       @mpd.outputs (r) =>
         for output in r
           if output.outputname is 'Otto Line Out'
@@ -361,6 +365,14 @@ global.otto.channels = do -> # note 'do' calls the function
             else
               @mpd.enableoutput output.outputid, ->
             break
+
+    toggle_crossfade: ->
+      @mpd.togglecrossfade()
+
+
+    toggle_replaygain: ->
+      @mpd.togglereplaygain()
+
 
     #server side vol for line out (doesn't affect the streams thankfully)
     setvol: (vol, callback) ->

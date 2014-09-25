@@ -22,7 +22,7 @@ global.otto.mpd = do ->  # note 'do' calls the function
 
   mpd.MPD = class MPD extends otto.events.EventEmitter
     constructor: (@name, @slot=0) ->
-      super ['*', 'start', 'time', 'state', 'status', 'playlist', 'outputs', 'died'] # valid events
+      super ['*', 'start', 'time', 'state', 'status', 'playlist', 'outputs', 'replaygain', 'died'] # valid events
       if mpd_list[@name]
         throw new Error "already an mpd with name #{@name}"
       mpd_list[@name] = @
@@ -112,6 +112,7 @@ global.otto.mpd = do ->  # note 'do' calls the function
       @status_interval = otto.misc.intervalSet 100, => @status_watchdog()
       @playlist_interval = otto.misc.intervalSet 200, => @playlist_watchdog()
       @outputs_interval = otto.misc.intervalSet 1000, => @outputs_watchdog()
+      @replaygain_interval = otto.misc.intervalSet 1000, => @replaygain_watchdog()
       @trigger 'start'
       if callback
         callback()
@@ -121,6 +122,7 @@ global.otto.mpd = do ->  # note 'do' calls the function
       clearInterval @status_interval
       clearInterval @playlist_interval
       clearInterval @outputs_interval
+      clearInterval @replaygain_interval
       if callback
         callback()
 
@@ -170,6 +172,15 @@ global.otto.mpd = do ->  # note 'do' calls the function
       callback()
 
 
+    restorereplaygain: (cache, callback) ->
+      if cache.metavolume?
+        @setvol cache.metavolume, ->
+      console.log 'restoring replaygain'
+      if cache.replaygain
+        @send "replay_gain_mode #{cache.replaygain}", ->
+          callback()
+
+
     revive: (callback) ->
       # try to revive a dead mpd by clearing out it's state file
       # to remove the potentially bad track and then restore it's state
@@ -178,28 +189,29 @@ global.otto.mpd = do ->  # note 'do' calls the function
       oldcache = @cache
       @connect =>
         @restoreoutputs oldcache, =>
-          # restore the playlist (minus the suspect song)
-          if oldcache.playlist
-            console.log 'restoring playlist'
-            newplaylist = []
-            for song in oldcache.playlist
-              newplaylist.push 'file://'+song.file
-            if oldcache.status?.song?
-              newplaylist.splice(oldcache.status.song, 1)
-            else
-              newplaylist.splice(0, 1)  # gotta remove something :)
-            for file in newplaylist
-              @addid file, null, ->
-            console.log 'done restoring playlist'
-          if wasplaying
-            # hack: give it some time to get the queue filled
-            # (currently fails because picking songs is so damn slow)
-            # (bumped it up from 500ms to 3000ms)
-            # (wouldn't be an issue if we restored the playlist) FIXME
-            #otto.misc.timeoutSet 3000, =>
-            #  @play 0, ->
-            @play 0, ->
-          callback()
+          @restorereplaygain oldcache, =>
+            # restore the playlist (minus the suspect song)
+            if oldcache.playlist
+              console.log 'restoring playlist'
+              newplaylist = []
+              for song in oldcache.playlist
+                newplaylist.push 'file://'+song.file
+              if oldcache.status?.song?
+                newplaylist.splice(oldcache.status.song, 1)
+              else
+                newplaylist.splice(0, 1)  # gotta remove something :)
+              for file in newplaylist
+                @addid file, null, ->
+              console.log 'done restoring playlist'
+            if wasplaying
+              # hack: give it some time to get the queue filled
+              # (currently fails because picking songs is so damn slow)
+              # (bumped it up from 500ms to 3000ms)
+              # (wouldn't be an issue if we restored the playlist) FIXME
+              #otto.misc.timeoutSet 3000, =>
+              #  @play 0, ->
+              @play 0, ->
+            callback()
 
 
     #####
@@ -214,6 +226,14 @@ global.otto.mpd = do ->  # note 'do' calls the function
 
     outputs: (callback) ->
       @send 'outputs', callback
+
+    replaygainstatus: (callback) ->
+      @send 'replay_gain_status', (r) ->
+        callback r[0].replay_gain_mode
+
+    replaygainmode: (mode, callback) ->
+      @send "replay_gain_mode #{mode}", callback
+      @replaygain_watchdog()
 
     pause: (callback) ->
       @send 'pause', callback
@@ -252,6 +272,21 @@ global.otto.mpd = do ->  # note 'do' calls the function
       # help hide mpd's '-1' volume when no output enabled
       @cache.metavolume = vol
       @status_watchdog()
+
+    togglecrossfade: ->
+      if @cache.status.xfade is '0'
+        @send 'crossfade 5', ->
+      else
+        @send 'crossfade 0', ->
+      @status_watchdog()
+
+    togglereplaygain: ->
+      if @cache.replaygain is 'off'
+        @send 'replay_gain_mode track', ->
+      else
+        @send 'replay_gain_mode off', ->
+      @replaygain_watchdog()
+
 
     # attempt to get mpd to load new files it might not have in it's database yet
     update: (filename, callback) ->
@@ -368,7 +403,7 @@ global.otto.mpd = do ->  # note 'do' calls the function
 
     refresh: (callback) ->
       @cache = {}
-      callcount = 3
+      callcount = 4
       @status_watchdog   ->
         if callcount-- == 1 and callback
           callback()
@@ -377,6 +412,9 @@ global.otto.mpd = do ->  # note 'do' calls the function
           callback()
           @trigger 'playlist', @cache.playlist  # triggers autofill
       @outputs_watchdog  ->
+        if callcount-- == 1 and callback
+          callback()
+      @replaygain_watchdog  ->
         if callcount-- == 1 and callback
           callback()
 
@@ -436,6 +474,16 @@ global.otto.mpd = do ->  # note 'do' calls the function
         if not _.isEqual r, @cache.outputs
           @cache.outputs = r
           @trigger 'outputs', @cache.outputs
+        if callback
+          callback
+
+
+    replaygain_watchdog: (callback) ->
+      @replaygainstatus (r) =>
+        newtime = r[0].time
+        if not _.isEqual r, @cache.replaygain
+          @cache.replaygain = r
+          @trigger 'replaygain', @cache.replaygain
         if callback
           callback
 
