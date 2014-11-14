@@ -1,0 +1,58 @@
+#!/bin/bash
+
+NODEVERSION="v0.8.17"
+PROJECT="`basename \`pwd\``"
+
+ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+if ! which git >/dev/null; then
+  echo "'git' not found, aborting."
+  exit
+fi
+
+if ! which virtualenv >/dev/null; then
+  echo "'virtualenv' not found, aborting."
+  exit
+fi
+
+if [ "$UID" == "0" ]; then
+  echo "please don't run this as root"
+  exit
+fi
+
+echo -n "press return to setup in $ROOT (or press ctrl-c to cancel): "
+read shunt
+
+cd $ROOT
+
+#echo "setting up python virtualenv and installing python modules..."
+#cd ..
+#virtualenv otto || exit
+#cd $ROOT
+#. activate
+#pip install -r requirements.pip
+
+echo "installing 'n'..."
+mkdir -p bin
+mkdir -p dist
+git clone -q https://github.com/tj/n.git dist/n || exit
+(cd dist/n; PREFIX="$ROOT" make install >/dev/null || exit) || exit
+
+#cd $ROOT
+#echo "creating activate script..."
+#cat <<EOF >activate
+#PATH=$ROOT/bin:$PATH
+#export N_PREFIX=$ROOT
+#PS1="($PROJECT)\$PS1"
+#EOF
+
+echo "using 'n' to install node $NODEVERSION..."
+. activate
+n $NODEVERSION >/dev/null || (echo "failed while installing node"; exit 1) || exit
+echo -n "node "
+node -v
+
+echo "done. type '. activate' to use this project."
+echo
+
+exit

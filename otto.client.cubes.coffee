@@ -1,14 +1,12 @@
 ####
-#### client side (otto.client.cubes.coffee served as /otto.cubes.js)
+#### client side (body of otto.client.cubes.coffee served as /otto.cubes.js)
 ####
 
 #### inspiration and code from http://beta.theexpressiveweb.com/
 
 global.otto.client.cubes = ->
   window.otto.client.cubes = do ->  # note the 'do' causes the function to be called
-
     $('head').append '<link rel="stylesheet" href="static/css/otto.cubes.css" />'
-
     cubes = {}
 
     $cubescontainer = false
@@ -39,13 +37,13 @@ global.otto.client.cubes = ->
 
 
     cubes.loader_event = (data) ->
-      if data.count and data.total
+      if data.count? and data.total?
         nothing = false
         $progress = $progress || $('.loadingprogress')
         $progress.html otto.templates.countprogress count: data.count, total: data.total
         $('.loadingstatus').removeClass('searching begin nonefound finished')
         $('.loadmusic2').html('scan')
-      else if data.album
+      else if data.album?
         nothing = false
         console.log 'loader says album:', data
         if not data.artist and data.fileunder?[0]?.name

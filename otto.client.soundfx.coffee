@@ -1,12 +1,10 @@
 ###############
-### client side (otto.client.soundfx.coffee served as /otto.soundfx.js)
+### client side (body of otto.client.soundfx.coffee served as /otto.soundfx.js)
 ###############
 
 global.otto.client.soundfx = ->
   window.otto.client.soundfx = do ->  # note the 'do' causes the function to be called
-
     $('head').append '<script src="static/js/buzz.js">'
-
     soundfx = {}
 
     event_sound_map =

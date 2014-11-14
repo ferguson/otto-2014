@@ -8,7 +8,6 @@ otto = global.otto
 
 module.exports = global.otto.livedev = do ->  # note the 'do' causes the function to be called
   livedev = {}
-
   #otto.development = true
 
 

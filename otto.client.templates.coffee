@@ -1,44 +1,46 @@
 ####
-#### client side (otto.client.templates.coffee served as /otto.templates.js)
+#### client side (body of otto.client.templates.coffee served as /otto.templates.js)
 ####
 
 # binds to otto.templates (on the client side), not otto.client.templates
 # for historical reasons (and brevity)
 
 global.otto.client.templates = ->
-  if not window['coffeecup']
-    $('head').append '<script src="static/js/coffeecup.js">'
+  $('head').append '<script src="static/js/coffeecup.js">' if not window['coffeecup']?
   window.otto = window.otto || {}
   window.otto.client = window.otto.client || {}
   window.otto.client.templates = true  # for otto.load_module's benefit
 
   window.otto.templates = do ->
     templates = {}
-    t = templates
+    t = otto.t = templates
     ccc = coffeecup.compile
     # you can't reference 'templates' or 't' in the compiled functions scope
     # (i'm guessing because they are 'eval'ed), use otto.templates instead
+    add = templates: templates, t: t
 
-
-    t.body_startup = ccc ->
-      div '.startup-container', ->
-        div '.startup', ->
-            text otto.templates.ouroboros size: 'large', direction: 'cw', speed: 'slow'
 
     t.body_welcome = ccc ->
-      div '#welcome', otto.templates.welcome @
+      div '#welcome', otto.t.welcome @
 
     t.body = ccc ->
       nav '.channellist-container', ''
       div '#mainpage', ''
       div '.ouroboros-container', ''
-      #div '.footer-container', otto.templates.footer()
+      #div '.footer-container', otto.t.footer()
       div '.cursor-hider', ''
+
+    t.body_reset = ->
+      $('.channellist-container').empty()
+      $('#mainpage').empty()
+      $('.ouroboros-container').empty()
+      #$('.footer-container').html otto.t.footer()
+      $('.cursor-hider').empty()
 
     t.welcome = ccc ->
       div '.wecome-container', ->
         div '.welcome', ->
-          text otto.templates.logo()
+          text otto.t.logo()
           div '.greeting', ->
             div '.hi', 'hello!'
             div '.explain', 'I love to play your music for you, but first I need to scan it'
@@ -48,12 +50,12 @@ global.otto.client.templates = ->
             div '.explain', 'I\'ll scan for music in this folder'
             div ->
               div '.folder', ->
-                button '.control.medium2.selectfolder', otto.templates.icon 'folder'
+                button '.control.medium2.selectfolder', otto.t.icon 'folder'
                 input '#selectFolder', type: 'file', style: 'display: none'  #must match UIDelegate in Otto.py
                 span '.path', contenteditable: '', @musicroot
             div '.explain.note', ->
               text '(press '
-              button '.control.small.selectfolder.', otto.templates.icon 'folder'
+              button '.control.small.selectfolder.', otto.t.icon 'folder'
               text ' to change this)'
             button '.control.large.wide.loadmusic', 'scan'
       div '.footer-container', ''
@@ -62,16 +64,16 @@ global.otto.client.templates = ->
     t.initialload = ccc ->
       div '.welcome-container', ->
         div '.welcome', ->
-          text otto.templates.logo()
-        div '.initialload-container', otto.templates.cubesloader @
+          text otto.t.logo()
+        div '.initialload-container', otto.t.cubesloader @
 
 
     t.cubeswithload = ccc ->
-      div '.cubeswithload-container', otto.templates.cubesloader @
+      div '.cubeswithload-container', otto.t.cubesloader @
 
 
     t.cubesloader = ccc ->
-      div '.loadingstatus', otto.templates.loadingstatuses @
+      div '.loadingstatus', otto.t.loadingstatuses @
       div '.loadingprogress', ''
       div '.loadingcurrent', ''
       div '.loadingcubes-container', ->
@@ -83,18 +85,18 @@ global.otto.client.templates = ->
         button '.control.large.wide.loadmusic2', 'scan'
       div '.status.searching', ->
         div '.loadingspinner', ->
-          div otto.templates.ouroboros size: 'medium', direction: 'cw', speed: 'fast'
+          div otto.t.ouroboros size: 'medium', direction: 'cw', speed: 'fast'
           div '.note', 'searching'
       div '.status.loading', ->
         div '.loadingspinner', ->
-          div otto.templates.ouroboros size: 'medium', direction: 'cw', speed: 'slow'
+          div otto.t.ouroboros size: 'medium', direction: 'cw', speed: 'slow'
           div '.note', 'scanning'
       div '.status.finished', ->
         div ->
           text 'all finished! press '
-          button '.control.small.begin', otto.templates.icon 'play'
+          button '.control.small.begin', otto.t.icon 'play'
           text ' to begin.'
-        button '.control.medium2.begin', otto.templates.icon 'play'
+        button '.control.medium2.begin', otto.t.icon 'play'
       div '.status.nonefound', ->
         div ->
           div 'sorry, I was unable to find any music I can play'
@@ -118,7 +120,7 @@ global.otto.client.templates = ->
           div '.landscape-left', ''
           div '.cubes', ->
             div '.scene', ''
-        #div '.resort.control.medium2', otto.templates.icon 'cubes'
+        #div '.resort.control.medium2', otto.t.icon 'cubes'
 
     t.cubelink = ccc ->
       div '.cubelink.'+@rowclass, 'data-id': @id, title: @title, ->
@@ -137,7 +139,7 @@ global.otto.client.templates = ->
             div '.progress-container', style: "width: #{sizePercent}%;", ->
               div '.progress', ->
                 div '.progress-indicator', style: "width: #{progressPercent}%;", ''
-            div '.count-container', otto.templates.count_widget(@)
+            div '.count-container', otto.t.count_widget(@)
 
 
     t.logo = ccc ->
@@ -145,33 +147,34 @@ global.otto.client.templates = ->
         #span '.logo', ''
         a '.logo', href: 'http://ottoaudiojukebox.com/', target: '_blank', ->
 
-    templates.mainpage = coffeecup.compile ->
+    t.mainpage = ccc ->
       if @channel.layout is 'webcast'
-          text otto.templates.channelbar channel: @channel
-          text otto.templates.console()
-          text otto.templates.webcast()
+          text otto.t.channelbar channel: @channel
+          text otto.t.console()
+          text otto.t.webcast()
       else if @channel.layout is 'featured'
-          text otto.templates.channelbar channel: @channel
-          text otto.templates.console()
-          text otto.templates.featured()
-      #else if @channel.layout is 'holidays'  # happy holidays
+          text otto.t.channelbar channel: @channel
+          text otto.t.console()
+          text otto.t.featured()
+      #else if @channel.layout is 'holidays'
+        # happy holidays
       else
-        text otto.templates.channelbar channel: @channel
-        text otto.templates.login()
-        text otto.templates.playing()
-        text otto.templates.thealbum()
+        text otto.t.channelbar channel: @channel
+        text otto.t.login()
+        text otto.t.playing()
+        text otto.t.thealbum()
         div '.ondeckchattoggle-container', ->
           div '.ondeck-container', ''
           div '.chattoggle-container', ->
-            button '.control.medium.chattoggle.shy', {title: 'chat'}, otto.templates.icon 'chat'
-        text otto.templates.console()
-        text otto.templates.browse()
+            button '.control.medium.chattoggle.shy', {title: 'chat'}, otto.t.icon 'chat'
+        text otto.t.console()
+        text otto.t.browse @
       #div '.footer-backer', ''
 
 
     templates.console = coffeecup.compile ->
       div '.console-container', tabindex: -1, ->
-        button '.control.medium.chattoggle.shy', otto.templates.icon 'close'
+        button '.control.medium.chattoggle.shy', otto.t.icon 'close'
         div '.output-container', ->
           div '.output.scrollkiller', ''
         div '.input-container', ->
@@ -201,13 +204,13 @@ global.otto.client.templates = ->
         'unknown command ' + @prefix + @command
 
 
-    templates.channelbar = coffeecup.compile ->
+    t.channelbar = ccc ->
       console.log 'channelbar', @
       div '.channelbar-container.reveal', ->
         div '.channelbar', ->
 
           div '.channelbar-left', ->
-            button '.control.medium.channeltoggle.shy', {title: 'channels'}, otto.templates.icon 'menu'
+            button '.control.medium.channeltoggle.shy', {title: 'channels'}, otto.t.icon 'menu'
 
           div '.channelbar-center', ->
             div '.channelname-container', ->
@@ -221,22 +224,22 @@ global.otto.client.templates = ->
                 host = if r and r.length is 3 then r[2] else ''
                 host
 
-            text otto.templates.logo()
+            text otto.t.logo()
 
             div '.topcontrols-container', ->
               #input '#fxtoggle', type: 'checkbox', checked: false
               #label '#fx.shy', for: 'fxtoggle', ->
               #  span 'sound cues'
-              button '.control.medium2.soundfxtoggle.shy', {title: 'sound cues'}, otto.templates.icon 'soundfx'
+              button '.control.medium2.soundfxtoggle.shy', {title: 'sound cues'}, otto.t.icon 'soundfx'
               if Notification?
                 #input '#notificationstoggle', type: 'checkbox', checked: false
                 #label '#notifications.shy', for: 'notificationstoggle', ->
                 #  span 'notifications'
-                button '.control.medium2.notificationstoggle.shy', {title: 'notifications'}, otto.templates.icon 'notifications'
+                button '.control.medium2.notificationstoggle.shy', {title: 'notifications'}, otto.t.icon 'notifications'
 
           div '.channelbar-right', ->
             #div '.chattoggle-container', ->
-            #  button '.control.medium.chattoggle.shy', otto.templates.icon 'chat'
+            #  button '.control.medium.chattoggle.shy', otto.t.icon 'chat'
 
           div '.channelbar-lower', ->
             div '.listeners-container', ''
@@ -279,20 +282,20 @@ global.otto.client.templates = ->
 
 
     t.play_widget = ccc ->
-      button '#play.control.medium2', {title: 'play/pause'}, otto.templates.icon 'play'
+      button '#play.control.medium2', {title: 'play/pause'}, otto.t.icon 'play'
 
     t.next_widget = ccc ->
-      button '#next.control.medium2.shy', {title: 'next'}, otto.templates.icon 'kill'
+      button '#next.control.medium2.shy', {title: 'next'}, otto.t.icon 'kill'
 
     # no longer used
     t.lineout_widget = ccc ->
       input '#lineouttoggle', type: 'checkbox', checked: false
       label '#lineout.shy', for: 'lineouttoggle', ->
         span 'server output'
-      text otto.templates.volumelineout_widget
+      text otto.t.volumelineout_widget
 
     t.volume_widget = ccc ->
-      div '.volume-container', ->
+      div '.volume-container', {title: 'local volume'}, ->
         div '.volume', ''
 
     t.volumelineout_widget = ccc ->
@@ -301,8 +304,8 @@ global.otto.client.templates = ->
 
     t.size_widget = ccc ->
       div '.size-widget.shy', ->
-        button '#size.smaller.control.small', {title: 'smaller'}, otto.templates.icon 'smaller'
-        button '#size.bigger.control.small', {title: 'bigger'}, otto.templates.icon 'bigger'
+        button '#size.smaller.control.small', {title: 'smaller'}, otto.t.icon 'smaller'
+        button '#size.bigger.control.small', {title: 'bigger'}, otto.t.icon 'bigger'
 
     t.currentsong_widget = ccc ->
       div '.currenttrack.autosize', {
@@ -346,8 +349,8 @@ global.otto.client.templates = ->
     t.time_widget = ccc ->
       span '#time', ->
         if @total or @current
-          totalstr = otto.format_time @total
-          currentstr = otto.format_time @current, totalstr.length
+          totalstr = otto.t.format_time @total
+          currentstr = otto.t.format_time @current, totalstr.length
           span '#current-time', currentstr
           span '#total-time.sep', totalstr
 
@@ -370,14 +373,14 @@ global.otto.client.templates = ->
               div '.progress', ->
                 div '.progress-indicator', style: "width: #{progressPercent}%;", ''
 
-            div '.time-container', otto.templates.time_widget(@)
+            div '.time-container', otto.t.time_widget(@)
 
     t.channel_status_errata_widget = ccc ->
       div '.time-container', ->
         div '.time', ->
           if @status.time
             times = @status.time.split ':'
-            text otto.templates.time_widget current: times[0], total: times[1]
+            text otto.t.time_widget current: times[0], total: times[1]
       #div '.audio', @status.audio || ''
       div '.bitrate', if @status.bitrate then @status.bitrate + 'kbps' else ''
 
@@ -432,34 +435,35 @@ global.otto.client.templates = ->
 
     t.currenttrack = ccc ->
       div '.currenttrack-binder', ->
-        div '.currentsong-container', otto.templates.currentsong_widget(@)
-        div '.timeprogress-container', otto.templates.timeprogress_widgets(@)
-        div '.currentalbum-container', otto.templates.currentalbum_widget(@)
-        div '.currentyear-container', otto.templates.currentyear_widget(@)
-        div '.currentartist-container', otto.templates.currentartist_widget(@)
+        div '.currentsong-container', otto.t.currentsong_widget(@)
+        div '.timeprogress-container', otto.t.timeprogress_widgets(@)
+        div '.currentalbum-container', otto.t.currentalbum_widget(@)
+        div '.currentyear-container', otto.t.currentyear_widget(@)
+        div '.currentartist-container', otto.t.currentartist_widget(@)
         div '.currenterrata-container', ->
-          div '.owner-container', otto.templates.owner_widget(@)
-          div '.requestor-container', otto.templates.requestor_widget(@)
-      div '.currentcover-container', otto.templates.currentcover_widget(@)
+          div '.owner-container', otto.t.owner_widget(@)
+          div '.requestor-container', otto.t.requestor_widget(@)
+      div '.currentcover-container', otto.t.currentcover_widget(@)
       div '.filename-container', ->
-        div '.filename-clipper', otto.templates.filename_widget(@)
+        div '.filename-clipper', otto.t.filename_widget(@)
 
     t.playing = ccc ->
       div '.playing-container.reveal', ->
         if otto.haslineout and otto.localhost
-          div '.play-container', otto.templates.play_widget
-          div '.shy', otto.templates.volumelineout_widget
+          div '.play-container', otto.t.play_widget
+          div '.shy', otto.t.volumelineout_widget
         else
-          #button '#connect.control.large.'+@channel.type, otto.templates.icon 'disconnected'
+          #button '#connect.control.large.'+@channel.type, otto.t.icon 'disconnected'
           #button '#connect.control.large.'+@channel.type, ->
           div '.connect-container', ->
-            button '#connect.control.large', ->
-              img src: 'static/images/disconnected.svg', height: 20, width: 20
-          div '.shy', otto.templates.volume_widget
+            button '#connect.control.large', { title: 'connect/disconnect' }, ->
+              #img src: 'static/images/disconnected.svg', height: 20, width: 20
+              text otto.t.icon 'connect'
+          div '.shy', otto.t.volume_widget
 
-        div '.size-container.size1', otto.templates.size_widget
-        div '.next-container.size1', otto.templates.next_widget
-        div '.currenttrack-container.size1', otto.templates.currenttrack(@)
+        div '.size-container.size1', otto.t.size_widget
+        div '.next-container.size1', otto.t.next_widget
+        div '.currenttrack-container.size1', otto.t.currenttrack(@)
 
     t.thealbum = ccc ->
       div '.thealbum-container.reveal', ->
@@ -476,12 +480,14 @@ global.otto.client.templates = ->
 
           div '.letterbar-container', ->
             ul '.letterbar', ->
-              bigwarning = if @largedatabase then '.warn.big' else ''  # bzzz! not passed in FIXME
-              li '.letter.control.shownewest.gap', {title: 'newest'}, otto.templates.icon 'newest'
-              li '.letter.control.showall.gap'+bigwarning, {title: 'all'}, otto.templates.icon 'all'
-              li '.letter.control.showusers.gap', {title: 'users'}, otto.templates.icon 'users'
-              li '.letter.control.showstars.gap', {title: 'starred'}, otto.templates.icon 'star'
-              li '.letter.control.showcubes.gap'+bigwarning, {title: 'cubes'}, otto.templates.icon 'cubes'
+              #bigwarning = if @largedatabase then '.warn.big' else ''  # bzzz! not passed in FIXME
+              bigwarning = ''
+              li '.letter.control.shownewest.gap', {title: 'newest'}, otto.t.icon 'newest'
+              li '.letter.control.showall.gap'+bigwarning, {title: 'all'}, otto.t.icon 'all'
+              if not @largedatabase  # need to make it faster, times out on very large databases FIXME
+                li '.letter.control.showusers.gap', {title: 'users'}, otto.t.icon 'users'
+              li '.letter.control.showstars.gap', {title: 'starred'}, otto.t.icon 'star'
+              li '.letter.control.showcubes.gap'+bigwarning, {title: 'cubes'}, otto.t.icon 'cubes'
               # other fun character considerations: ⁂ ? № ⁕ ⁖ ⁝ ⁞ ⃛ ⋯ +⚂ ⚐ ⚑
               # someday add back: st va
               li '.letter.gap', 'A'
@@ -519,7 +525,7 @@ global.otto.client.templates = ->
         othercount=0
         for id in @listeners
           if @listeners[id].socketids or @listeners[id].streams
-            console.log @listeners[id].channelname
+            #console.log @listeners[id].channelname
             if @listeners[id].channelname and @listeners[id].channelname == otto.mychannel
               count++
             else
@@ -527,7 +533,7 @@ global.otto.client.templates = ->
         if not count
           label = 'no listeners'
         else
-          label = count + ' ' + 'listener' + otto.templates.plural(count)
+          label = count + ' ' + 'listener' + otto.t.plural(count)
         span '.count', label
         if count
           span '.sep', ''
@@ -540,18 +546,18 @@ global.otto.client.templates = ->
               if sid is @socketid
                 us = id
         if us and @listeners[us]
-          text otto.templates.format_listener listener: @listeners[us], first: first, me: true
+          text otto.t.format_listener listener: @listeners[us], first: first, me: true
           first = false
         for id in @listeners
           if id is us
             continue
           if @listeners[id].socketids or @listeners[id].streams
             if @listeners[id].channelname and @listeners[id].channelname == otto.mychannel
-              text otto.templates.format_listener listener: @listeners[id], first: first, me: false
+              text otto.t.format_listener listener: @listeners[id], first: first, me: false
               first = false
 
         if othercount
-          label = othercount + ' ' + 'other listener' + otto.templates.plural(othercount)
+          label = othercount + ' ' + 'other listener' + otto.t.plural(othercount)
           span '', ' | '
           span '.count', label
 
@@ -560,7 +566,7 @@ global.otto.client.templates = ->
               continue
             if @listeners[id].socketids or @listeners[id].streams
               if @listeners[id].channelname and @listeners[id].channelname != otto.mychannel
-                text otto.templates.format_listener listener: @listeners[id], first: first, me: false, showchannel: true
+                text otto.t.format_listener listener: @listeners[id], first: first, me: false, showchannel: true
                 first = false
 
 
@@ -624,7 +630,7 @@ global.otto.client.templates = ->
           if @listener.user
             span '.thisisme', ->
               span '.you', '(you)'
-              button '.control.small.logout', {title: 'logout'}, otto.templates.icon 'logout'
+              button '.control.small.logout', {title: 'logout'}, otto.t.icon 'logout'
 
 
     t.format_listeners_for_channel_in_channelbar = ccc ->
@@ -633,20 +639,20 @@ global.otto.client.templates = ->
         for id in @listeners
           if @listeners[id].socketids or @listeners[id].streams
             if @listeners[id].channelname and @listeners[id].channelname == @channelname
-              text otto.templates.format_listener listener: @listeners[id], first: first, me: false, shortname: true
+              text otto.t.format_listener listener: @listeners[id], first: first, me: false, shortname: true
               first = false
 
 
     templates.channellist = coffeecup.compile ->
       div '.channellistheader', ->
-        button '.control.medium.channeltoggle', otto.templates.icon 'close'
+        button '.control.medium.channeltoggle', otto.t.icon 'close'
       ul ->
         for i in [1..1]
           for channel in @channellist
             classes = '.changechannel'
             classes = classes + '.currentchannel.open' if channel.name is otto.mychannel
             li classes, 'data-channelname': channel.name, ->
-              button '.channelsettings.control.small.shy', {title: 'more info'}, otto.templates.icon 'info'
+              button '.channelsettings.control.small.shy', {title: 'more info'}, otto.t.icon 'info'
               div '.channelselect', ->
                 div '.channelname.autosize', {
                     'data-autosize-max': 20,
@@ -659,14 +665,14 @@ global.otto.client.templates = ->
                   if @listeners
                     # if we reactive the count we should consider omitting if it's 1
                     #span '.listeners.count', count || ''
-                    text otto.templates.format_listeners_for_channel_in_channelbar listeners: @listeners, channelname: channel.name
-              button '.channeloutput.control.small.shy', {title: 'toggle lineout'}, otto.templates.icon 'output'
+                    text otto.t.format_listeners_for_channel_in_channelbar listeners: @listeners, channelname: channel.name
+              button '.channeloutput.control.small.shy', {title: 'toggle lineout'}, otto.t.icon 'output'
               div '.settings', ->
-                #button '.channelsettings.control.small', otto.templates.icon 'close'
-                button '.channelplay.control.medium2', {title: 'play/pause'}, otto.templates.icon 'play'
-                text otto.templates.volumelineout_widget()
+                #button '.channelsettings.control.small', otto.t.icon 'close'
+                button '.channelplay.control.medium2', {title: 'play/pause'}, otto.t.icon 'play'
+                text otto.t.volumelineout_widget()
                 div '.channelerrata-container', ''
-                #button '.channelfork.control.small', {title: 'fork'}, otto.templates.icon 'fork'
+                #button '.channelfork.control.small', {title: 'fork'}, otto.t.icon 'fork'
 
                 button '.crossfade.control.small', {title: 'crossfade'}, 'CF'
                 button '.replaygain.control.small', {title: 'replay gain'}, 'RG'
@@ -695,9 +701,9 @@ global.otto.client.templates = ->
 
     templates.startswith = coffeecup.compile ->
       empty = true
-      otto.templates.page_it_out @data, 200, 10, div, (item) ->
+      otto.t.page_it_out @data, 200, 10, div, (item) ->
         empty = false
-        text otto.templates.artist item: item
+        text otto.t.artist item: item
 
       if empty
         div '.none', 'Nothing filed under ' + @params.value
@@ -706,7 +712,7 @@ global.otto.client.templates = ->
     templates.allalbums = coffeecup.compile ->
       div '.thumbnails', ->
         empty = true
-        otto.templates.page_it_out @data, 300, 100, span, (album) ->
+        otto.t.page_it_out @data, 300, 100, span, (album) ->
           empty = false
           div '.albumall', ->
             div '.thumb.px120.expand', 'data-id': album._id, ->
@@ -736,7 +742,7 @@ global.otto.client.templates = ->
           span '.artistname.expand', {'data-id': @item._id }, @item.name # was @item.artist before fileunder
           ul '.thumbnails', ->
             if @item.albums?
-              albumorder = otto.templates.orderalbums @item.albums
+              albumorder = otto.t.orderalbums @item.albums
               for album in albumorder
                 li '.h.thumb.px40.expand', 'data-id': album._id, 'data-container': @item._id, ->
                   if album.cover
@@ -817,11 +823,11 @@ global.otto.client.templates = ->
 
     templates.albums_details = coffeecup.compile ->
       div '.albumlist-container', { 'data-id': @_id }, ->
-        button '.close.control.tiny.shy', otto.templates.icon 'close'
+        button '.close.control.tiny.shy', otto.t.icon 'close'
         #if @data.length > 1
-        button '.close.lower.control.tiny.shy', otto.templates.icon 'close'
+        button '.close.lower.control.tiny.shy', otto.t.icon 'close'
         div '.albumlist', ->
-          albumorder = otto.templates.orderalbums @data
+          albumorder = otto.t.orderalbums @data
           had_various = false
           had_nonvarious = false
           for album in albumorder
@@ -831,7 +837,7 @@ global.otto.client.templates = ->
               had_various = true
             else
               had_nonvarious = true
-            text otto.templates.album_details album: album, fileunder: @fileunder
+            text otto.t.album_details album: album, fileunder: @fileunder
 
 
     templates.album_details = coffeecup.compile ->
@@ -883,7 +889,7 @@ global.otto.client.templates = ->
             table ->
               for song in @album.songs
                 tr -> td ->
-                  text otto.templates.enqueue_widget()
+                  text otto.t.enqueue_widget()
                   span ".id#{song._id}", {'data-id': song._id}, song.song
                   if @album.artistinfo.various or song.artist is not @album.artistinfo.primary
                     # this doesn't work when the fileunder name has been transformed in any way FIXME
@@ -893,8 +899,8 @@ global.otto.client.templates = ->
                       span '.subartist.sep', song.artist
                   if otto.myusername
                     button '.stars.control.teeny.shy.n0', 'data-id': song._id
-                    #button '.stars.control.teeny.shy.n0', {'data-id': song._id}, otto.templates.icon 'star'
-                  span '.time.sep.shy', otto.format_time(song.length)
+                    #button '.stars.control.teeny.shy.n0', {'data-id': song._id}, otto.t.icon 'star'
+                  span '.time.sep.shy', otto.t.format_time(song.length)
 
         div '.albumdir.dirpath.shy', ->
            @album.dirpath
@@ -905,16 +911,16 @@ global.otto.client.templates = ->
         # the rest of the queue, on deck
         for song in @songs
           tr ->
-            td '.requestor-container', otto.templates.requestor_widget( song: song, nodecorations: true )
+            td '.requestor-container', otto.t.requestor_widget( song: song, nodecorations: true )
             td ->
-              text otto.templates.unqueue_widget( addtoclassstr: '.shy' )
+              text otto.t.unqueue_widget( addtoclassstr: '.shy' )
               addtoclassstr = ''
               if song.requestor
                 addtoclassstr='.requested'
               span ".song.id#{song._id}#{addtoclassstr}", { 'data-id': song._id, 'data-mpdqueueid': song.mpdqueueid }, song.song
               span '.album.sep', song.album
               span '.artist.sep', song.artist
-              span '.sep', otto.format_time(song.length)
+              span '.sep', otto.t.format_time(song.length)
               span '.shy', ->
                 if song.owners
                   owner = song.owners[0].owner
@@ -935,15 +941,15 @@ global.otto.client.templates = ->
             else
               span '.requestor', -> ''
             if song.nowplaying
-              span '.playing.control.teeny', otto.templates.icon 'play'
+              span '.playing.control.teeny', otto.t.icon 'play'
               span '.song.currenttrack', -> song.song
             else
               button '.play.control.teeny.shy', id: song.mpdqueueid, 'data-position': n, ->
-                text otto.templates.icon 'play'
+                text otto.t.icon 'play'
               span '.song', song.song
             span '.album.sep', song.album
             span '.artist.sep', song.artist
-            span '.sep', otto.format_time(song.length)
+            span '.sep', otto.t.format_time(song.length)
             span '.shy', ->
               if song.owners
                 owner = song.owners[0].owner
@@ -974,13 +980,13 @@ global.otto.client.templates = ->
             div ->
               for fileunder in @data.fileunders
                 #li -> fileunder.name
-                div -> otto.templates.artist item: fileunder
+                div -> otto.t.artist item: fileunder
 
           if @data.albums.length
             div class: 'section', 'Albums'
             div class: 'albums', ->
               for album in @data.albums
-                div -> otto.templates.album item: album
+                div -> otto.t.album item: album
 
           if @data.songcomposers? and @data.songcomposers.length
             div '.section', 'Composers'
@@ -1008,7 +1014,7 @@ global.otto.client.templates = ->
                     button '.stars.control.teeny.shy.n0', 'data-oid': song.oid
                   span class: 'shy', ->
                     span class: 'sep'
-                    span -> otto.format_time(song.length)
+                    span -> otto.t.format_time(song.length)
                     if song.owners
                       owner = song.owners[0].owner
                     else
@@ -1025,7 +1031,7 @@ global.otto.client.templates = ->
               for song in @data.songs
                 songs_list[song._id] = true
                 li ->
-                  text otto.templates.enqueue_widget()
+                  text otto.t.enqueue_widget()
                   span ".song.id#{song._id}", { 'data-id': song._id }, song.song
                   span '.album.sep', song.album
                   span '.artist.sep', song.artist
@@ -1033,7 +1039,7 @@ global.otto.client.templates = ->
                     button '.stars.control.teeny.shy.n0', 'data-id': song._id
                   span class: 'shy', ->
                     span class: 'sep'
-                    span -> otto.format_time(song.length)
+                    span -> otto.t.format_time(song.length)
                     owner = ''
                     if song.owners
                       owner = song.owners[0].owner
@@ -1051,7 +1057,7 @@ global.otto.client.templates = ->
               ul class: 'my-new-list', ->
                 for song in other_cleaned
                   li ->
-                    text otto.templates.enqueue_widget()
+                    text otto.t.enqueue_widget()
                     span ".id#{song._id}", { 'data-id': song._id }, song.song
                     span '.sep', song.album
                     span '.sep', song.artist
@@ -1079,40 +1085,26 @@ global.otto.client.templates = ->
             if album.owners?
               if owner isnt album.owners[-1..][0].owner
                 owner = album.owners[-1..][0].owner
-                div '.newestowner', owner + ' &nbsp; ' + otto.templates.format_timestamp(album.timestamp)
+                div '.newestowner', owner + ' &nbsp; ' + otto.t.format_timestamp(album.timestamp)
               else if interval > 3600000
-                div '.newestowner', owner + ' &nbsp; ' + otto.templates.format_timestamp(album.timestamp)
+                div '.newestowner', owner + ' &nbsp; ' + otto.t.format_timestamp(album.timestamp)
             else if owner
               owner = ''
-              div '.newestowner', '' + otto.templates.format_timestamp(album.timestamp)
+              div '.newestowner', '' + otto.t.format_timestamp(album.timestamp)
             else if interval > 3600000
-              div '.newestowner', owner + ' &nbsp; ' + otto.templates.format_timestamp(album.timestamp)
-            div -> otto.templates.album item: album
+              div '.newestowner', owner + ' &nbsp; ' + otto.t.format_timestamp(album.timestamp)
+            div -> otto.t.album item: album
 
 
         if empty
           div '.none', 'None'
 
 
-    t.format_timestamp = (timestamp) ->
-      if timestamp
-        #d = new Date(timestamp * 1000)
-        #hours = d.getHours();
-        #minutes = d.getMinutes();
-        #seconds = d.getSeconds();
-        #day = d.getDate()
-        #month = d.getMonth()
-        #return moment(timestamp).fromNow()  # i like this one
-        return moment(timestamp).format('ddd MMM Do YYYY ha')
-      else
-        return ''
-
-
     otto.event_last_display_time = false
     templates.event = coffeecup.compile ->
       div '.event', ->
         timestamp = new Date(@event.timestamp)
-        display_time = otto.format_time(timestamp.getHours() * 60 + timestamp.getMinutes(), 5)
+        display_time = otto.t.format_time(timestamp.getHours() * 60 + timestamp.getMinutes(), 5)
         if display_time isnt otto.event_last_display_time
           span '.timestamp', display_time
           otto.event_last_display_time = display_time
@@ -1167,10 +1159,10 @@ global.otto.client.templates = ->
               empty = false
               tr '.section', ->
                 td '.owner', user.owner
-                td if user.songs   then "#{user.songs} song" + otto.templates.plural(user.songs)
-                td if user.albums  then "#{user.albums} album" + otto.templates.plural(user.albums)
-                td if user.artists then "#{user.artists} artist" + otto.templates.plural(user.artists)
-                td "#{user.stars} starred item" + otto.templates.plural(user.stars)
+                td if user.songs   then "#{user.songs} song" + otto.t.plural(user.songs)
+                td if user.albums  then "#{user.albums} album" + otto.t.plural(user.albums)
+                td if user.artists then "#{user.artists} artist" + otto.t.plural(user.artists)
+                td "#{user.stars} starred item" + otto.t.plural(user.stars)
 
         if empty
           div '.none', 'None'
@@ -1191,7 +1183,7 @@ global.otto.client.templates = ->
               div '.section', ->
                 span user
                 span '.sep', ->
-                  span starlist.length.toString() + ' item' + otto.templates.plural(starlist.length)
+                  span starlist.length.toString() + ' item' + otto.t.plural(starlist.length)
                   if otto.myusername
                     span class: 'shy', -> button class: 'download btn teeny control', 'data-id': user._id, -> i class: 'download-alt'
 
@@ -1208,16 +1200,16 @@ global.otto.client.templates = ->
                     else
                       button ".stars.control.teeny.n#{item.rank}.immutable.noupdate", 'data-id': item._id
                     if item.otype == 40
-                      text otto.templates.artist item: item, nostars: true
+                      text otto.t.artist item: item, nostars: true
                     else if item.otype == 20
-                      text otto.templates.album item: item, nostars: true
+                      text otto.t.album item: item, nostars: true
                     else
                       song = item
-                      text otto.templates.enqueue_widget()
+                      text otto.t.enqueue_widget()
                       span ".song.id#{song._id}", { 'data-id': song._id }, song.song
                       span '.album.sep', song.album
                       span '.artist.sep', song.artist
-                      span '.sep.shy', otto.format_time(song.length)
+                      span '.sep.shy', otto.t.format_time(song.length)
                       if song.owners
                         owner = song.owners[0].owner
                         span '.owner.sep.shy', owner
@@ -1261,9 +1253,44 @@ global.otto.client.templates = ->
             span '.fill', ''
 
 
+    t.format_time = (seconds, minlen=4) ->
+      hours = parseInt(seconds / 3600)
+      seconds = seconds % 3600
+      minutes = parseInt(seconds / 60)
+      seconds = parseInt(seconds % 60)
+      if seconds < 10
+        seconds = '0' + seconds
+      else
+        seconds = '' + seconds
+      if minutes < 10 and (hours > 0 or minlen > 4)
+        minutes = '0' + minutes
+      else
+        minutes = '' + minutes
+      formatted = ''
+      if hours or minlen > 6
+        formatted = "#{hours}:#{minutes}:#{seconds}"
+      else
+        formatted = "#{minutes}:#{seconds}"
+
+
+    t.format_timestamp = (timestamp) ->
+      if timestamp
+        #d = new Date(timestamp * 1000)
+        #hours = d.getHours();
+        #minutes = d.getMinutes();
+        #seconds = d.getSeconds();
+        #day = d.getDate()
+        #month = d.getMonth()
+        #return moment(timestamp).fromNow()  # i like this one
+        return moment(timestamp).format('ddd MMM Do YYYY ha')
+      else
+        return ''
+
+
     templates.icon = coffeecup.compile ->
       switch String @
         when 'play'         then span '.icon-play2', ''
+        when 'connect'      then span '.icon-play', ''
         when 'pause'        then span '.icon-pause', ''
         when 'kill'         then span '.icon-remove', ''
         when 'menu'         then span '.icon-menu', ''

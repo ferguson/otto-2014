@@ -50,6 +50,11 @@ rm -rf mpd-0.16.3-10.7
 
 cd $ROOT/app || exit
 
+echo "making sure all npm modules are installed..."
+(cd ..; npm install)
+echo "making sure all python modules are installed..."
+(cd ..; pip install -r requirements.pip)
+
 #rsync -a $ROOT/lib/{node,node_modules,python2.7,glib-2.0,gettext,charset.alias} $RES/lib/
 
 #!#rsync -a $ROOT/lib/{node,node_modules,glib-2.0,gettext,charset.alias} $RES/lib/
@@ -61,7 +66,7 @@ rsync -a $ROOT/node_modules $RES/
 
 scp -p /usr/local/lib/libtiff* $RES/lib   # i wonder... is this needed? maybe py2app takes care of it?
 # ha! it seems this was not needed and in fact was causing my /usr/local/lib embedded path problem that
-# i wrote fixlibpaths.sh to fix
+# i wrote fixlibpaths to fix
 # wait, yes i *do* need to copy this. sigh.
 # now to fix it's embedded /usr/local/lib...
 echo "fixing libtiff's libjpegsearch path..."
@@ -86,8 +91,8 @@ ln -s python $RES/bin/python2
 ln -s python $RES/bin/python2.7
 cp -p $ROOT/.Python $RES
 
-#rsynclist='.git LICENSE NOTES README.md TODO activate dev.sh scan.py otto* package.json reset.sh slosh go.sh static'
-rsynclist='LICENSE NOTES README.md TODO activate dev.sh scan.py otto* package.json reset.sh slosh go.sh static'
+#rsynclist='.git LICENSE NOTES README.md TODO activate dev scan.py otto* package.json reset slosh go static'
+rsynclist='LICENSE NOTES README.md TODO activate dev devsetup nogfix scan.py otto* package.json reset slosh go static'
 if [ "$1" = "-A" ]; then
     echo "-A mode, only linking files"
     for f in $rsynclist; do
@@ -103,7 +108,7 @@ else
     done
 
     #echo "fixing embedded dynamic library paths..."
-    #if ./fixlibpaths.sh $RES/lib; then
+    #if ./fixlibpaths $RES/lib; then
     #	echo -n ""
     #else
     #	echo "error! exiting $0"

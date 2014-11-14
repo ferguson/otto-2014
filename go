@@ -6,7 +6,7 @@ cd $ROOT
 . activate
 
 while true; do
-  coffee otto
+  coffee otto.coffee
   if [ $? -eq 0 ]; then
       break
   fi

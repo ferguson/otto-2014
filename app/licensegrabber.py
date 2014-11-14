@@ -216,7 +216,7 @@ def grabLicenses(root_dir, output_file):
                   In the event that I accidentally failed to list a required notice,
                   please bring it to my attention by sending email to:
 
-                             jon@ottoaudiojukebox.com
+                             jon@ottojukebox.com
 
                   The attached notices are provided for information only.
                   """

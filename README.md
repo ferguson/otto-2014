@@ -1,15 +1,27 @@
-Otto Audio Jukebox - beta
-=========================
+Otto Jukebox - beta
+===================
 
-Home page <http://ottoaudiojukebox.com>
+Home page <http://ottojukebox.com>
 
-> Version 2014.09.24.0 - added home page link to logo, bottom logo jumps back to top,
-> one logo at a time on screen, added tooltips to most controls, fixed hover color
-> for notifications and sound cues controls, cleaned up channel list appearance,
-> current channel now open, changed icon for expanding channel info, current channel
-> expanded by default, added toggle for crossfade and replay gain, consolidated
-> zoom in and zoom out controls into one control, fixed setting owner with otto.json,
-> app is now less than half it's previous size, tweaked README
+> Version 2014.11.13.0 - general source code cleanups
+> better connection logic to fix empty now playing loading bug
+> handle no license file / third party notices exceptions
+> changed 'load music' to 'scan music' in app menus
+> scan music app menu item brings forth the cubes view
+> makeapp runs a pip install and npm install
+> fixed mmenu channel slider bug on reconnects
+> fixed error about uninited slider
+> added debug npm module (but not using it yet)
+> fixed right-click refresh bug in app
+> tried and failed to tweak bottom margin on bottom logo
+> discovered that some versions of coffee seem to need .coffee
+> fixed an errant exception catch in offeescript that though it was python
+> remove .sh from scrips
+> rename ottoaudijukebox.com to ottojukebox.com
+> updated README to talk about web interface and expand on Linux installation instructions
+> added devsetup script which installs node (and may do other things someday)
+> added nogfix script which links npm modules execuables into bin
+> added N_PREFIX to activate script
 
 (See "History" for previous releases)
 
@@ -17,9 +29,10 @@ Home page <http://ottoaudiojukebox.com>
 Otto is an open source music jukebox application that disguises itself as an
 iTunes replacement without all the extra baggage.
 
-It is also a web-first, fully streaming, anti-cloud, social music server that
+It is also a web-first fully streaming cloudless social music server that
 is always playing music and allows multiple people to listen to the same stream
-of music at the same time (and act as DJs for each other).
+of music at the same time (and act as DJs for each other). This is enabled
+via. it's full featured web-interface running on port 8778.
 
 It gracefully organizes very large music collections.
 
@@ -34,7 +47,7 @@ OSX Installation
 (For Linux, see "Linux Installation")
 
  - Download and open the disk image (.dmg file) from
-   <http://ottoaudiojukebox.com/downloads/>
+   <http://ottojukebox.com/downloads/>
  - Drag Otto.app to your Applications folder (or your Desktop if you prefer)
  - Eject the disk image
  - Open the Otto application.
@@ -54,9 +67,9 @@ To uninstall Otto:
    trash
 
 If you want to be extra clean when uninstalling (optional):
- - Find the `com.ottoaudiojukebox.otto.plist` file in the Preferences folder
+ - Find the `com.ottojukebox.otto.plist` file in the Preferences folder
    (in the Library folder in your home folder) and drag it to the trash
- - Or type `defaults delete com.ottoaudiojukebox.otto.plist` on the command
+ - Or type `defaults delete com.ottojukebox.otto.plist` on the command
    line
 
 
@@ -103,6 +116,9 @@ The folder selection dialog box can be slow to come up on OSX when you click
 the folder icon during the initial scan. This might be especially slow if your
 music is on a network drive.
 
+If you manage to paste a folder path into the initial load screen you may get
+some funky formatting
+
 If you have the OSX firewall enabled you may be prompted to allow incoming
 network connections.  Otto opens an incoming network port for its web
 interface, and an additional port for streaming each channel (three channels
@@ -147,6 +163,29 @@ similar errors on the last command.
 Operation
 =========
 
+Web Interface
+-------------
+
+When running Otto you (and other people) can listen to and control it
+with any modern web browser or mobile device. Otto runs a web server
+on port 8778 and the web interface is the same interface as in the
+desktop application.
+
+If you are running it on the same machine as your browser you can
+access it at the URL <http://localhost:8778/>. The port number `8778`
+is suppose to memorable by looking like the word 'otto' (with 8's
+being mutant 'o's and 7's being 't's).
+
+To access it from other machines you'll need to figure out the IP
+address or hostname of the machine running Otto and replace
+`localhost` with the IP address or hostname.
+
+If you are on the same local network as your Otto server, and your
+Otto server computer has a name configured (see the Sharing system
+preferences panel in OSX for example), then you might be able to
+access the machine by using `http://<computername>.local:8778/`.
+
+
 Scanning Music
 --------------
 
@@ -183,9 +222,9 @@ The format for setting the owner in "otto.json" is:
     { "owner": "<email address>" }
 
 Here is an example otto.json file that sets the owner to
-"teddy@ottoaudiojukebox.com":
+"roommate@mindspring.com":
 
-    { "owner": "teddy@ottoaudiojukebox.com" }
+    { "owner": "roommate@mindspring.com" }
 
 If a music file is not in a folder with an "@" in it, and there is no otto.json
 file, the owner will default to the current user running the application.
@@ -214,19 +253,19 @@ To scan from the command line:
 
  - Then run the scan script:
 
-        $ ./scan.sh
+        $ ./scan
 
 That will scan whatever folder was last scanned (or will default to
 `~/Music` if there has never been a scan). You can give an argument to
-scan.sh to tell it to scan a different folder:
+scan to tell it to scan a different folder:
 
-    $ ./scan.sh /Volumes/MyMusicDisk   # for example
+    $ ./scan /Volumes/MyMusicDisk   # for example
 
 Future scans will then default to that folder.
 
-Otto remembers all the music it previously scanned, so you can run scan.sh
-several times with different arguments to build a database that covers several
-different distinct folders.
+Otto remembers all the music it previously scanned, so you can run scan
+multiple times with different arguments to build a database that covers any
+number of different distinct folders.
 
 When scanning a folder Otto only looks at new music files it hasn't scanned
 before. If you make any changes to your music (delete/move/rename files, change
@@ -300,13 +339,13 @@ bad song from the MPD queue:
 
     - On Osx:
 
-            $ /Applications/Otto.app/Content/Resources/reset.sh
+            $ /Applications/Otto.app/Content/Resources/reset
 
     - On Linux:
 
-            $ /usr/local/otto/reset.sh
+            $ /usr/local/otto/reset
 
-    - Be aware that reset.sh will try to kill off all mpd, mongod, and node
+    - Be aware that reset will try to kill off all mpd, mongod, and node
       processes, so you might not want to use it if you are using MongoDB
       or NodeJS on you machine for other purposes.
 
@@ -330,66 +369,26 @@ Linux Installation
 Otto is not yet packaged together as a singular application or installation
 package for Linux like it is on OSX. Therefore Linux installation is fraught
 with peril, especially when it comes to getting a correctly compiled version
-of MPD installed (you might want to start with that, see below).
+of MPD installed.
 
-You will also need to install Node.js, Node.js packages, MongoDB and setup a
-Python virtual environment with a number of Python modules.
+You will also need to install git, MongoDB, Node.js + NPM packages,
+Avahi DNS lib (and development headers), virtualenv and setup a Python
+virtual environment with a number of Python modules.
 
-Clone a copy of Otto into `/usr/local/otto` (requires git):
+Installing MPD
+--------------
 
-    $ cd /usr/local
-    $ sudo mkdir otto
-    $ sudo chown `whoami` otto   # NOTE: those are back ticks, not quotes
-    $ git clone https://github.com/ferguson/otto.git otto
-    $ cd otto
-
-Setup a python virtual environment (requires virtualenv):
-
-    $ cd /usr/local   # NOTE: don't cd into the otto directory yet
-    $ virtualenv otto
-    $ cd otto
-    $ . activate   # NOTE: there is a space between the "." and "activate"
-    $ pip install -r requirements.pip
-
- - Among other modules, this will install the Pillow module (a PIL
-   replacement) which will need libtiff, libjpeg, and perhaps several other
-   packages. Inspect the output from 'pip install' above and adjust as needed.
-
- - You can retry installing Pillow with `pip uninstall Pillow` followed by
-   `pip install -r requirements.pip`
-
-Download and install MongoDB <http://www.mongodb.org/downloads>:
-
- - The latest version should work just fine
- - Version 2.4.9 is what is currently used in the Otto OSX application
- - You can install the MongoDB executables in /usr/local/otto/bin, or you can
-   install it elsewhere and put a link to just the 'mongod' executable in
-   /usr/local/otto/bin.
-
-Download and install Node.js version 0.8:
-
- - Otto has only been tested with Node.js version 0.8.17
- - But I'm sure any newer version of 0.8 would work
- - You can download 0.8.17 at <http://nodejs.org/dist/v0.8.17/>
- - Other versions at <http://nodejs.org/dist/>
- - You can install node directly in `/usr/local/otto`, or link to
-   the `node` and `npm` executables in `/usr/local/otto/bin`. Make sure npm
-   stays as a soft link to `npm-cli.js` or else it won't be able to find its
-   modules (Cannot find module 'npmlog')
-
- - Once node is installed, install the required npm modules:
-
-        $ cd /usr/local/otto  
-        $ npm install
-
-Installing MPD:
-
- - MPD is the hardest part. You might want to try this first because if it
-   doesn't work you are sunk
+ - MPD is the hardest part. I put this first because if it doesn't
+   work you are sunk
 
  - You can try installing MPD using a package manager
    for your OS, but most versions of MPD are not compiled with the
    `--enable-httpd-server` option and Otto requires it
+
+ - Someone tried installing Otto on a Fedora machine for me (thanks
+   Matt!), and he said "Luckily it looks like Fedora + rpmfusion
+   packaged all the deps necessary, including mpd with httpd support."
+   See "Fedora Tips" below.
 
  - You can check if mpd was compiled with `--enable-httpd-server` by
    typing
@@ -425,21 +424,116 @@ Installing MPD:
 
  - Good luck
 
+Fedora Tips
+-----------
+
+Someone (thanks again Matt!) was able to install Otto on Fedora using
+system packages for mpd (which thankfully was compiled with httpd
+support) and MongoDB.
+
+    $ yum install python-virtualenv mpd avahi-compat-libdns_sd-devel
+
+Don't use the Fedora packages for node/npm/coffee-script, they are too
+new for Otto. Otto needs node v8 and they install node v10. Instead
+use the 'devsetup' script included in the otto repo to install node
+(see below). Don't worry if you already have them installed, the
+devsetup script will only install them in the otto directory, they
+won't conflict with a system-wide node install.
+
+You could also use yum install mongo and mongo-server, but it's so
+easy to install MongoDB directly into the otto directory, just do that
+instead (see below).
+
+
+Install the Otto repo from github
+---------------------------------
+
+Clone a copy of Otto into `/usr/local/otto` (requires git):
+
+    $ cd /usr/local
+    $ sudo mkdir otto
+    $ sudo chown `whoami` otto   # NOTE: those are back ticks, not quotes
+    $ git clone https://github.com/ferguson/otto.git otto
+
+
+Setup the python virtual environment and required modules
+---------------------------------------------------------
+
+This requires virtualenv be installed.
+
+    $ cd /usr/local   # NOTE: don't cd into the otto directory yet
+    $ virtualenv otto
+    $ cd otto
+    $ . activate   # NOTE: there is a space between the "." and "activate"
+    $ pip install -r requirements.pip
+
+ - Among other modules, this will install the Pillow module (a PIL
+   replacement) which will need libtiff, libjpeg, and perhaps several other
+   packages. Inspect the output from 'pip install' above and adjust as needed.
+
+ - You can retry installing Pillow with `pip uninstall Pillow` followed by
+   `pip install -r requirements.pip`
+
+
+Install MongoDB
+---------------
+
+Download and install MongoDB <http://www.mongodb.org/downloads>.
+
+You don't need to do anything complicated here like making sure
+MongoDB starts when your system boots. As long as Otto can find a
+MongoDB executable in Otto's bin directory, it will take care of
+everything else it needs.
+
+The easiest thing to do is to download the correct tarball for your
+system from the above link, unpack it, and just copy everything in the
+resulting bin directory into `/usr/local/otto/bin`.
+
+ - The latest version (or anything close to it) should work just fine
+ - Version 2.4.9 is what is currently used in the Otto OSX application
+ - You can install the MongoDB executables in /usr/local/otto/bin, or you can
+   install it elsewhere and put a link to just the 'mongod' executable in
+   /usr/local/otto/bin.
+ - You don't need to configure MongoDB to start/stop on boot
+
+
+Install Node.js using 'devsetup'
+--------------------------------
+
+The 'devsetup' script in the Otto repo will download 'n' (a utility by
+the inimitable TJ Holowaychuk) and uses that to download and install
+the correct version of node locally in the Otto directory.
+
+    $ cd /usr/local/otto
+    $ ./devsetup
+
+Just for reference, Otto has only been tested with Node.js version
+0.8.17 (but I'm sure any newer version of 0.8 will work).
+
+
+Install NPM modules
+-------------------
+
+    $ cd /usr/local/otto
+    $ . activate   # won't hurt to do it twice if you previously activated above
+    $ npm install
+    $ ./nogfix  # links `coffee` into otto/bin
+
 
 Starting Otto on Linux
 ----------------------
 
 To start the Otto server on Linux:
 
-    $ /usr/local/otto/go.sh
+    $ /usr/local/otto/go
 
- - Otto will need permissions to create and write in `/usr/local/otto/var`
+  - Otto will need permissions to create and write in `/usr/local/otto/var`
     It will try to create it if it doesn't already exist.
 
   - You can ignore "Failed to load database" errors from MPD and dire looking
     warnings about the "Apple Bonjour compatibility layer of Avahi".
 
-  - Press `Ctrl-C` to stop the server
+  - To stop Otto, press `Ctrl-C`
 
 Point a web browser on your machine to <http://localhost:8778/>
 
@@ -451,6 +545,14 @@ yet know about any music. See "Scanning Music".
 
 History
 =======
+
+> Version 2014.09.24.0 - added home page link to logo, bottom logo jumps back to top,
+> one logo at a time on screen, added tooltips to most controls, fixed hover color
+> for notifications and sound cues controls, cleaned up channel list appearance,
+> current channel now open, changed icon for expanding channel info, current channel
+> expanded by default, added toggle for crossfade and replay gain, consolidated
+> zoom in and zoom out controls into one control, fixed setting owner with otto.json,
+> app is now less than half it's previous size, tweaked README
 
 > Version 2014.09.18.0 - Fix for broken scan.py (unicode char in creating
 > composer index), orange logo

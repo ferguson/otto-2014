@@ -14,7 +14,7 @@ module.exports = global.otto.db = do ->  # note the 'do' causes the function to 
   mongo = null
   c = {}
   #collections_inuse = ['objects', 'connections', 'images', 'accesslog', 'listeners', 'queues', 'events']
-  collections_inuse = ['objects', 'connections', 'images']
+  collections_inuse = ['objects', 'connections', 'images', 'events']
   filenamecache = null
 
 
@@ -25,18 +25,18 @@ module.exports = global.otto.db = do ->  # note the 'do' causes the function to 
       domainSocket: true
       #host: 'localhost'
       #port: 8777
-      #username: 'admin'  # optional
+      #username: 'admin'   # optional
       #password: 'secret'  # optional
       collection: 'sessions'  # only for connect-mongo, optional, default: sessions
 
-      file:            "#{otto.OTTO_VAR}/mongodb.conf"
-      db_directory:     "#{otto.OTTO_VAR_MONGODB}"
-      #log_file:         "#{otto.OTTO_VAR}/mongod.log"
-      pid_file:         "#{otto.OTTO_VAR}/mongod.pid"
-      socket_file:      "#{otto.OTTO_VAR}/mongod.sock"  # must end in .sock for pymongo to work
-      #bind_ip:          "localhost"
-      port:             8777 # not really used when using a unix domain socket (but still required?)
-      mongod_executable:   "#{otto.MONGOD_EXECUTABLE}"  #this'll need to be found more dynamically FIXME
+      file:              "#{otto.OTTO_VAR}/mongodb.conf"
+      db_directory:      "#{otto.OTTO_VAR_MONGODB}"
+      #log_file:          "#{otto.OTTO_VAR}/mongod.log"
+      pid_file:          "#{otto.OTTO_VAR}/mongod.pid"
+      socket_file:       "#{otto.OTTO_VAR}/mongod.sock"  # must end in .sock for pymongo to work
+      #bind_ip:           "localhost"
+      port:              8777 # not really used when using a unix domain socket (but still required?)
+      mongod_executable: "#{otto.MONGOD_EXECUTABLE}"
 
     db.dbconf.text = """
       # auto generated (and regenerated) by otto, don't edit
@@ -138,11 +138,30 @@ module.exports = global.otto.db = do ->  # note the 'do' causes the function to 
             db.emptydatabase = true
           else
             db.emptydatabase = false
-          if count > 150000
+          if count > 200000
             console.log 'we have a large database!'
             db.largedatabase = true
           else
             db.largedatabase = false
+
+          #if not c.events.isCapped()
+          #  console.log 'events collection is not capped'
+          #else
+          #  console.log 'events collection is capped'
+
+          # couldn't get this to work. perhaps runCommand is missing from my mongodb driver?
+          #if not c.events.isCapped
+          #  console.log 'capping events collection'
+          #  p_client.runCommand {"convertToCapped": "events", size: 100000}
+
+          #console.dir p_client
+          #p_client.createCollection 'events', {'capped':true, 'size':100000}, ->
+          #p_client.createCollection 'events', ->
+          #  if not c.events.isCapped
+          #    console.log 'events collection is not capped'
+          #  else
+          #    console.log 'events collection is capped'
+
           if callback
             callback()
 
@@ -162,10 +181,15 @@ module.exports = global.otto.db = do ->  # note the 'do' causes the function to 
       callback()
 
 
+  db.save_event = (e, callback) ->
+    _id = c.events.save e, (err, eSaved) ->
+      callback eSaved._id
+
+
   db.save_object = (o, callback) ->
     if not o.otype? and o.otype
       throw new Error 'object need an otype to be saved'
-    oid = self.db.objects.save o, (err, oSaved) ->
+    oid = c.objects.save o, (err, oSaved) ->
       callback oSaved._id
 
 
@@ -817,7 +841,7 @@ module.exports = global.otto.db = do ->  # note the 'do' causes the function to 
 
   db.find_or_create_owner = (username, callback) ->
     db.load_owner username, (owner) ->
-      if owner
+      if owner[0]
         callback owner[0]
       else
         c.objects.save { otype: 1, owner: username }, (err, newowner) ->
@@ -1060,16 +1084,27 @@ module.exports = global.otto.db = do ->  # note the 'do' causes the function to 
       #console.log objects.length, 'objects'
       songs = []
       for object in objects
+        if not object.rank > 0 then continue
         if object.otype is 10
           songs.push object
       # expand albums into songs (still need to handle artists also)
       async_count = 0;
       for object in objects
+        if not object.rank > 0 then continue
         if object.otype is 20
           async_count += 1
           db.load_subobjects object, 10, no, [5,6], (object) ->
             async_count -= 1
-            #console.log 'looping over album songs'
+            if object.songs?
+              for song in object.songs
+                songs.push song
+            if async_count is 0
+              callback db.pick_random_songs_from_array howmany, songs
+        if object.otype is 40  # not actually working yet
+          async_count += 1
+          db.load_subobjects object, 10, no, [5,6], (objects) ->
+            console.log '^^^^^^^^^^^^^^ otype 40 objects', objects
+            async_count -= 1
             if object.songs?
               for song in object.songs
                 songs.push song

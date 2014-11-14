@@ -1,87 +1,88 @@
 ####
-#### client side (otto.client served by zappa as /otto.client.js)
+#### client side (body of global.otto.client served by zappa as /otto.client.js)
 ####
 
 global.otto.client = ->
   window.otto = window.otto || {}
-
   otto.socketconnected = false
+  otto.serverproceed = false
+  otto.clientstarted = false
+  otto.clientready = false
   otto.salutations = false
-  otto.clientstate = {}
-  otto.myusername = no
-  otto.mychannel = no
-  otto.current_track_qid = no
-  otto.channel_list = []
-  otto.current_channel = no
-  otto.play_state = 'unknown'
-  otto.connect_state = 'disconnected'
-  otto.ignore_reload = false
-  otto.cache = { queue: [], list: [], stars: [] }
-  otto.current_volume = 80
-  otto.soundfx = no
-  otto.notifications = no
-  if /Otto_OSX/.test(navigator.userAgent)
-    delete Notification
-
-
-  ## should only do this in dev mode, but we need to tell the client we are in dev mode somehow FIXME
-  #window.console.log = ->
-  #  @emit 'console.log', Array().slice.call(arguments)
-  #window.console.dir = ->
-  #  @emit 'console.dir', Array().slice.call(arguments)
-
-
-  #alternately:
-  #$('body').append $ '<script src="http://jsconsole.com/remote.js?656D8845-91E3-4879-AD29-E7C807640B61">'
-
-
-  @on 'error': ->
-    console.log 'socket.io connection error'
-    #alert 'reloading'
-    window.location.reload()
 
 
   @on 'connect': ->
-    console.log 'socket.io connected'
+    console.log 'sio connect'
     otto.socketconnected = true
     # now we wait for the server to say 'proceed' or ask us to 'resession'
 
 
-  @on 'resession': ->
-    console.log 'sir, yes sir!'
-    $.get '/resession', =>
-      console.log 'sir, done sir!'
-      otto.sayhello()
-
-
   @on 'proceed': ->
+    console.log 'sio proceed'
+    otto.serverproceed = true
     otto.sayhello()
     # now we wait for the server to say 'welcome' and give us data
 
 
+  @on 'resession': ->
+    console.log 'sio resession, sir, yes sir!'
+    $.get '/resession', =>
+      console.log '/resession, sir, done sir!'
+      otto.serverproceed = true
+      otto.sayhello()
+
+
   @on 'disconnect': ->
-    console.log 'socket.io disconnection'
+    console.log 'sio disconnect'
     $('body').addClass 'disconnected'
     otto.socketconnected = false
+    otto.serverproceed = false
+    #otto.clientstarted = false
+    otto.clientready = false
+    otto.salutations = false
     otto.saygoodbye()
 
 
-  # note: doesn't work when moved under $ or nextTick!
+  @on 'error': ->
+    console.log 'sio error, reloading'
+    window.location.reload()
+
+
+  # note: connect doesn't work when moved under $ or nextTick!
   # it appears you have to call @connect inside zappa.run's initial call
   # or else the context.socket isn't created inside zappa.run() in
   # time for it to be used internally. i think this also means it's going
-  # to be very difficut it rig things so we can call @connect again to connect
+  # to be very difficut to rig things so we can call @connect again to connect
   # to a different server. -jon
-  # first arg is the url to connect to, undefined connects to where we were served from
-  @connect undefined, 'reconnection limit': 5000, 'max reconnection attempts': Infinity
+
+  # first arg is the url to connect to, undefined connects back to where we were served from
+  @connect undefined, 'reconnection limit': 3000, 'max reconnection attempts': Infinity
+  # this might be in a race condition with the rest of this file being parsed (move it to end?)
+  # i think i fixed ^^ this with the added otto.clientstarted logic
 
 
-  # use nextTick so the function, and the functions it calls, are all defined
-  nextTick ->
-    otto.start_client()
+  # using nextTick here so the function, and all the functions it calls, are finished being defined
+  nextTick -> otto.start_client()
 
   otto.start_client = =>
     console.log 'start_client'
+
+    otto.clientstate = {}
+    otto.myusername = no
+    otto.mychannel = no
+    otto.current_track_qid = no
+    otto.channel_list = []
+    otto.current_channel = no
+    otto.play_state = 'unknown'
+    otto.connect_state = 'disconnected'
+    otto.ignore_reload = false
+    otto.cache = { queue: [], list: [], stars: [] }
+    otto.current_volume = 80
+    otto.soundfx = no
+    otto.notifications = no
+    # no notifications in the app
+    if /Otto_OSX/.test(navigator.userAgent)
+      delete Notification
 
     otto.touch_init()
 
@@ -91,10 +92,8 @@ global.otto.client = ->
     $(window).smartresize otto.results_lazyload_handler
     $(window).smartresize otto.autosize_adjust
     $(window).on 'focus blur', otto.window_focus_handler
-    otto.ouroboros_init()
+    otto.ouroboros_ajax_hooks()
     otto.window_idle_handler_init()
-
-    $(document.body).html otto.templates.body_startup()
 
     $('body').on 'click', otto.button_click_handler
     $('body').on 'click', otto.logo_click_handler
@@ -120,15 +119,15 @@ global.otto.client = ->
             when 'chat' then if v == '1' then $('.chattoggle').click()
             when 'ignorereload' then if v = '1' then otto.ignore_reload = true
 
-    #otto.sayhello()  # is this needed? doesn't having it in @on 'connect' suffice? FIXME
-    # if it is needed we might be in trouble with out new 'proceed' and 'resession' setup
+    otto.clientstarted = true
+    otto.sayhello()
 
 
   otto.sayhello = =>
-    if otto.socketconnected and not otto.salutations
+    if otto.socketconnected and otto.serverproceed and otto.clientstarted and not otto.salutations
       otto.salutations = true
       console.log 'well, hello server!'
-      @emit 'hello', otto.clientstate # causes the server to welcome us and tells us our state
+      @emit 'hello', otto.clientstate # causes the server to welcome us and tell us our state
 
 
   otto.saygoodbye = =>
@@ -147,9 +146,6 @@ global.otto.client = ->
     otto.largedatabase = @data.largedatabase
     otto.haslineout = @data.haslineout
     otto.musicroot = @data.musicroot
-    console.log 'musicroot', otto.musicroot
-
-    #otto.emptydatabase = true  #!# temp. while developing
 
     if otto.emptydatabase
       otto.create_hellopage()
@@ -157,7 +153,10 @@ global.otto.client = ->
       otto.myusername = @data.myusername
       otto.mychannel = @data.mychannel
     else
-      $(document.body).html otto.templates.body()
+      if $('.mmenu-page').length
+        otto.templates.body_reset()
+      else
+        $(document.body).html otto.templates.body()
       $('.channellist-container').on 'click', otto.channellist_click_handler
       otto.process_channellist @data.channellist, true  #process_mychannel will do the final html
       otto.process_myusername.call @, @data.myusername
@@ -173,20 +172,19 @@ global.otto.client = ->
     otto.process_mychannel.call @, otto.mychannel
     $('.output').append navigator.userAgent
     $('.output').append otto.app
-
     @emit 'updateme'
 
 
   otto.create_mainpage = ->
     #$(document).attr 'title', otto.current_channel.fullname + ' ▪ ' + otto.myurl + ' ▪ otto' #FIXME
- #!#   $(document).attr 'title', otto.current_channel.fullname + ' ▪ otto' #FIXME
-    $('#mainpage').html otto.templates.mainpage channel: otto.current_channel
+    #$(document).attr 'title', otto.current_channel.fullname + ' ▪ otto' #FIXME
+    $('#mainpage').html otto.templates.mainpage channel: otto.current_channel, largedatabase: otto.largedatabase
 
     $('.playing-container').on 'click', otto.results_click_handler
     $('.browseresults-container').on 'click', otto.results_click_handler
     $('.console-container').on 'click', otto.console_click_handler
-    $('.volume').slider value: otto.current_volume, range: 'min', slide: otto.adjust_volume_handler
-    $('.volumelineout').slider value: otto.current_volume, range: 'min', slide: otto.adjust_volumelineout_handler
+    $('.volume').slider().slider value: otto.current_volume, range: 'min', slide: otto.adjust_volume_handler
+    $('.volumelineout').slider().slider value: otto.current_volume, range: 'min', slide: otto.adjust_volumelineout_handler
     $('.scrollkiller').on 'mousewheel', otto.scroll_bubble_stop_handler
     $('.console-container').resizable handles: 's', alsoResize: $('.output'), minHeight: 45, autoHide: true
     $('.channellist-container').mmenu(  { slidingSubmenus: false } )
@@ -285,20 +283,30 @@ global.otto.client = ->
 
 
   @on 'loader': ->
-    #console.log 'loader says:', @data
-    otto.client.cubes.loader_event @data
-    if @data is 'started'
-      if otto.emptydatabase
-        $(document.body).html otto.templates.initialload folder: $('.folder .path').text()
-        $('.loadingstatus').addClass('searching');
-        $('.loadingcubes').html otto.client.cubes.show()
-    else if @data.stdout and @data.stdout isnt 'new' and @data.stdout isnt ' ' and @data.stdout isnt ''
-      $output = $('.output')
-      if $output.length
-        amountscrolledup =  $output.prop('scrollHeight') - $output.height() - $output.scrollTop()
-        $output.append otto.templates.loader event: @data.stdout
-        if amountscrolledup < 500  # was 80, but i think we need a different detection mech. for autoscroll
-          $output.scrollToBottom()
+    console.log 'loader says:', @data
+    otto.load_module 'cubes', =>
+      otto.client.cubes.loader_event @data
+      if @data is 'started'
+        if otto.emptydatabase
+          $(document.body).html otto.templates.initialload folder: $('.folder .path').text()
+          $('.loadingstatus').addClass('searching');
+          $('.loadingcubes').html otto.client.cubes.show()
+        else if otto.localhost and $('.loadingstatus').length is 0
+          # switch to cubes view (for when scan is triggered from app menu)
+          $('.browseresults-container').html otto.templates.cubeswithload()
+          $('.browseresults-container').append otto.templates.footer()
+          $('.loadingstatus').addClass('begin')
+          $('.loadingcubes').html otto.call_module 'cubes', 'show'
+          if $('.loadmusic2').text() is 'scan'
+            $('.loadmusic2').html otto.templates.ouroboros size: 'small', direction: 'cw', speed: 'slow'
+      else if @data.stdout and @data.stdout isnt 'new' and @data.stdout isnt ' ' and @data.stdout isnt ''
+        $output = $('.output')
+        if $output.length
+          amountscrolledup =  $output.prop('scrollHeight') - $output.height() - $output.scrollTop()
+          $output.append otto.templates.loader event: @data.stdout
+          if amountscrolledup < 500  # was 80, but i think we need a different detection mech. for autoscroll
+            $output.scrollToBottom()
+
 
 
   @on 'myusername': ->
@@ -344,6 +352,7 @@ global.otto.client = ->
 
       if otto.connect_state isnt 'disconnected'
         otto.connect_player()
+      otto.clientready = true
     @emit 'updateme'
 
 
@@ -361,6 +370,12 @@ global.otto.client = ->
       else
         window.location.hash += '#chat=1'
     window.location.reload()
+
+
+  @on 'flushstream': ->
+    console.log 'flushstream'
+    if otto.connect_state isnt 'disconnected'
+      otto.reconnect_player() # make it stop playing instantly (flush buffer)
 
 
   @on 'chat': ->
@@ -473,29 +488,29 @@ global.otto.client = ->
 
 
   @on 'status': ->
-    if @data
-      for channelname,status of @data
-        $el = $('.channellist-container .changechannel[data-channelname="'+channelname+'"]')
-        if $el
-          if status.state == 'play'
-            $el.addClass 'playing'
-          else
-            $el.removeClass 'playing'
-        if channelname == otto.mychannel
-          # should prob. do this here too: if parseInt($vol.slider('value')) != parseInt(status.volume)
-          $('#mainpage .volumelineout').slider 'option', 'value', status.volume
-        $el.find('.volumelineout').each ->
-          $vol = $(@)
-          # when i do a log based volume formula, i'll need to reverse it here
-          if parseInt($vol.slider('value')) != parseInt(status.volume)
-            #console.log '$vol.value', $vol.slider('value'), 'status.volume', status.volume
-            $vol.slider 'option', 'value', status.volume
-        $el.find('.crossfade').each ->
-          if status.xfade is '0'
-            $(@).removeClass 'enabled'
-          else
-            $(@).addClass 'enabled'
-        $el.find('.channelerrata-container').html otto.templates.channel_status_errata_widget status: status
+    return if not otto.clientready or not @data
+    for channelname,status of @data
+      $el = $('.channellist-container .changechannel[data-channelname="'+channelname+'"]')
+      if $el.length
+        if status.state == 'play'
+          $el.addClass 'playing'
+        else
+          $el.removeClass 'playing'
+      if channelname == otto.mychannel
+        # should prob. do this here too: if parseInt($vol.slider('value')) != parseInt(status.volume)
+        $('#mainpage .volumelineout').slider 'option', 'value', status.volume
+      $el.find('.volumelineout').each ->
+        $vol = $(@)
+        # when i do a log based volume formula, i'll need to reverse it here
+        if parseInt($vol.slider('value')) != parseInt(status.volume)
+          #console.log '$vol.value', $vol.slider('value'), 'status.volume', status.volume
+          $vol.slider 'option', 'value', status.volume
+      $el.find('.crossfade').each ->
+        if status.xfade is '0'
+          $(@).removeClass 'enabled'
+        else
+          $(@).addClass 'enabled'
+      $el.find('.channelerrata-container').html otto.templates.channel_status_errata_widget status: status
 
 
   @on 'replaygain': ->
@@ -646,6 +661,7 @@ global.otto.client = ->
       #  $('.next-container').addClass('size1').removeClass('size2')
       $('.currenttrack-container,.next-container,.size-container').addClass('size1').removeClass('size2')
       otto.autosize_adjust()
+
     else if $button.is '.bigger'
       #window.resizeTo(1920, 1080)  # just for debugging tv mode
       #if $('.currenttrack-container').is '.size2'
@@ -876,8 +892,8 @@ global.otto.client = ->
       seconds = Math.round( (e.offsetX+adjust) / (width-1) * otto.current_song_time.total)
       console.log 'seconds', seconds
       @emit 'seek', seconds
-      if otto.connect_state isnt 'disconnected'
-        otto.reconnect_player() # make it stop playing instantly (flush buffer)
+      #if otto.connect_state isnt 'disconnected'
+      #  otto.reconnect_player() # make it stop playing instantly (flush buffer)
 
     #else if $target.is '.loadmusic' # i don't understand why this is needed here, why button_click_handler doesn't see it
     #  #@emit 'loadmusic', $('.folder .path').text()
@@ -902,8 +918,8 @@ global.otto.client = ->
     console.log 'deleteid', qid
     @emit 'deleteid', qid
     otto.current_song_time = false
-    if otto.connect_state isnt 'disconnected'
-      otto.reconnect_player() # make it stop playing instantly (flush buffer)
+    #if otto.connect_state isnt 'disconnected'
+    #  otto.reconnect_player() # make it stop playing instantly (flush buffer)
 
 
   toggle_channellist = ($button) ->
@@ -1382,8 +1398,7 @@ global.otto.client = ->
         $("meta[name='apple-mobile-web-app-status-bar-style']'").remove()
 
 
-
-  otto.ouroboros_init = ->
+  otto.ouroboros_ajax_hooks = ->
     # css animations seem to stop when the client is working (e.g. when rending the template
     # after receiving the data from the ajax call). i wonder if animated gifs do.
     # i hear making it it's own layer on the GPU will allow animations to continue (ref AEA '13 notes)
@@ -1450,3 +1465,13 @@ global.otto.client = ->
       otto.clientstate.inchat = 0
       @emit 'inchat', 0
       $('body').removeClass 'inchat'
+
+
+  ## should only do this in dev mode, but we need to tell the client we are in dev mode somehow FIXME
+  #window.console.log = ->
+  #  @emit 'console.log', Array().slice.call(arguments)
+  #window.console.dir = ->
+  #  @emit 'console.dir', Array().slice.call(arguments)
+
+  #alternatively:
+  #$('body').append $ '<script src="http://jsconsole.com/remote.js?656D8845-91E3-4879-AD29-E7C807640B61">'

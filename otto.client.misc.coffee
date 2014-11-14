@@ -1,10 +1,9 @@
 ###############
-### client side (otto.client.misc.coffee served as /otto.misc.js)
+### client side (body of otto.client.misc.coffee served as /otto.misc.js)
 ###############
 
 
 global.otto.client.misc = ->
-
   window.otto = window.otto || {}
 
   # on demand client side modules
@@ -39,7 +38,6 @@ global.otto.client.misc = ->
 
   # client side version of node's nextTick
   window.nextTick = (func) -> setTimeout(func, 0)
-
 
   # coffeescript friendly version of setTimeout and setInterval
   window.timeoutSet  = (ms, func) -> setTimeout(func, ms)
@@ -92,26 +90,6 @@ global.otto.client.misc = ->
       $element.css
         'font-size': "#{fontSize}px"
         'top': "#{heightAdjust}px"
-
-
-  otto.format_time = (seconds, minlen=4) ->
-    hours = parseInt(seconds / 3600)
-    seconds = seconds % 3600
-    minutes = parseInt(seconds / 60)
-    seconds = parseInt(seconds % 60)
-    if seconds < 10
-      seconds = '0' + seconds
-    else
-      seconds = '' + seconds
-    if minutes < 10 and (hours > 0 or minlen > 4)
-      minutes = '0' + minutes
-    else
-      minutes = '' + minutes
-    formatted = ''
-    if hours or minlen > 6
-      formatted = "#{hours}:#{minutes}:#{seconds}"
-    else
-      formatted = "#{minutes}:#{seconds}"
 
 
   # from http://stackoverflow.com/questions/6658517/window-resize-in-jquery-firing-multiple-times

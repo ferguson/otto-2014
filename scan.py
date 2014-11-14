@@ -11,7 +11,6 @@ import codecs
 import getpass
 import hashlib
 import unicodedata
-#import simplejson as json # temp to make it work on my latop FIXME
 import json
 
 import ottodb
@@ -359,7 +358,7 @@ def parse_song_info(db, filename):
     imagesdata = []
     for key, value in tags.iteritems():
         # some tags have pesky bytes in them like \xA9
-        # this line next is all crap, but i wanted to keep the replace logic somewhere for later reference
+        # this next line is all crap, but i wanted to keep the replace logic somewhere for later reference
         #ukey = key.('latin-1').encode('utf-8', errors='replace').replace(u'\ufffd', '?')
         # mongodb doesn't do keys that start with '$' or that have a '.' or null in them
         ukey = to_unicode(key) # this is probably a no-op
@@ -847,7 +846,10 @@ def add_new_songs(checklist, loaded_filenames, search_path, default_ownername):
                     ownername = d
                     #break # nah, keep searching, there might be a more specific sub dir
         if not ownername:
-            ownername = default_ownername
+            if 'owner' in otto_json:
+                ownername = otto_json['owner']   # i suspect the logic above means this fails if owner is set by dir name in path FIXME
+            else:
+                ownername = default_ownername
         owner = find_or_create_owner(ownername)
 
         # connect dirs to owner
@@ -985,8 +987,6 @@ def add_new_songs(checklist, loaded_filenames, search_path, default_ownername):
 
         if emitJSON:
             for newalbum in newalbumslist:
-                #import time
-                #time.sleep(2) #!# just for layout purposes FIXME
                 info = make_serializable_copy(newalbum)
                 info['fileunder'] = make_serializable_copy(fileunders)
                 songs = []

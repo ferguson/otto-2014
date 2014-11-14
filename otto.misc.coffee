@@ -25,8 +25,11 @@ module.exports = global.otto.misc = do ->  # note the 'do' causes the function t
     try
       stat = fs.lstatSync path
       if stat then return stat.isDirectory() else return no
-    catch ENOENT
-      return no
+    catch err
+      if err.code? and err.code is 'ENOENT'
+        return no
+      else
+        throw err
 
 
   # check if a path is an existing directory or throw an exception

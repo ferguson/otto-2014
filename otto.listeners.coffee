@@ -183,7 +183,7 @@ otto.listeners = do ->  # note the 'do' causes the function to be called
 
 
     set_state: (sessionID, socketid, state, value) ->
-      console.log 'set_state', sessionID, socketid, state, value
+      #console.log 'set_state', sessionID, socketid, state, value
       if @list.set sessionID, socketid, state, value
         @update()
 

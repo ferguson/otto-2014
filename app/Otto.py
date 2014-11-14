@@ -1,4 +1,4 @@
-# these are here just to force py2app to include them as they are used by loader.py
+# these are here just to force py2app to include them as they are used by scan.py
 import json
 import getpass
 import hashlib
@@ -336,20 +336,26 @@ linkpolicy = False
 
 class LinkPolicyDelegate(NSObject):
 
-    def webView_decidePolicyForNavigationAction_request_frame_decisionListener_(self, webView, actionInformation, request, frame, listener):
+    def webView_decidePolicyForNavigationAction_request_frame_decisionListener_(self, webView, action, request, frame, listener):
         print 'link clicked:', request.URL()
-        listener.ignore()
-        if str(request.URL()).endswith('/license'):
-            openLicense()
-        elif str(request.URL()).endswith('/notices'):
-            openNotices()
+        #print 'action:', action
+        #print 'action type:', action['WebActionNavigationTypeKey']
+        #print 'reload type', WebKit.WebNavigationTypeReload
+        if action['WebActionNavigationTypeKey'] == WebKit.WebNavigationTypeReload:
+            listener.use()
         else:
-            #NSWorkspace.sharedWorkspace().openURL_(request.URL())  # this crashes for some reason
-            subprocess.call(['open', str(request.URL())])
+            listener.ignore()
+            if str(request.URL()).endswith('/license'):
+                openLicense()
+            elif str(request.URL()).endswith('/notices'):
+                openNotices()
+            else:
+                #NSWorkspace.sharedWorkspace().openURL_(request.URL())  # this crashes for some reason
+                subprocess.call(['open', str(request.URL())])
 
     # this one is for links with a 'target' attribute
     def webView_decidePolicyForNewWindowAction_request_newFrameName_decisionListener_(self, webView, actionInformation, request, newFrameName, listener):
-        # punt to the regular link handeler
+        # punt to the regular link handeler above
         self.webView_decidePolicyForNavigationAction_request_frame_decisionListener_(webView, actionInformation, request, None, listener)
         
 
@@ -414,8 +420,11 @@ def openLicense():
         textview.setSelectable_(True)
 
         respath = os.environ['RESOURCEPATH']
-        with codecs.open( os.path.join(respath, 'LICENSE'), 'r', 'utf-8') as f:
-            licensetext = f.read()
+        try:
+            with codecs.open( os.path.join(respath, 'LICENSE'), 'r', 'utf-8') as f:
+                licensetext = f.read()
+        except IOError:
+            licensetext = 'Could not read LICENSE file.'
         storage = textview.textStorage()
         nsstring = NSAttributedString.alloc().initWithString_(licensetext)
         storage.insertAttributedString_atIndex_(nsstring, 0)
@@ -467,8 +476,11 @@ def openNotices():
         scrollview.setDocumentView_(textview)
 
         respath = os.environ['RESOURCEPATH']
-        with codecs.open( os.path.join(respath, 'THIRD-PARTY-NOTICES'), 'r', 'utf-8') as f:
-            noticestext = f.read()
+        try:
+            with codecs.open( os.path.join(respath, 'THIRD-PARTY-NOTICES'), 'r', 'utf-8') as f:
+                noticestext = f.read()
+        except IOError:
+            noticestext = 'Could not read THIRD-PARTY-NOTICES file.'
         storage = textview.textStorage()
         nsstring = NSAttributedString.alloc().initWithString_(noticestext)
         storage.insertAttributedString_atIndex_(nsstring, 0)
@@ -722,7 +734,7 @@ def makeMainMenu():
     fileMenu.addItemWithTitle_action_keyEquivalent_('Stop', 'pauseifnot:', '.')  # does 'stop:' have a special meaning?
     fileMenu.addItemWithTitle_action_keyEquivalent_('Next', 'next:', NSRightArrowFunctionKey)
     fileMenu.addItem_(NSMenuItem.separatorItem())
-    fileMenu.addItemWithTitle_action_keyEquivalent_('Load Music', 'loadMusic:', '')
+    fileMenu.addItemWithTitle_action_keyEquivalent_('Scan Music', 'loadMusic:', '')
 
     # # Edit menu
     # editMenu = NSMenu.alloc().initWithTitle_('Edit')
@@ -781,7 +793,7 @@ def makeStatusBarMenu():
     nextItem.setKeyEquivalentModifierMask_(0)
     mainWindowItem.setKeyEquivalentModifierMask_(0)
     statusMenu.addItem_(NSMenuItem.separatorItem())
-    statusMenu.addItemWithTitle_action_keyEquivalent_('Load Music', 'loadMusic:', '')
+    statusMenu.addItemWithTitle_action_keyEquivalent_('Scan Music', 'loadMusic:', '')
     statusMenu.addItem_(NSMenuItem.separatorItem())
     statusMenu.addItemWithTitle_action_keyEquivalent_('Quit Otto', 'terminate:', '')
 

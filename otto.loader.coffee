@@ -11,11 +11,10 @@ otto = global.otto
 
 global.otto.loader = do ->  # note the 'do' causes the function to be called
   loader = {}
-
   loading = false
   child = false
 
-  #loader.load = (req, res, zappa) ->  # from when it used to be triggered by a GET
+
   loader.load = (zappa, path) ->
     console.log 'loader.load'
     console.log 'path', path
@@ -32,8 +31,6 @@ global.otto.loader = do ->  # note the 'do' causes the function to be called
         #env :
         #  DYLD_FALLBACK_LIBRARY_PATH: otto.OTTO_LIB
         #  LD_LIBRARY_PATH: otto.OTTO_LIB
-      #if process.env['USER'] is 'root'
-      #  opts.uid = posix.getpwnam('jon').uid  # mpd can't use file:/// as root, also: not Windows
 
       console.log 'spawning scan.py'
       args = ['-u', otto.OTTO_ROOT + '/scan.py', '-j']

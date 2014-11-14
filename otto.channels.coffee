@@ -4,9 +4,7 @@ otto = global.otto
 
 global.otto.channels = do -> # note 'do' calls the function
   channels = {}
-
   channels.channel_list = {}
-  root = null
 
 
   channels.Channel = class Channel extends otto.events.EventEmitter
@@ -240,7 +238,7 @@ global.otto.channels = do -> # note 'do' calls the function
                   console.log 'autofill_pending', @autofill_pending
                   callback()
           when 'limited'
-            otto.db.get_random_starred_songs howmany, 'jon', (newsongs) =>
+            otto.db.get_random_starred_songs howmany, @info.limiteduser, (newsongs) =>
               console.log 'auto filling queue with limited songs'
               mpdfilenames = []
               if newsongs
@@ -291,7 +289,7 @@ global.otto.channels = do -> # note 'do' calls the function
 
 
     remove_from_queue: (id, user) ->
-    # this appears to be messed up re: return values and async callbacks
+      # this appears to be messed up re: return values and async callbacks
       if @queue
         first = true
         if id is '' and @queue[0]
@@ -426,19 +424,6 @@ global.otto.channels = do -> # note 'do' calls the function
 
 
   channels.init = (callback) ->
-    # figure out where the music directory lives so we know how to convert
-    # between otto's absolute filenames and mpd's relative file names
-    # maybe we should compute this from the database?
-    for testroot in otto.MUSICROOT_SEARCHLIST
-      testroot.dir = otto.misc.expand_tilde testroot.dir
-      if otto.misc.is_dirSync(testroot.dir)
-        root = testroot
-        break
-    #if not root
-    #  console.log 'error: could not find the music root directory. exiting.'
-    #  process.exit(1)
-    console.log 'using ' + root.dir + ' as the music root directory.'
-
     callcount = otto.channelinfolist.length
     for channelinfo in otto.channelinfolist
       console.log "creating channel #{channelinfo.name}"
@@ -451,23 +436,12 @@ global.otto.channels = do -> # note 'do' calls the function
       #channel.refresh()  # this didn't do what i expected
 
 
-  #channels.mpd_filename_to_otto = (filename) ->
-  #  if filename?
-  #    return root.dir+'/' + filename.replace('^'+root.strip+'/', '')
-
-  #channels.otto_filename_to_mpd = (filename) ->
-  #  # files with " in them don't work, mpd can't handle 'em
-  #  return filename.replace(root.dir+'/', '').replace('"', '\\"')
-
   channels.mpd_filename_to_otto = (filename) ->
     return filename
 
   channels.otto_filename_to_mpd = (filename) ->
     # files with " in them don't work, mpd can't handle 'em
     return 'file://'+filename.replace('"', '\\"')
-
-  channels.otto_filename_to_relative = (filename) ->
-    return filename.replace(root.dir+'/', '')
 
 
   return channels

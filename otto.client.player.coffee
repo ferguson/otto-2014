@@ -1,14 +1,11 @@
 ###############
-### client side (otto.client.player.coffee served as /otto.player.js)
+### client side (body of otto.client.player.coffee served as /otto.player.js)
 ###############
 
 global.otto.client.player = ->
   window.otto.client.player = do ->  # note the 'do' causes the function to be called
-
     $('head').append '<script src="static/js/jquery.jplayer.min.js">'
     #$('head').append '<script src="static/js/jquery.jplayer.inspector.js">'
-
-
     player = {}
 
 
@@ -136,7 +133,8 @@ global.otto.client.player = ->
       switch newstate
         when 'disconnected'
           #$('#connect').html otto.templates.icon 'disconnected'  # put correct play icon back FIXME
-          $('#connect').html '<img src="static/images/disconnected.svg" height="20" width="20">'
+          #$('#connect').html '<img src="static/images/disconnected.svg" height="20" width="20">'
+          $('#connect').html otto.templates.icon 'connect'
         when 'connecting'
           # the ouroboros might already be there from when the module was being loaded
           if not $('#connect>:first-child').is '.ouroboros'

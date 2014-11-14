@@ -30,8 +30,9 @@ need better indenting for wrapping long titles, e.g. in album view or search res
 stars get pushed down a little when an artist line wraps in starts with view
 application window is too big for some laptop screens
 make favicon orange to match logo
-menubar icon orange too? try it and see. background wrong too
+menubar icon orange too? (how about if only while playing) try it and see. background wrong too
 splash screen logo orange?
+bottom-margin on bottom logo wrong in app, css not working for some reason
 v orange logo for a splash of color?
 v make selections orange
 v move username separators left in new albums to match style on search, stars
@@ -42,10 +43,14 @@ v stars in search albums off a bit
 v stars in expanded albums (and others?) in all stars view
 
 :bugs:
+scan music from app menu during a scan initiates another scan
+pasting in music folder content editable field (using right-click) yields some funky formatting (but seems to work)
+setting owners with otto.json logic might be wrong wrt owners being set by @ in dir name
 move zero years to end in all albums view
 sometimes mpd hangs on certain songs i think, detect this and kill mpd & remove song from queue
 seeking is scaled wrong in TV mode (it's 'doubled'), stars too
 volume slider has trouble in TV mode too
+make events a capped collection
 searching for 'the' on big collections(?) crashes?
 strange state where users isn't fully logged in or something causes stars to crash
 often current song doesn't load when attaching with browser
