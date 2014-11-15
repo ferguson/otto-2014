@@ -161,7 +161,7 @@ global.otto.client.templates = ->
       else
         text otto.t.channelbar channel: @channel
         text otto.t.login()
-        text otto.t.playing()
+        text otto.t.playing @
         text otto.t.thealbum()
         div '.ondeckchattoggle-container', ->
           div '.ondeck-container', ''
@@ -461,9 +461,10 @@ global.otto.client.templates = ->
               text otto.t.icon 'connect'
           div '.shy', otto.t.volume_widget
 
-        div '.size-container.size1', otto.t.size_widget
-        div '.next-container.size1', otto.t.next_widget
-        div '.currenttrack-container.size1', otto.t.currenttrack(@)
+        size = @size || 'size1'
+        div ".size-container.#{size}", otto.t.size_widget
+        div ".next-container.#{size}", otto.t.next_widget
+        div ".currenttrack-container.#{size}", otto.t.currenttrack(@)
 
     t.thealbum = ccc ->
       div '.thealbum-container.reveal', ->
@@ -1292,7 +1293,8 @@ global.otto.client.templates = ->
         when 'play'         then span '.icon-play2', ''
         when 'connect'      then span '.icon-play', ''
         when 'pause'        then span '.icon-pause', ''
-        when 'kill'         then span '.icon-remove', ''
+        #when 'kill'         then span '.icon-remove', ''
+        when 'kill'         then span '.icon-minus', ''
         when 'menu'         then span '.icon-menu', ''
         when 'chat'         then span '.icon-bubble2', ''
         when 'bigger'       then span '.icon-zoomin', ''

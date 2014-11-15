@@ -7,15 +7,15 @@
   <key>CFBundleExecutable</key>
   <string>Otto</string>
   <key>CFBundleIdentifier</key>
-  <string>com.ottojukebox.otto</string>
+  <string>com.ottoaudiojukebox.otto</string>
   <key>CFBundleName</key>
   <string>Otto</string>
   <key>CFBundleIconFile</key>
   <string>Otto.icns</string>
   <key>CFBundleShortVersionString</key>
-  <string>2014.11.13.0</string>
+  <string>2014.11.15.0</string>
   <key>CFBundleVersion</key>
-  <string>2014.11.13.0</string>
+  <string>2014.11.15.0</string>
   <key>CFBundleInfoDictionaryVersion</key>
   <string>6.0</string>
   <key>CFBundlePackageType</key>

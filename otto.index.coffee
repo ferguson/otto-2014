@@ -62,6 +62,7 @@ global.otto.index = do -> # note 'do' calls the function
     'static/js/addtohomescreen.min.js'
     'static/js/toe.js'
     'static/js/prefixfree.js'
+    'static/js/modernizr.custom.04062.js'
     #'static/js/miniAlert.js'
     'static/js/showdown.js'
     'otto.client.templates.js'

@@ -68,7 +68,11 @@ class DB():
     def __init__(self):
         #self.connection = pymongo.Connection()
         if sys.platform.startswith('darwin'):
-            mongod_socket = os.path.expanduser('~/Library/Otto/var/mongod.sock')
+            ottolib = os.path.expanduser('~/Library/Otto')
+            if os.path.isdir(ottolib + '/var'):  # for backwards compatability
+              mongod_socket = ottolib + '/var/mongod.sock'
+            else:
+              mongod_socket = ottolib + '/mongod.sock'
         elif sys.platform.startswith('linux'):
             mongod_socket = '/usr/local/otto/var/mongod.sock'
         else:

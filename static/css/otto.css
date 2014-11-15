@@ -1218,9 +1218,9 @@ body.loggedout .ondeckchattoggle-container {
   content: '\e604';
   -webkit-font-smoothing: antialiased;
 }
-.control.enqueue.unqueue.first:before {
-  content: '\e62e';
-}
+//.control.enqueue.unqueue.first:before {
+//  content: '\e62e';
+//}
 
 .control.stars.n0:before {
   content: '\e610\e610\e610';

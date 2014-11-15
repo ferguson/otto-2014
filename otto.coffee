@@ -78,7 +78,7 @@ if fs.existsSync channels_json
   try
     console.log "loading channels.json file (#{channels_json})"
     otto.channelinfolist = JSON.parse(fs.readFileSync channels_json, 'utf8')
-    console.log 'channelinfolist', otto.channelinfolist
+    #console.log 'channelinfolist', otto.channelinfolist
   catch error
     console.log "### error reading channels.json file (#{channeld_json}): #{error}"
     console.log '### using default channels'

@@ -3,25 +3,10 @@ Otto Jukebox - beta
 
 Home page <http://ottojukebox.com>
 
-> Version 2014.11.13.0 - general source code cleanups
-> better connection logic to fix empty now playing loading bug
-> handle no license file / third party notices exceptions
-> changed 'load music' to 'scan music' in app menus
-> scan music app menu item brings forth the cubes view
-> makeapp runs a pip install and npm install
-> fixed mmenu channel slider bug on reconnects
-> fixed error about uninited slider
-> added debug npm module (but not using it yet)
-> fixed right-click refresh bug in app
-> tried and failed to tweak bottom margin on bottom logo
-> discovered that some versions of coffee seem to need .coffee
-> fixed an errant exception catch in offeescript that though it was python
-> remove .sh from scrips
-> rename ottoaudijukebox.com to ottojukebox.com
-> updated README to talk about web interface and expand on Linux installation instructions
-> added devsetup script which installs node (and may do other things someday)
-> added nogfix script which links npm modules execuables into bin
-> added N_PREFIX to activate script
+> Version 2014.11.15.0 - put bundle id back to com.ottoaudiojukebox.otto until issue with signing is resolved
+> changed kill track symbol to a plain minus as the circle-minus symbol made people think they were deleting the track
+> using localStorage to remember now playing size
+> forgot to remove a /var under OSX in ottodb.py
 
 (See "History" for previous releases)
 
@@ -545,6 +530,26 @@ yet know about any music. See "Scanning Music".
 
 History
 =======
+
+> Version 2014.11.13.0 - general source code cleanups
+> better connection logic to fix empty now playing loading bug
+> handle no license file / third party notices exceptions
+> changed 'load music' to 'scan music' in app menus
+> scan music app menu item brings forth the cubes view
+> makeapp runs a pip install and npm install
+> fixed mmenu channel slider bug on reconnects
+> fixed error about uninited slider
+> added debug npm module (but not using it yet)
+> fixed right-click refresh bug in app
+> tried and failed to tweak bottom margin on bottom logo
+> discovered that some versions of coffee seem to need .coffee
+> fixed an errant exception catch in offeescript that though it was python
+> remove .sh from scrips
+> rename ottoaudijukebox.com to ottojukebox.com
+> updated README to talk about web interface and expand on Linux installation instructions
+> added devsetup script which installs node (and may do other things someday)
+> added nogfix script which links npm modules execuables into bin
+> added N_PREFIX to activate script
 
 > Version 2014.09.24.0 - added home page link to logo, bottom logo jumps back to top,
 > one logo at a time on screen, added tooltips to most controls, fixed hover color

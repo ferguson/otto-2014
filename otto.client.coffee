@@ -178,7 +178,9 @@ global.otto.client = ->
   otto.create_mainpage = ->
     #$(document).attr 'title', otto.current_channel.fullname + ' ▪ ' + otto.myurl + ' ▪ otto' #FIXME
     #$(document).attr 'title', otto.current_channel.fullname + ' ▪ otto' #FIXME
-    $('#mainpage').html otto.templates.mainpage channel: otto.current_channel, largedatabase: otto.largedatabase
+    if Modernizr.localstorage
+      size = localStorage.getItem('size') || 'size1'
+    $('#mainpage').html otto.templates.mainpage channel: otto.current_channel, largedatabase: otto.largedatabase, size: size
 
     $('.playing-container').on 'click', otto.results_click_handler
     $('.browseresults-container').on 'click', otto.results_click_handler
@@ -661,6 +663,8 @@ global.otto.client = ->
       #  $('.next-container').addClass('size1').removeClass('size2')
       $('.currenttrack-container,.next-container,.size-container').addClass('size1').removeClass('size2')
       otto.autosize_adjust()
+      if Modernizr.localstorage
+        localStorage.setItem 'size', 'size1'
 
     else if $button.is '.bigger'
       #window.resizeTo(1920, 1080)  # just for debugging tv mode
@@ -671,6 +675,8 @@ global.otto.client = ->
       #  $('.next-container').addClass('size2').removeClass('size1')
       $('.currenttrack-container,.next-container,.size-container').addClass('size2').removeClass('size1')
       otto.autosize_adjust()
+      if Modernizr.localstorage
+        localStorage.setItem 'size', 'size2'
 
     else if $button.is '.close'
       container_top = $button.parent().parent().parent().offset().top
@@ -1382,7 +1388,7 @@ global.otto.client = ->
     #touch_device = 'ontouchstart' in window or 'onmsgesturechange' in window # 2nd test for ie10
 
     #touch_device = true  #detection not working for some reason wtf? FIXME
-    $('head').append '<script src="static/js/modernizr.custom.66957.js">'
+    #$('head').append '<script src="static/js/modernizr.custom.66957.js">'
     touch_device = Modernizr.touch  # prob doesn't work for ie10
     #http://stackoverflow.com/questions/4817029/whats-the-best-way-to-detect-a-touch-screen-device-using-javascript
     if touch_device
