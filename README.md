@@ -3,12 +3,21 @@ Otto Jukebox - beta
 
 Home page <http://ottojukebox.com>
 
-> Version 2014.11.15.0 - put bundle id back to com.ottoaudiojukebox.otto until issue with signing is resolved
-> changed kill track symbol to a plain minus as the circle-minus symbol made people think they were deleting the track
-> using localStorage to remember now playing size
-> forgot to remove a /var under OSX in ottodb.py
+> Version 2014.11.19.1 - bundle id back to com.ottojukebox.otto
 
 (See "History" for previous releases)
+
+NOTE: On the Mac if you are running OSX 10.9.5 (or 10.10 I presume)
+you will get a dialog with message "the identity of the developer
+cannot be confirmed." and it won't let you run Otto. To get past this,
+control-click on the Otto.app and select "Open" from the pop-up
+menu. This will get you a dialog with the option to open the app
+anyway.
+
+This page shows how to use the workaround (but for Firefox instead of
+Otto):
+
+<https://support.mozilla.org/en-US/kb/firefox-cant-be-opened-after-you-install-it-on-mac>
 
 ------------------------------------------------------------
 Otto is an open source music jukebox application that disguises itself as an
@@ -24,6 +33,8 @@ It gracefully organizes very large music collections.
 Otto utilizes and integrates a large number of other open source projects and
 would not be possible without them, especially the excellent Music Player
 Daemon (MPD) <http://www.musicpd.org/> which is what gives Otto its voice.
+
+See the demo at <http://demo.ottojukebox.com:8778/>.
 
 
 OSX Installation
@@ -429,6 +440,26 @@ You could also use yum install mongo and mongo-server, but it's so
 easy to install MongoDB directly into the otto directory, just do that
 instead (see below).
 
+Don't forget to put a link to the system installed mpd into otto/bin:
+
+    $ ln -s /usr/bin/mpd /usr/local/otto/bin
+
+
+Debian Tips
+-----------
+
+The mpd 0.16.7 system package on Debian 7.6 seems to be compiled with
+httpd enabled, so that's good!  Installing the mpd package configures
+it to automatically start up. The resulting mpd running in the
+background shouldn't conflict with Otto, but you might want disable it
+just to be sure.
+
+    $ sudo aptitude install git python-virtualenv python-dev curl libavahi-compat-libdnssd-dev libtiff-dev libjpeg-dev
+
+Don't forget to put a link to the system installed mpd into otto/bin:
+
+    $ ln -s /usr/bin/mpd /usr/local/otto/bin
+
 
 Install the Otto repo from github
 ---------------------------------
@@ -530,6 +561,11 @@ yet know about any music. See "Scanning Music".
 
 History
 =======
+
+> Version 2014.11.15.0 - put bundle id back to com.ottoaudiojukebox.otto until issue with signing is resolved
+> changed kill track symbol to a plain minus as the circle-minus symbol made people think they were deleting the track
+> using localStorage to remember now playing size
+> forgot to remove a /var under OSX in ottodb.py
 
 > Version 2014.11.13.0 - general source code cleanups
 > better connection logic to fix empty now playing loading bug

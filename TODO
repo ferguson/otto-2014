@@ -24,7 +24,6 @@ v search doesn't reset active letterbar icon
 v hide notifications icon in app until it actually works
 
 :layout:
-add hover for notifications and sound fx
 make album text in selected thumbnail not be orange?
 need better indenting for wrapping long titles, e.g. in album view or search results
 stars get pushed down a little when an artist line wraps in starts with view
@@ -33,6 +32,7 @@ make favicon orange to match logo
 menubar icon orange too? (how about if only while playing) try it and see. background wrong too
 splash screen logo orange?
 bottom-margin on bottom logo wrong in app, css not working for some reason
+v add hover for notifications and sound fx
 v orange logo for a splash of color?
 v make selections orange
 v move username separators left in new albums to match style on search, stars
@@ -43,6 +43,7 @@ v stars in search albums off a bit
 v stars in expanded albums (and others?) in all stars view
 
 :bugs:
+need to group owners when detecting loading events in new albums view
 scan music from app menu during a scan initiates another scan
 pasting in music folder content editable field (using right-click) yields some funky formatting (but seems to work)
 setting owners with otto.json logic might be wrong wrt owners being set by @ in dir name
@@ -81,7 +82,6 @@ app seems to have css problems on the second initial load page
 don't put a black background behind album images (see shaped picture disc examples e.g. devo)
 clear emptydatabase flag earlier in load process (so you can point a browser at it while it's still doing the initial load)?
 make TV mode one of the -/+ sizes
-remember 1/+ size setting (cookie? or local storage?)
 logging out leaves things active on letter bar (and there are prob. other things that need to be reset too)
 . need to reprocess stars on login
 clicking on album name or artist name in now playing renders .browserresults w/o "otto" logo footer
@@ -90,6 +90,7 @@ queue updates need to be split between now playing and queue changes to prevent 
 click on landscape doesn't reset cubes
 otto will think music was loaded on initial load if it finds files but can't actually load them
 once saw ouroboros disappear after about 60 seconds on long load (or maybe crash) and it never came back
+v remember 1/+ size setting (cookie? or local storage?)
 v /nick in chat should change username
 . eventually need to seperate chat nick name from username so people can have a choice
 v? leaving stream too sensitive, esp. in channelbar display
