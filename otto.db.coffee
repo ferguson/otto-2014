@@ -1051,6 +1051,45 @@ module.exports = global.otto.db = do ->  # note the 'do' causes the function to 
             callback shuffle
 
 
+  db.cursor_skip_each = (positions, cursor, callback, position=0) ->
+    process.nextTick ->
+      s = new Date
+      if position is 0
+        cursor.skip(positions[position])
+        new_position = position + 1
+      else if position is positions.length
+        cursor.close
+        return
+      else
+        cursor.skip(positions[position] - positions[position - 1])
+        new_position = position + 1
+      cursor.nextObject (err, item) ->
+        if err?
+          return callback(err, null)
+        if item?
+          callback null, item
+          db.cursor_skip_each(positions, cursor, callback, position)
+        else
+          cursor.close
+          callback err, null
+        return
+      return
+
+
+  db.cursor_skip_toArray = (positions, cursor, callback) ->
+    items = []
+    db.cursor_skip_each positions, cursor, (err, item) ->
+     if err?
+       return callback(err, null)
+     if item? and Array.isArray(items)
+       items.push item
+     else
+       resultItems = items
+       items = null
+       callback err, resultItems
+     return
+
+
   db.get_random_songs = (howmany=1, callback) ->
     console.log 'get_random_songs', howmany
     elapsed = new otto.misc.Elapsed()
@@ -1058,8 +1097,12 @@ module.exports = global.otto.db = do ->  # note the 'do' causes the function to 
     # pick a slate of random songs, skipping anything over 15mins long
     c.objects.find({ otype: 10, length: {$lt: 900} }, { _id: 1 }).count (err, count) ->
       console.log "#{elapsed} count songs: #{count}"
-      randomWhere = "(Math.random() > #{(count-howmany)/count})"
-      c.objects.find( {otype: 10, length: {$lt: 900}, $where: randomWhere} ).toArray (err, picked_songs) ->
+      positions = []
+      for i in [0...howmany - 1] by 1
+        positions.push(Math.floor(Math.random() * count))
+      positions.sort((a,b)->return a - b)
+      cursor = c.objects.find( {otype: 10, length: {$lt: 900} })
+      db.cursor_skip_toArray positions, cursor, (err, picked_songs) ->
         throw err if err
         console.log "#{elapsed} randomWhere done, #{picked_songs.length} picked_songs"
         db.attach_parents picked_songs, { otype: 1 }, ->
