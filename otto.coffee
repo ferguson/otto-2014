@@ -100,7 +100,7 @@ require './otto.listeners'
 require './otto.channels'
 require './otto.loader'
 require './otto.index'
-#require './otto.zeroconf'
+require './otto.zeroconf'
 require './otto.main'
 
 # client side

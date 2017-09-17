@@ -557,7 +557,7 @@ global.otto.mpd = do ->  # note 'do' calls the function
         bind_to_address   "#{@control_socket}"
         #port              "#{@control_port}"
         #bind_to_address   "localhost"
-        #zeroconf_enabled  "no"
+        #zeroconf_enabled  "yes"
         #zeroconf_name     "Otto Music Player #{@name}"
         volume_normalization "yes"
         input {
@@ -569,7 +569,7 @@ global.otto.mpd = do ->  # note 'do' calls the function
           encoder         "lame"
           #bind_to_address "#{@stream_sockets['mp3']}"
           port            "#{@stream_ports['mp3']}"
-          bind_to_address "any"
+          bind_to_address "localhost"
           #quality         "5.0"     # do not define if bitrate is defined
           bitrate         "128"     # do not define if quality is defined
           format          "44100:16:1"
@@ -581,7 +581,7 @@ global.otto.mpd = do ->  # note 'do' calls the function
           encoder         "vorbis"
           #bind_to_address "#{@stream_sockets['ogg']}"
           port            "#{@stream_ports['ogg']}"
-          bind_to_address "any"
+          bind_to_address "localhost"
           #quality         "5.0"     # do not define if bitrate is defined
           bitrate         "128"     # do not define if quality is defined
           format          "44100:16:1"
@@ -593,7 +593,7 @@ global.otto.mpd = do ->  # note 'do' calls the function
           encoder         "wave"
           #bind_to_address "#{@stream_sockets['wav']}"
           port            "#{@stream_ports['wav']}"
-          bind_to_address "any"
+          bind_to_address "localhost"
           format          "44100:16:1"
           #max_clients     "0"
         }

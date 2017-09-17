@@ -25,7 +25,7 @@ otto.server = ->
     otto.listening = true
     otto.on_listening_hook() if otto.on_listening_hook
 
-  #otto.zeroconf.createMDNSAdvertisement()
+  otto.zeroconf.createMDNSAdvertisement()
 
   otto.sessionlist = {}
   otto.sessioniplist = {}

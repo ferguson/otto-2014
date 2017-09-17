@@ -51,8 +51,7 @@ important_extensions = [
     'ofs',
     'tta',
     'ogg',
-    #'flv', # not yet,
-    'wma'
+    #'flv', # not yet
     ]
 
 directories_to_ignore = [
