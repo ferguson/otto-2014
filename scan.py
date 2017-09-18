@@ -25,6 +25,8 @@ import StringIO
 #import Image
 from PIL import Image
 
+import struct
+
 #COVER_SIZES = ['orig', '300', '120', '40']
 COVER_SIZES = ['orig', '120', '40']
 
@@ -52,6 +54,7 @@ important_extensions = [
     'tta',
     'ogg',
     #'flv', # not yet
+    'wma',
     ]
 
 directories_to_ignore = [
@@ -300,6 +303,14 @@ def parse_song_info(db, filename):
             year = tags['\xA9day'][0][:4]
         if tags.get('\xA9gen'):  # what about 'genre'? https://code.google.com/p/mp4v2/wiki/iTunesMetadata FIXME
             genre = tags['\xA9gen'][0]
+    elif extlc in ['wma']:
+        songname = to_unicode(tags.get('Title', [None])[0])
+        artist = to_unicode(tags.get('Author', [None])[0])
+        album = to_unicode(tags.get('WM/AlbumTitle', [None])[0])
+        if tags.get('WM/Year'):
+            year = to_unicode(tags['WM/Year'][0])
+        if tags.get('WM/Genre'):
+            genre = to_unicode(tags['WM/Genre'][0])
     else:
         songname = tags.get('title', [None])[0]
         artist = tags.get('artist', [None])[0]
@@ -387,7 +398,11 @@ def parse_song_info(db, filename):
             for data in listy(value):
                 imagesdata.append(data)
             value = 'yes' # is there a way to get the mime type? FIXME
-
+        if ukey.startswith('WM/Picture'):
+            for data in listy(value):
+                wma_pic = bin_to_pic(data)
+                imagesdata.append(wma_pic['data'])
+                value = wma_pic['mime']
         utags[ukey] = to_unicode(value)
 
     setattr(song, 'tags', utags)
@@ -412,6 +427,26 @@ def parse_song_info(db, filename):
             setattr(song, 'images', imageids)
 
     return song
+
+#From picard
+def bin_to_pic(image):
+    data = image.value
+    (type, size) = struct.unpack_from("<bi", data)
+    pos = 5
+    mime = ""
+    while data[pos:pos+2] != "\x00\x00":
+        mime += data[pos:pos+2]
+        pos += 2
+    pos += 2
+    description = ""
+    while data[pos:pos+2] != "\x00\x00":
+        description += data[pos:pos+2]
+        pos += 2
+    pos += 2
+    image_data = data[pos:pos+size]
+    return {
+        'mime': mime.decode("utf-16-le"),
+        'data': image_data,}
 
 def listy(items):
     if type(items) != list:
