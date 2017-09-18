@@ -1055,20 +1055,22 @@ module.exports = global.otto.db = do ->  # note the 'do' causes the function to 
     process.nextTick ->
       s = new Date
       if position is 0
-        cursor.skip(positions[position])
+        if positions[position] is not 0
+          cursor.skip(positions[position] - 1)
         new_position = position + 1
       else if position is positions.length
         cursor.close
+        callback null, null
         return
       else
-        cursor.skip(positions[position] - positions[position - 1])
+        cursor.skip(positions[position] - positions[position - 1] - 1)
         new_position = position + 1
       cursor.nextObject (err, item) ->
         if err?
           return callback(err, null)
         if item?
           callback null, item
-          db.cursor_skip_each(positions, cursor, callback, position)
+          db.cursor_skip_each(positions, cursor, callback, new_position)
         else
           cursor.close
           callback err, null
@@ -1098,7 +1100,7 @@ module.exports = global.otto.db = do ->  # note the 'do' causes the function to 
     c.objects.find({ otype: 10, length: {$lt: 900} }, { _id: 1 }).count (err, count) ->
       console.log "#{elapsed} count songs: #{count}"
       positions = []
-      for i in [0...howmany - 1] by 1
+      for i in [0...howmany] by 1
         positions.push(Math.floor(Math.random() * count))
       positions.sort((a,b)->return a - b)
       cursor = c.objects.find( {otype: 10, length: {$lt: 900} })
