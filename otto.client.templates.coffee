@@ -726,7 +726,19 @@ global.otto.client.templates = ->
                     'data-original': "/image/120?id=#{album.cover}", \
                     title: album.album
               else
-                 div '.noimg.px120', -> album.album + '<br>' + album.fileunder[0].name + '<br>' + album.owners[0].owner + '<br>' + album.year #+ album.genre
+                album_div_text = album.album
+                if album.fileunder?
+                  if album.fileunder[0]?
+                    if album.fileunder[0].name?
+                      album_div_text += '<br>' + album.fileunder[0].name
+                if album.owners?
+                  if album.owners[0]?
+                    if album.owners[0].owner?
+                      album_div_text += '<br>' + album.owners[0].owner
+                if album.year?
+                  album_div_text += '<br>' + album.year
+                div '.noimg.px120', -> album_div_text
+#                 div '.noimg.px120', -> album.album + '<br>' + album.fileunder[0].name + '<br>' + album.owners[0].owner + '<br>' + album.year #+ album.genre
             if otto.myusername
               button '.stars.control.teeny.shy.n0', 'data-id': album._id
 
