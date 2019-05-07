@@ -59,8 +59,8 @@ OSX Uninstalling
 
 To uninstall Otto:
  - Drag the Otto application to the trash
- - Drag the Otto folder (in the Library folder in your home folder) to the
-   trash
+ - Drag the Otto folder (found inside the Library folder in your home
+   folder) to the trash
 
 If you want to be extra clean when uninstalling (optional):
  - Find the `com.ottojukebox.otto.plist` file in the Preferences folder
@@ -202,7 +202,7 @@ Music Owners
 ------------
 
 Otto associates an owner with the music it scans. Multiple owners can have
-music scanned in to Otto and Otto will pick and play music depending on who is
+music scanned into Otto and Otto will pick and play music depending on who is
 listening and which owners it knows about.
 
 If music is stored inside a folder that looks like an email address (the
