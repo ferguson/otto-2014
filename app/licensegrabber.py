@@ -183,22 +183,22 @@ def grabLicenses(root_dir, output_file):
     notfoundlist = []
 
     loadlist = [
-        ('mpd', '"Music Player Daemon"', '0.16.3', 'dist/mpd-0.16.3/COPYING', 'mpd -V', 'mpd (MPD: Music Player Daemon) 0.16.3 '), # note ending space in verstr
-        ('mongo', '"MongoDB"', '2.4.9', ['dist/mongodb-osx-x86_64-2.4.9/GNU-AGPL-3.0',
-                            'dist/mongodb-osx-x86_64-2.4.9/THIRD-PARTY-NOTICES'], 'mongo --version', 'MongoDB shell version: 2.4.9'),
-        ('node', '"node.js"', '0.8.17', 'dist/node-v0.8.17-darwin-x64/LICENSE', 'node -v', 'v0.8.17'),
-        ('python', '"Python"', '2.7.6', '/usr/local/Cellar/python/2.7.6/LICENSE', 'python -V', 'Python 2.7.6'),
+        #('mpd', '"Music Player Daemon"', '0.16.3', 'dist/mpd-0.16.3/COPYING', 'mpd -V', 'mpd (MPD: Music Player Daemon) 0.16.3 '), # note ending space in verstr
+        ('mongo', '"MongoDB"', '2.4.9', ['/Users/jon/otto/mongodb-osx-x86_64-2.4.9/GNU-AGPL-3.0',
+                            '/Users/jon/otto/mongodb-osx-x86_64-2.4.9/THIRD-PARTY-NOTICES'], 'mongo --version', 'MongoDB shell version: 2.4.9'),
+        ('node', '"node.js"', '0.8.17', '/Users/jon/otto/node-v0.8.17-darwin-x64/LICENSE', 'node -v', 'v0.8.17'),
+        #('python', '"Python"', '2.7.6', '/usr/local/Cellar/python/2.7.6/LICENSE', 'python -V', 'Python 2.7.6'),
         ]
 
-    fatal = False
-    for info in loadlist:
-        license = loadLicense(root_dir, info)
-        if license:
-            licenselist.append(license)
-        else:
-            fatal = True
-    if fatal:
-        sys.exit(1)
+    # fatal = False
+    # for info in loadlist:
+    #     license = loadLicense(root_dir, info)
+    #     if license:
+    #         licenselist.append(license)
+    #     else:
+    #         fatal = True
+    # if fatal:
+    #     sys.exit(1)
 
     (nm_licenselist, nm_notfoundlist) = findNodeModuleLicenses( os.path.join(root_dir, 'node_modules') )
     licenselist.extend(nm_licenselist)

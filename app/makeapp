@@ -1,11 +1,11 @@
 #!/bin/sh
 
-ROOT=/usr/local/otto
-
-if [ "$OTTO_ACTIVATE" != "$ROOT" ]; then
+if [ "$OTTO_ACTIVATE" == "" ]; then
     echo "you need to . activate"
     exit 1
 fi
+
+ROOT=$OTTO_ACTIVATE
 
 cd $ROOT/app || exit
 
