@@ -1,9 +1,10 @@
 # . dist/python/bin/activate
-RES="`pwd`"
-PATH=$RES/bin:$PATH
-export DYLD_FALLBACK_LIBRARY_PATH=$RES/dist/mpd/lib:${DYLD_LIBRARY_PATH}
-export LD_LIBRARY_PATH=$RES/dist/mpd/lib:${LD_LIBRARY_PATH}
-export MANPATH=$RES/dist/python/share/man:$RES/dist/node/share/man:${MANPATH}
-export PYTHONPATH=$RES/dist/python
-export N_PREFIX=$RES/dist/node
-export OTTO_ACTIVATE=$RES
+ROOT="`pwd`"
+PATH=$ROOT/bin:$PATH
+PS1="(otto) $PS1"
+export DYLD_FALLBACK_LIBRARY_PATH=$ROOT/dist/mpd/lib:${DYLD_LIBRARY_PATH}
+export LD_LIBRARY_PATH=$ROOT/dist/mpd/lib:${LD_LIBRARY_PATH}
+export MANPATH=$ROOT/dist/python/share/man:$ROOT/dist/node/share/man:${MANPATH}
+export PYTHONPATH=$ROOT/dist/python
+export N_PREFIX=$ROOT/dist/node
+export OTTO_ACTIVATE=$ROOT
