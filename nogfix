@@ -1,7 +1,0 @@
-#!/bin/sh
-
-echo "linking node_modules/.bin/* to bin..."
-(cd bin; ln -s ../node_modules/.bin/* .) 2>/dev/null
-echo "done."
-
-exit
