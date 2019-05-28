@@ -759,7 +759,7 @@ statusImages = {'idle': 'static/images/osxmenubaricon.png'}
 images = {}
 statusbar = None
 state = 'idle'
-statusItem = False  # must be global or else menu dissappears when function exits
+statusItem = False  # must be global or else menu disappears when function exits
 
 def makeStatusBarMenu():
     global statusImages
