@@ -2,11 +2,12 @@
 appId: com.ottojukebox.otto
 copyright: Copyright © 2019 Jon Ferguson
 extraResources:
-- lib
-- bin/mongod
-- bin/mpd
-- bin/scan
 - static
+- from: build/bin
+  to: bin
+- from: build/lib
+  to: lib
+
 mac:
   category: public.app-category.music
   extraDistFiles: "../README.md"

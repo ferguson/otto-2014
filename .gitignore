@@ -5,6 +5,7 @@
 /*.log-*
 /.Python
 /bin
+/build
 /dist
 /lib
 /node_modules

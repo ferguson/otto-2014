@@ -10,3 +10,7 @@ Find all new files and all missing files:
 For each new file/directory:
 
 1) Convert filename to unicode, skip it and report if it can't be converted to unicode
+
+
+I was going to append app/NOTES into this file before removing it, but
+it didn't contain much that wasn't specific to pre-electron days.

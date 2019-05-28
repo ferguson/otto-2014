@@ -4,7 +4,7 @@ NODE_VERSION="v12.2"
 YARN_VERSION="1.16.0"
 MONGO_URL="http://downloads.mongodb.org/osx"
 MONGO_TAR="mongodb-osx-ssl-x86_64-3.6.12.tgz"
-MPD_TAR="app/mpd-0.16.3-10.7.tar.gz"
+MPD_TAR="assets/mpd-0.16.3-10.7.tar.gz"
 PROJECT="`basename \`pwd\``"
 
 ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -58,7 +58,7 @@ if [ ! -e dist/node ]; then
     echo "using n to install node $NODE_VERSION..."
     N_PREFIX="$ROOT/dist/node" bin/n $NODE_VERSION >/dev/null ||
 	(echo "failed while installing node"; exit 1) || exit 1
-    echo -n "node version " `node -v` "installed"
+    echo "node `node -v` installed"
     ln -s -f ../dist/node/bin/{node,npm,npx} bin/
     echo "using npm to install yarn $YARN_VERSION..."
     bin/npm install -g yarn@$YARN_VERSION
@@ -99,7 +99,8 @@ fi
 #EOF
 
 echo ""
-echo "done. type '. activate' to use this project."
+echo "done."
+echo "type '. ./activate' to use this project."
 echo ""
 
 exit
