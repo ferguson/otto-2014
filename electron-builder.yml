@@ -1,0 +1,26 @@
+---
+appId: com.ottojukebox.otto
+copyright: Copyright © 2019 Jon Ferguson
+extraResources:
+- lib
+- bin/mongod
+- bin/mpd
+- bin/scan
+- static
+mac:
+  category: public.app-category.music
+  extraDistFiles: "../README.md"
+dmg:
+  icon: build/dmgicon.icns
+  background: build/background.png
+  contents:
+  - x: 410
+    y: 120
+    type: link
+    path: "/Applications"
+  - x: 130
+    y: 120
+  - type: file
+    path: "../README.md"
+    x: 270
+    y: 250

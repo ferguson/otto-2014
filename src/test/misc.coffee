@@ -2,8 +2,9 @@ fs = require 'fs'
 os = require 'os'
 net = require 'net'
 glob = require 'glob'
-connect = require 'zappajs/node_modules/express/node_modules/connect'
-Session = connect.middleware.session.Session
+#cookie_parser = require 'cookie-parser'
+#connect = require 'zappajs/node_modules/express/node_modules/connect'
+#Session = connect.middleware.session.Session
 
 global.otto = otto = global.otto || {}
 
@@ -288,11 +289,14 @@ module.exports = global.otto.misc = do ->  # note the 'do' causes the function t
 
   misc.socket_authenticate_user = (handshake, accept) ->
     console.log 'io.set authorization'
+    accept(null, true)
+    return
+
     # check if there's a cookie header
     if handshake.headers.cookie
       # if there is, parse the cookies
-      cookieParser = otto.zappa.express.cookieParser()
-      cookieParser handshake, null, (error) ->
+      #cookieParser = otto.zappa.express.cookieParser()
+      cookie_parser handshake, null, (error) ->
         if error
           console.log 'cookie parse error:', error
           accept('cookie parse error', false)
