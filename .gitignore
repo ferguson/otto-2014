@@ -4,7 +4,6 @@
 /.git-*
 /.gitignore-*
 /gitswitch
-/*.js
 /*.log
 /*.log-*
 /logs
@@ -21,10 +20,7 @@
 /share
 /var*
 /static/html/events.html
-/build
 /app/build
 /app/dist
 /app.old
 loader.sh
-/historical
-/misc
