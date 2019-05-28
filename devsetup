@@ -1,42 +1,94 @@
 #!/bin/bash
 
-NODEVERSION="v12.2"
+NODE_VERSION="v12.2"
+YARN_VERSION="1.16.0"
+MONGO_URL="http://downloads.mongodb.org/osx"
+MONGO_TAR="mongodb-osx-ssl-x86_64-3.6.12.tgz"
+MPD_TAR="app/mpd-0.16.3-10.7.tar.gz"
 PROJECT="`basename \`pwd\``"
 
 ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 if ! which git >/dev/null; then
   echo "'git' not found, aborting."
-  exit
+  exit 1
 fi
 
 if ! which virtualenv >/dev/null; then
   echo "'virtualenv' not found, aborting."
-  exit
+  exit 1
 fi
 
 if [ "$UID" == "0" ]; then
   echo "please don't run this as root"
-  exit
+  exit 1
 fi
 
-echo -n "press return to setup in $ROOT (or press ctrl-c to cancel): "
+echo -n "press return to setup dev environment in $ROOT (or press ctrl-c to cancel): "
 read shunt
+echo ""
 
 cd $ROOT
+PATH=$ROOT/bin:${PATH}
 
-#echo "setting up python virtualenv and installing python modules..."
-#cd ..
-#virtualenv otto || exit
-#cd $ROOT
-#. activate
-#pip install -r requirements.pip
-
-echo "installing 'n'..."
-mkdir -p bin
 mkdir -p dist
-git clone -q https://github.com/tj/n.git dist/n || exit
-(cd dist/n; PREFIX="$ROOT" make install >/dev/null || exit) || exit
+mkdir -p bin
+
+if [ ! -e dist/python ]; then
+    echo "setting up python virtualenv and installing python modules..."
+    virtualenv --prompt=$PROJECT dist/python
+    #virtualenv --relocatable dist/python
+    . dist/python/bin/activate
+    pip install -r requirements.pip > /dev/null ||
+	(echo "failed while using pip to install python modules node"; exit 1) || exit 1
+    ln -s -f ../dist/python/bin/{python,python2,python2.7,setuptools,pip,wheel,pyinstaller,mutagen-inspect,chardetect} bin/
+else
+    echo "skipping python setup"
+fi
+
+if [ ! -e dist/n ]; then
+    echo "installing n..."
+    git clone -q https://github.com/tj/n.git dist/n || exit 1
+    ln -s -f ../dist/n/bin/n bin/
+else
+    echo "skipping n setup"
+fi
+
+if [ ! -e dist/node ]; then
+    echo "using n to install node $NODE_VERSION..."
+    N_PREFIX="$ROOT/dist/node" bin/n $NODE_VERSION >/dev/null ||
+	(echo "failed while installing node"; exit 1) || exit 1
+    echo -n "node version " `node -v` "installed"
+    ln -s -f ../dist/node/bin/{node,npm,npx} bin/
+    echo "using npm to install yarn $YARN_VERSION..."
+    bin/npm install -g yarn@$YARN_VERSION
+    ln -s -f ../dist/node/bin/yarn bin/
+    echo "using yarn to install node_modules..."
+    bin/yarn install
+    ln -s -f ../node_modules/.bin/{coffee,electron,electron-builder,electron-rebuild} bin/
+else
+    echo "skipping node setup"
+fi
+
+if [ ! -e dist/mongo ]; then
+    echo "downloading and installing mongo..."
+    mkdir -p dist/mongo
+    (cd dist/mongo; curl -O "$MONGO_URL/$MONGO_TAR")
+    (cd dist/mongo; tar -zxf $MONGO_TAR --strip-components 1)
+    ln -s -f ../dist/mongo/bin/{mongo,mongod} bin/
+else
+    echo "skipping mongo setup"
+fi
+    
+if [ ! -e dist/mpd ]; then
+    echo "installing mpd..."
+    mkdir -p dist/mpd
+    (cd dist/mpd; tar -zxf ../../$MPD_TAR --strip-components 1)
+    ln -s -f ../dist/mpd/bin/{mpd,mpc,ncmpc} bin/
+else
+    echo "skipping mpd setup"
+fi
+
 
 #cd $ROOT
 #echo "creating activate script..."
@@ -46,13 +98,8 @@ git clone -q https://github.com/tj/n.git dist/n || exit
 #PS1="($PROJECT)\$PS1"
 #EOF
 
-echo "using 'n' to install node $NODEVERSION..."
-. activate
-n $NODEVERSION >/dev/null || (echo "failed while installing node"; exit 1) || exit
-echo -n "node "
-node -v
-
+echo ""
 echo "done. type '. activate' to use this project."
-echo
+echo ""
 
 exit

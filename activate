@@ -1,9 +1,9 @@
-. bin/activate
+. virtualenv/bin/activate
 #PATH=${PATH}:~/otto/bin
 RES="`pwd`"
 export DYLD_FALLBACK_LIBRARY_PATH=$RES/lib:${DYLD_LIBRARY_PATH}
 export LD_LIBRARY_PATH=$RES/lib:${LD_LIBRARY_PATH}
 export MANPATH=$RES/share/man:${MANPATH}
-export PYTHONPATH=$RES
+export PYTHONPATH=$RES/virtualenv
 export N_PREFIX=$RES
 export OTTO_ACTIVATE=$RES
