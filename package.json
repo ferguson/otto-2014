@@ -2,41 +2,36 @@
   "name": "Otto",
   "version": "0.0.1",
   "description": "Otto Audio Jukebox. (or) The Social Jukebox. (or) The Networked Jukebox (or) Your Music, Everywhere. (or) Stop Listening Alone.",
-  "main": "index.html",
-  "node-main": "main.js",
-  "window": {
-    "title": "Otto",
-    "icon": "otto.png",
-    "width": 500,
-    "height": 250,
-    "show": false,
-    "toolbar": false,
-    "frame": false
-  },
-  "webkit": {
-    "page-cache": true,
-    "plugin": true
+  "author": "jon@ottojukebox.com",
+  "main": "src/electron.js",
+  "scripts": {
+    "start": "electron ."
   },
   "dependencies": {
-    "coffee-script": "1.4.0",
-    "coffeecup": "0.3.21",
-    "connect-mongo": "0.3.2",
-    "glob": "3.1.14",
-    "jsonreq": "*",
-    "JSONStream": "0.4.3",
-    "mdns": "1.1.0",
-    "mongodb": "1.2.0",
+    "JSONStream": "^1.3.5",
+    "coffeescript": "^2.4.1",
+    "compression": "^1.7.4",
+    "connect-mongo": "^2.0.3",
+    "cookie-parser": "^1.4.4",
+    "debug": "^4.1.1",
+    "electron-window-state": "^5.0.3",
+    "express-session": "^1.16.1",
+    "glob": "^7.1.4",
+    "jsonreq": "^0.1.0",
+    "mongodb": "^3.2.5",
     "mpdsocket": "git://github.com/ferguson/node-mpdsocket.git",
-    "posix": "0.0.10",
-    "underscore": "1.4.2",
-    "zappajs": "0.4.14",
-    "zappajs-partials": "0.0.7",
-    "zipstream": "0.2.1",
-    "compression": "~1.0.11",
-    "debug": "~2.0.0"
+    "serve-favicon": "^2.5.0",
+    "teacup": "^2.0.0",
+    "underscore": "^1.9.1",
+    "zappajs": "^6.5.0",
+    "zappajs-plugin-client": "^1.1.1",
+    "zip-stream": "^2.0.1"
   },
   "devDependencies": {
-    "supervisor": "*"
+    "electron": "^5.0.1",
+    "electron-builder": "^20.40.2",
+    "electron-rebuild": "^1.8.4",
+    "supervisor": "^0.12.0"
   },
-  "engine": "node 0.8.14"
+  "engine": "node 12.2.0"
 }

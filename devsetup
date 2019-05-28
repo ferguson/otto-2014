@@ -1,6 +1,6 @@
 #!/bin/bash
 
-NODEVERSION="v0.8.17"
+NODEVERSION="v12.2"
 PROJECT="`basename \`pwd\``"
 
 ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
