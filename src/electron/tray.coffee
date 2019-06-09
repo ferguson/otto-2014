@@ -4,7 +4,7 @@ tray = {}
 
 ourTray = null
 
-tray.makeTray = () =>
+tray.makeTray = (pathToTrayImage) =>
   template =
   [
     { label: 'Play/Pause', role: 'togglePlay' },
@@ -18,7 +18,7 @@ tray.makeTray = () =>
 
   trayMenu = Menu.buildFromTemplate(template)
 
-  ourTray = new Tray "#{otto.OTTO_ROOT}/static/images/osxmenubaricon.png"
+  ourTray = new Tray pathToTrayImage
   ourTray.setToolTip 'Otto'
   ourTray.setContextMenu(trayMenu)
 
