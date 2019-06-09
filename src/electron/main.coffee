@@ -1,5 +1,9 @@
-{ ipcMain, app, Menu, BrowserWindow } = require 'electron'
+{ ipcMain, app, Menu, Tray, BrowserWindow } = require 'electron'
 windowStateKeeper = require 'electron-window-state'
+
+otto_misc = require '../server/misc.coffee'
+menus = require './menus.coffee'
+tray = require './tray.coffee'
 
 mainWindowState = null
 splashScreen = null
@@ -49,15 +53,20 @@ createBrowserWindow = () =>
     win.openDevTools()
     win.show()
 
+
 serverReady = () =>
   createBrowserWindow();
   splashScreen.close();
 
 ipcMain.on 'server-ready', serverReady
 
+
 app.on 'ready', () =>
     console.log 'ready event'
-    #makeMenus()
+    console.log 'app.getName()', app.getName()
+    #menus.makeMenus()
+    tray.makeTray()
+
     mainWindowState = windowStateKeeper
       defaultWidth: 1020,
       defaultHeight: 800,
@@ -65,97 +74,29 @@ app.on 'ready', () =>
     createBackendWindow()
     createSplashScreen()
 
+    #setTimeout(app.quit, 10000)
 
-makeMenus = () =>
-  console.log 'app.getName()', app.getName()
-  template = [
-    # { role: 'appMenu' }
-    [{
-      label: app.getName(),
-      submenu: [
-        { role: 'about' },
-        { type: 'separator' },
-        { role: 'services' },
-        { type: 'separator' },
-        { role: 'hide' },
-        { role: 'hideothers' },
-        { role: 'unhide' },
-        { type: 'separator' },
-        { role: 'quit' }
-      ]
-    }],
-    # { role: 'fileMenu' }
-    {
-      label: 'File',
-      submenu: [
-        { role: 'close' }
-      ]
-    },
-    # { role: 'editMenu' }
-    {
-      label: 'Edit',
-      submenu: [
-        { role: 'undo' },
-        { role: 'redo' },
-        { type: 'separator' },
-        { role: 'cut' },
-        { role: 'copy' },
-        { role: 'paste' },
-        { role: 'pasteAndMatchStyle' },
-        { role: 'delete' },
-        { role: 'selectAll' },
-        { type: 'separator' },
-        {
-          label: 'Speech',
-          submenu: [
-            { role: 'startspeaking' },
-            { role: 'stopspeaking' }
-          ]
-        }
-      ]
-    },
-    # { role: 'viewMenu' }
-    {
-      label: 'View',
-      submenu: [
-        { role: 'reload' },
-        { role: 'forcereload' },
-        { role: 'toggledevtools' },
-        { type: 'separator' },
-        { role: 'resetzoom' },
-        { role: 'zoomin' },
-        { role: 'zoomout' },
-        { type: 'separator' },
-        { role: 'togglefullscreen' }
-      ]
-    },
-    {
-      label: 'Channels',
-      submenu: [
-        { label: 'One', role: 'channelone' },
-      ]
-    },
-    # { role: 'windowMenu' }
-    {
-      label: 'Window',
-      submenu: [
-        { role: 'minimize' },
-        { role: 'zoom' },
-        { type: 'separator' },
-        { role: 'front' },
-        { type: 'separator' },
-        { role: 'window' }
-      ]
-    },
-    {
-      role: 'help',
-      submenu: [
-        {
-          label: 'Learn More'
-        }
-      ]
-    }
-  ]
 
-  menu = Menu.buildFromTemplate(template)
-  Menu.setApplicationMenu(menu)
+cleanup_processes = () =>
+  OTTO_VAR = otto_misc.expand_tilde '~/Library/Otto'
+  OTTO_VAR_MPD = OTTO_VAR + '/mpd'
+  otto.misc.kill_from_pid_fileSync "#{OTTO_VAR_MPD}/[0-9]*pid"
+  otto.misc.kill_from_pid_fileSync "#{OTTO_VAR}/mongod.pid"
+
+# cmd-q
+app.on 'will-quit', () =>
+  console.log 'will-quit'
+  cleanup_processes()
+  console.log 'cleaned up'
+
+## ctrl-c
+#process.on 'SIGINT', () =>
+#  console.log 'SIGINT'
+#  cleanup_processes()
+#  console.log 'cleaned up'
+
+## kill (default)
+#process.on 'SIGTERM', () =>
+#  console.log 'SIGTERM'
+#  cleanup_processes()
+#  console.log 'cleaned up'
