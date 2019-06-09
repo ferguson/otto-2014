@@ -29,11 +29,7 @@ otto.OTTO_BIN            = otto.OTTO_ROOT    + '/bin'
 otto.OTTO_LIB            = otto.OTTO_ROOT    + '/lib'
 
 if process.platform is 'darwin'
-  library = otto.misc.expand_tilde '~/Library/Otto'
-  if otto.misc.is_dirSync(library + '/var')  # for backwards compatability
-    otto.OTTO_VAR =  library + '/var'
-  else
-    otto.OTTO_VAR =  library
+  otto.OTTO_VAR = otto.misc.expand_tilde '~/Library/Otto'
 else
   otto.OTTO_VAR          = otto.OTTO_ROOT    + '/var'
 otto.misc.assert_is_dir_or_create_itSync otto.OTTO_VAR
@@ -101,8 +97,9 @@ if not otto.channelinfolist
 
 require './server/server'
 require './server/events'    # attaches to global.otto.events
-require './server/db'        # etc...
+require './server/mongod'    # etc...
 require './server/mpd'
+require './server/db'
 require './server/listeners'
 require './server/channels'
 require './server/loader'

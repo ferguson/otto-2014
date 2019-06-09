@@ -23,3 +23,7 @@ ipcRenderer.on 'message', (event, arg) =>
 global.otto.main () =>
   console.log 'server ready'
   ipcRenderer.send 'server-ready'
+  #not reliable enough (see NOTES)
+  #window.addEventListener 'unload', () =>
+  #  console.log 'cleaning up processes'
+  #  global.otto.cleanup_processes()
