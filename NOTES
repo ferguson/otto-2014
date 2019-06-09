@@ -14,3 +14,38 @@ For each new file/directory:
 
 I was going to append app/NOTES into this file before removing it, but
 it didn't contain much that wasn't specific to pre-electron days.
+
+=== Problems with closing down background server processes ===
+
+It seems signals to subprocess spwaned from electon window
+(rendering?) processes are not delevered reliably. It appears as if
+the process doesn't always hang around long enough to deliver them all
+when you have multiple processes to kill like we do. Even if we wrap
+all the subprocesses under a single detached subprocess that gets a
+single signal and handles shutting down all the mpd and mondod
+processes, I'm worried it still won't be 100% reliable.
+
+Sockets are a very reliable way to tell when a process on the other
+end has exited and puts the onus on the subprocess instead of the
+parent process. If you use a single sub-process that is in chars of
+launching all the other sub processes and that process monitors a
+socket back to the app, then when the socket closes it can cleanup all
+the subprocesses and exit. I think this will make cleaning up the
+subprocesses very reliable. I'm hoping it'll work under Windows well
+too (Windows has issues with missing process signals, I'm hoping
+sockets work better).
+
+For now running `electron .` in the source repo and then pressing
+ctrl-c is going to leave the backgroup mpd and mongod processes
+running. This has a side advantage of making it quicker to restart the
+app during the developemnt cycle (Ott will just reattach itself to the
+alreayd running processes instead of spawning new ones, which takes
+time).
+
+Use `killall mpd mongod` to cleanup after running `electron .`.
+
+I do wonder if spawing the subprocesses without the 'deatched' option
+might help with this (i.e. let the OS deal with it). But a quick
+testing of this didn't seem to help. Should dig deepper here.
+
+I still need to test how force quitting apps affects things.
