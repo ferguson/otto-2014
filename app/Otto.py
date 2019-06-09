@@ -784,7 +784,7 @@ def makeStatusBarMenu():
     (F7, F8, F9) = ('', '', '')
     if hotkeys:
         #(F7, F8, F9) = (NSF7FunctionKey, NSF8FunctionKey, NSF9FunctionKey)
-        # sadly i can't currently distunguish between multiple hot keys
+        # sadly i can't currently distinguish between multiple hot keys
         (F7, F8, F9) = ('', '', NSF8FunctionKey)  # note that F9 actually equals F8
     togglePlay = statusMenu.addItemWithTitle_action_keyEquivalent_('Play/Pause', 'togglePlay:', F8)
     nextItem = statusMenu.addItemWithTitle_action_keyEquivalent_('Next', 'next:', F9)
