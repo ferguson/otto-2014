@@ -1,16 +1,11 @@
 _ = require 'underscore'
-fs = require 'fs'
-net = require 'net'
 mongodb = require 'mongodb'
-querystring = require 'querystring'
-child_process = require 'child_process'
 
 otto = global.otto
 
 
 module.exports = global.otto.db = do ->  # note the 'do' causes the function to be called
   db = {}
-
 
   mongo = null
   c = {}
@@ -19,108 +14,12 @@ module.exports = global.otto.db = do ->  # note the 'do' causes the function to 
   filenamecache = null
 
 
-  db.assemble_dbconf = ->
-    db.dbconf =
-      db: 'otto'
-      host: otto.OTTO_VAR + '/mongod.sock'
-      domainSocket: true
-      url: "mongodb://#{otto.OTTO_VAR + '/mongod.sock'}"
-      url_escaped: "mongodb://#{querystring.escape(otto.OTTO_VAR + '/mongod.sock')}"
-      #host: 'localhost'
-      #port: 8777
-      #username: 'admin'   # optional
-      #password: 'secret'  # optional
-      collection: 'sessions'  # only for connect-mongo, optional, default: sessions
-
-      file:              "#{otto.OTTO_VAR}/mongodb.conf"
-      db_directory:      "#{otto.OTTO_VAR_MONGODB}"
-      #log_file:          "#{otto.OTTO_VAR}/mongod.log"
-      pid_file:          "#{otto.OTTO_VAR}/mongod.pid"
-      socket_file:       "#{otto.OTTO_VAR}/mongod.sock"  # must end in .sock for pymongo to work
-      #bind_ip:           "localhost"
-      port:              8777 # not really used when using a unix domain socket (but still required?)
-      mongod_executable: "#{otto.MONGOD_EXECUTABLE}"
-
-    db.dbconf.text = """
-      # auto generated (and regenerated) by otto, don't edit
-
-      dbpath = #{db.dbconf.db_directory}
-      pidfilepath = #{db.dbconf.pid_file}
-      bind_ip = #{db.dbconf.socket_file}
-      #bind_ip = #{db.dbconf.bind_ip}
-      port = #{db.dbconf.port} # not really used, socket file on previous line is used instead
-      nounixsocket = true  # suppresses creation of a second socket in /tmp
-      #nohttpinterface = true
-      journal = on
-      noprealloc = true
-      noauth = true
-      #verbose = true
-      quiet = true
-      profile = 0  # don't report slow queries
-      slowms = 2000  # it still prints them to stdout though, this'll cut that down
-
-      """  # blank line at the end is so conf file has a closing CR (but not a blank line)
-
-    return db.dbconf
-
-
-  db.spawn = (callback) ->
-    # see if there is an existing mongod by testing a connection to the socket
-    testsocket = net.connect db.dbconf.socket_file, ->
-      # mongod process already exists, don't spawn another one
-      console.log "using existing mongod on #{db.dbconf.socket_file}"
-      testsocket.destroy()
-
+  db.init = (db_name, url_escaped, callback) ->
+    db.connect db_name, url_escaped, (err) ->
+      if err
+        "mongod does not appear to be running"
+        throw err
       callback()
-
-    testsocket.on 'error', (err) ->
-      #console.log 'error', err
-      testsocket.destroy()
-      console.log "no existing mongod found, spawning a new one on #{db.dbconf.socket_file}"
-      console.log "...using executable #{db.dbconf.mongod_executable}"
-      # we wait until now to write the conf file so we don't step on existing conf files for an existing mongod
-      fs.writeFile db.dbconf.file, db.dbconf.text, (err) ->
-        if err then throw err
-        opts =
-          #stdio: [ 'ignore', 'ignore', 'ignore' ]
-          detached: true
-          #env :
-          #  DYLD_FALLBACK_LIBRARY_PATH: otto.OTTO_LIB
-          #  LD_LIBRARY_PATH: otto.OTTO_LIB
-        if otto.OTTO_SPAWN_AS_UID
-          opts.uid = otto.OTTO_SPAWN_AS_UID
-        child = child_process.spawn db.dbconf.mongod_executable, ['-f', db.dbconf.file], opts
-        child.unref()
-        mongod_says = (data) ->
-          process.stdout.write 'mongod: ' + data # i could also color this differently, fun!
-        child.stdout.on 'data', mongod_says
-        child.stderr.on 'data', mongod_says
-        child.on 'exit', (code, signal) ->
-          return if otto.exiting
-          console.log "mongod exited with code #{code}"
-          if signal then console.log "...and signal #{signal}"
-
-          throw new Error 'mongod went away!'  # i guess we could wait and try reconnecting? FIXME
-
-        otto.misc.wait_for_socket db.dbconf.socket_file, 1500, (err) ->  # needed to be > 500 for linux
-          if err then throw new Error err
-          callback()
-
-
-  db.kill_mongodSync = ->
-    # needs to be Sync so we finish before event loop exits
-    otto.misc.kill_from_pid_fileSync otto.OTTO_VAR + '/mongod.pid'
-
-
-  db.init = (callback) ->
-    db.assemble_dbconf()
-    db.spawn ->
-      db.connect db.dbconf.db, db.dbconf.url_escaped, (err) ->
-        if err
-          "mongodb does not appear to be running"
-          throw err
-        #process.nextTick ->  # not sure this is really necessary
-        callback()
 
 
   db.connect = (database='otto', url='mongodb://localhost:27017', callback=no) ->

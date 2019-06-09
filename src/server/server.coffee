@@ -42,7 +42,7 @@ server_go = ->
 
   # from http://stackoverflow.com/questions/6819911/nodejs-expressjs-session-handling-with-mongodb-mongoose
   MongoStore = connect_mongo(express_session)
-  otto.sessionStore = new MongoStore(otto.db.dbconf)
+  otto.sessionStore = new MongoStore( {url: otto.mongod.conf.url} )
 
   otto.ourlisteners = new otto.listeners.Listeners()
 
