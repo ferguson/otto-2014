@@ -5,7 +5,8 @@
   "author": "jon@ottojukebox.com",
   "main": "src/electron.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "build:app": "scripts/build-electron-app.sh"
   },
   "dependencies": {
     "JSONStream": "^1.3.5",
