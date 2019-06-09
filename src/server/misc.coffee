@@ -81,7 +81,10 @@ module.exports = global.otto.misc = do ->  # note the 'do' causes the function t
     pid_files.forEach (pid_file) ->
       data = fs.readFileSync pid_file
       pid = parseInt(data)
-      process.kill(pid)
+      try
+        process.kill(pid)
+      catch err
+        console.err "could not kill pid #{pid} #{err}"
 
 
   # expand "~" in a filename to the user's home directory
