@@ -84,7 +84,7 @@ module.exports = global.otto.misc = do ->  # note the 'do' causes the function t
       try
         process.kill(pid)
       catch err
-        console.err "could not kill pid #{pid} #{err}"
+        console.error "could not kill pid #{pid} #{err}"
 
 
   # expand "~" in a filename to the user's home directory
