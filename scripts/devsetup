@@ -24,12 +24,12 @@ if [ "$UID" == "0" ]; then
   exit 1
 fi
 
-if [ "$1" !== "-y" ]; then
+if [ "$1" != "-y" ]; then
     echo -n "press return to setup development environment in $ROOT (or press ctrl-c to cancel): "
     read shunt
     echo ""
 else
-    echo -n "setting up the devlopment environment in $ROOT..."
+    echo "setting up the development environment in $ROOT..."
 fi
 
 cd $ROOT
@@ -95,7 +95,7 @@ fi
 
 echo ""
 echo "done."
-if [ "$1" !== "-y" ]; then
+if [ "$1" != "-y" ]; then
     echo "type '. ./activate' to use this project."
 fi
 echo ""
