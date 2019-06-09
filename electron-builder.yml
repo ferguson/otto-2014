@@ -3,8 +3,12 @@ appId: com.ottojukebox.otto
 copyright: Copyright © 2019 Jon Ferguson
 extraResources:
 - static
-- from: build/bin
-  to: bin
+- from: build/bin/mongod
+  to: bin/mongod
+- from: build/bin/scan
+  to: bin/scan
+- from: build/bin/mpd
+  to: bin/mpd
 - from: build/lib
   to: lib
 
