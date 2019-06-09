@@ -517,8 +517,8 @@ global.otto.mpd = do ->  # note 'do' calls the function
           opts =
             detached: true
             env :
-              DYLD_FALLBACK_LIBRARY_PATH: otto.OTTO_LIB
-              LD_LIBRARY_PATH: otto.OTTO_LIB
+              DYLD_FALLBACK_LIBRARY_PATH: "#{otto.OTTO_LIB}:#{otto.OTTO_ROOT}/dist/mpd/lib"
+              LD_LIBRARY_PATH: "#{otto.OTTO_LIB}:#{otto.OTTO_ROOT}/dist/mpd/lib"
           if otto.OTTO_SPAWN_AS_UID
             opts.uid = otto.OTTO_SPAWN_AS_UID
 
