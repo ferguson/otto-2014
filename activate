@@ -12,9 +12,10 @@ export OTTO_ACTIVATE=$ROOT
 if [ ! -e dist/python ]; then
     echo "the development environment hasn't been setup yet"
     echo
-    read -p "set up the development environment in $OTTO_ROOT [y]? "
+    echo -n "set up the development environment in $ROOT [y]? "
+    read yn
     case $yn in
-	[yY]|yes|Yes|YES )
+	""|[yY]|yes|Yes|YES )
             ./scripts/devsetup -y
             ;;
     esac
