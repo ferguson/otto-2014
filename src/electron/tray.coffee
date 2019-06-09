@@ -18,7 +18,7 @@ tray.makeTray = () =>
 
   trayMenu = Menu.buildFromTemplate(template)
 
-  ourTray = new Tray 'assets/osxmenubaricon.png'  # 'static/images/osxmenubaricon.png'  # FIXME
+  ourTray = new Tray "#{otto.OTTO_ROOT}/static/images/osxmenubaricon.png"
   ourTray.setToolTip 'Otto'
   ourTray.setContextMenu(trayMenu)
 
