@@ -8,3 +8,15 @@ export MANPATH=$ROOT/dist/python/share/man:$ROOT/dist/node/share/man:${MANPATH}
 export PYTHONPATH=$ROOT/dist/python
 export N_PREFIX=$ROOT/dist/node
 export OTTO_ACTIVATE=$ROOT
+
+if [ ! -e dist/python ]; then
+    echo "the development environment hasn't been setup yet"
+    echo
+    read -p "set up the development environment in $OTTO_ROOT [y]? "
+    case $yn in
+	[yY]|yes|Yes|YES )
+            ./scripts/devsetup -y
+            ;;
+    esac
+fi
+
