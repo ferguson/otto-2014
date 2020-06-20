@@ -14,7 +14,7 @@ v readme: an empty queue can sometimes be fixed by adding a song
 v readme: sometimes right-click for reload can fix stuff?
 v readme: file selection dialog box can be slow to come up on osx, esp. if on network drive?
 x bind mpd sockets to localhost to avoid firewall messages (already is)
-v rename master branch to main
+rename master branch to main
 
 :stoppers:
 v test owners in otto.json
