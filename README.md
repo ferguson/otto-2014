@@ -1,3 +1,7 @@
+# Note: This repo has been archived
+Watch https://otto.stream for more information
+--
+
 Otto Jukebox - beta
 ===================
 
